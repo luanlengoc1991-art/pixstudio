@@ -362,3 +362,34 @@
   box-shadow: none;
   transform: none;
 }
+
+/* Studio backdrop: deep navy with soft colour glows (dark theme) */
+[data-theme="pixstudio-dark"] body {
+  background:
+    radial-gradient(1200px 600px at 75% -10%, rgba(59, 130, 246, 0.22), transparent 60%),
+    radial-gradient(900px 500px at 10% 0%, rgba(124, 92, 255, 0.16), transparent 60%),
+    #070c22;
+}
+[data-theme="pixstudio"] body {
+  background:
+    radial-gradient(1200px 600px at 75% -10%, rgba(53, 169, 232, 0.18), transparent 60%),
+    #dceffc;
+}
+
+/* Frosted glass panels used by the shell and home screen */
+.glass {
+  background: color-mix(in srgb, oklch(var(--b1)) 72%, transparent);
+  border: 1px solid color-mix(in srgb, oklch(var(--bc)) 12%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 30px -12px rgba(0, 0, 0, 0.45);
+}
+
+/* Gentle float for the hero illustration */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float { animation: float-y 5s ease-in-out infinite; }
+.animate-float-slow { animation: float-y 7s ease-in-out infinite; }

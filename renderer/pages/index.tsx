@@ -47,7 +47,7 @@ const App = () => {
   }, []);
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-base-300 text-base-content">
+    <div className="flex h-screen w-screen flex-col overflow-hidden text-base-content">
       <TopBar version={version} />
       <div className="relative min-h-0 flex-1">
         <section className={activeTab === "home" ? "h-full" : "hidden"}>

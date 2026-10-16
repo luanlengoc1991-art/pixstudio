@@ -17,6 +17,8 @@ import { ELECTRON_COMMANDS } from "@common/electron-commands";
 import { SaveFilePayload, SaveFilesToFolderPayload } from "@common/types/types";
 import { sanitizePath } from "@common/sanitize-path";
 import { cn } from "@/lib/utils";
+import { TOOL_ACCENT } from "@/lib/tool-style";
+import Icon3D from "@/components/ui/icon-3d";
 import { getTool, ToolId } from "@/lib/tools";
 import { activeTabAtom, pendingToolImageAtom } from "@/atoms/workspace-atom";
 import { useToast } from "@/components/ui/use-toast";
@@ -88,8 +90,8 @@ export function ToolLayout({
   const Icon = tool.icon;
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-base-300 text-base-content">
-      <header className="flex shrink-0 items-center gap-3 border-b border-base-content/10 bg-base-100/70 px-5 py-3">
+    <div className="flex h-full w-full flex-col overflow-hidden text-base-content">
+      <header className="flex shrink-0 items-center gap-3 border-b border-base-content/10 bg-base-100/40 px-5 py-3 backdrop-blur-md">
         <button
           className="btn btn-ghost btn-sm btn-square"
           onClick={() => setActiveTab("home")}
@@ -98,9 +100,7 @@ export function ToolLayout({
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm", tool.tint)}>
-          <Icon className="h-6 w-6" strokeWidth={2.2} />
-        </span>
+        <Icon3D icon={Icon} colors={TOOL_ACCENT[toolId]} size="md" tilt={false} />
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-base font-extrabold tracking-tight">{tool.title}</h2>
           <p className="truncate text-xs font-light text-base-content/70">{tool.description}</p>
@@ -108,9 +108,9 @@ export function ToolLayout({
         {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
       </header>
       <div className="flex min-h-0 flex-1">
-        <aside className="flex w-[370px] shrink-0 flex-col overflow-hidden border-r border-base-content/10 bg-base-200">
+        <aside className="flex w-[370px] shrink-0 flex-col overflow-hidden border-r border-base-content/10 bg-base-200/60 backdrop-blur-md">
           <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">{aside}</div>
-          {footer && <div className="border-t border-base-content/10 bg-base-200 p-4">{footer}</div>}
+          {footer && <div className="border-t border-base-content/10 p-4">{footer}</div>}
         </aside>
         <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">{children}</main>
       </div>
