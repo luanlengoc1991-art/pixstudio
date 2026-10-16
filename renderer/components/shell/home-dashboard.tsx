@@ -132,32 +132,35 @@ function ToolRow({ tool, index, onOpen }: { tool: ToolInfo; index: number; onOpe
   return (
     <button
       onClick={onOpen}
-      className="panel-cut-sm group relative flex w-full items-stretch overflow-hidden bg-gradient-to-r from-[#1b2346]/95 via-[#151c3a]/95 to-[#11173a]/95 text-left shadow-[0_14px_30px_-18px_rgba(0,0,0,0.8)] transition-all duration-200 hover:from-[#222c58] hover:via-[#1a2247] hover:to-[#141b44]"
+      className="panel-cut-sm group relative flex w-full items-stretch overflow-hidden bg-gradient-to-r from-[#26315f] via-[#1d2650] to-[#161d44] text-left shadow-[0_14px_30px_-18px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-inset ring-white/10 transition-all duration-200 hover:from-[#2e3b72] hover:via-[#232e5e] hover:to-[#1b2350] hover:ring-white/25"
     >
       {/* Overlay number behind the row */}
-      <span className="font-display pointer-events-none absolute -bottom-6 right-24 select-none text-[110px] font-bold leading-none text-white/[0.05] mix-blend-overlay">
+      <span className="font-display pointer-events-none absolute -bottom-6 right-28 select-none text-[120px] font-bold leading-none text-white/[0.05] mix-blend-overlay">
         {pad(index + 1)}
       </span>
-      <span className="absolute inset-y-3 left-0 w-[3px]" style={{ background: main, boxShadow: `0 0 12px ${main}` }} />
-      <div className="flex w-16 shrink-0 flex-col items-center justify-center border-r border-white/10 py-3">
-        <span className="font-display text-[28px] font-bold leading-none text-white">{pad(index + 1)}</span>
-        <span className="mt-1 font-display text-[9px] font-light uppercase tracking-[0.2em] text-white/50">Công cụ</span>
+      <span className="absolute inset-y-3 left-0 w-1" style={{ background: main, boxShadow: `0 0 12px ${main}` }} />
+      <div className="flex w-[72px] shrink-0 flex-col items-center justify-center border-r border-white/15 py-3">
+        <span className="font-display text-[32px] font-bold leading-none text-white">{pad(index + 1)}</span>
+        <span className="mt-1 font-display text-[10px] font-medium uppercase tracking-[0.2em] text-white/60">Công cụ</span>
       </div>
-      <div className="relative flex min-w-0 flex-1 items-center gap-3 px-4 py-3">
+      <div className="relative flex min-w-0 flex-1 items-center gap-4 px-4 py-3.5">
         <img
           src={toolImage(tool.id)}
           alt=""
           draggable={false}
-          className="h-14 w-14 shrink-0 object-contain transition-transform duration-300 group-hover:scale-110"
+          className="h-16 w-16 shrink-0 object-contain transition-transform duration-300 group-hover:scale-110"
           style={{ filter: `drop-shadow(0 6px 10px ${main}66)` }}
         />
         <div className="min-w-0">
           {/* Room above the caps so Vietnamese marks (Ấ, Ổ...) are not clipped by truncate */}
-          <h3 className="font-display truncate pt-0.5 text-[21px] uppercase leading-[1.3] tracking-wide text-white">
+          <h3
+            className="font-display truncate pt-0.5 text-[24px] uppercase leading-[1.3] tracking-wide text-white"
+            style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}
+          >
             <span className="font-bold">{strong}</span>
-            {soft && <span className="font-extralight text-white/85"> {soft}</span>}
+            {soft && <span className="font-normal text-white/90"> {soft}</span>}
           </h3>
-          <p className="line-clamp-1 text-[12px] font-light leading-5 text-white/65">{tool.description}</p>
+          <p className="line-clamp-1 text-[13.5px] leading-5 text-white/85">{tool.description}</p>
           <div className="mt-1.5">
             <EngineTag tool={tool} />
           </div>
@@ -165,10 +168,10 @@ function ToolRow({ tool, index, onOpen }: { tool: ToolInfo; index: number; onOpe
       </div>
       <div className="relative flex shrink-0 items-center pr-4">
         <span
-          className="font-display flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-white transition-all group-hover:gap-2.5"
-          style={{ background: `linear-gradient(135deg, ${light}, ${main})`, boxShadow: `0 6px 16px -8px ${main}` }}
+          className="font-display flex items-center gap-1.5 px-4 py-2 text-sm font-bold uppercase tracking-wider text-white transition-all group-hover:gap-2.5"
+          style={{ background: `linear-gradient(135deg, ${light}, ${main})`, boxShadow: `0 6px 16px -8px ${main}`, textShadow: "0 1px 2px rgba(0,0,0,0.35)" }}
         >
-          Mở <ArrowRight className="h-3.5 w-3.5" />
+          Mở <ArrowRight className="h-4 w-4" />
         </span>
       </div>
     </button>
@@ -246,22 +249,23 @@ export default function HomeDashboard() {
             </span>
             <div className="relative flex items-start justify-between gap-6">
               <div>
-                <div className="flex items-center gap-3">
-                  <span className="font-display text-2xl uppercase tracking-tight text-white">
-                    <span className="font-bold">Luan_MKT</span>
-                    <span className="font-extralight">_Studio</span>
-                  </span>
-                  <span className="h-7 w-px bg-white/30" />
-                  <div className="font-display text-[10px] font-semibold uppercase leading-4 tracking-[0.25em] text-white/80">
-                    <p>Bộ công cụ AI xử lý ảnh</p>
-                    <p className="font-light text-white/55">Sáng tạo không giới hạn</p>
+                {/* Row 1: title with the brand block beside it */}
+                <div className="flex items-center gap-5">
+                  <h1 className="font-display text-[68px] uppercase leading-[1.1] tracking-tight text-white">
+                    <span className="font-light">Bộ công cụ </span>
+                    <span className="font-bold text-cyan-300 drop-shadow-[0_0_24px_rgba(103,232,249,0.45)]">AI</span>
+                  </h1>
+                  <span className="h-14 w-px bg-white/30" />
+                  <div className="font-display uppercase">
+                    <p className="text-2xl tracking-tight text-white">
+                      <span className="font-bold">Luan_MKT</span>
+                      <span className="font-light">_Studio</span>
+                    </p>
+                    <p className="mt-0.5 text-[11px] font-medium tracking-[0.22em] text-white/75">Bộ công cụ AI · Sáng tạo không giới hạn</p>
                   </div>
                 </div>
-                <h1 className="font-display mt-2 text-[60px] uppercase leading-[1.05] tracking-tight text-white">
-                  <span className="font-extralight">Bộ công cụ </span>
-                  <span className="font-bold text-cyan-300 drop-shadow-[0_0_24px_rgba(103,232,249,0.45)]">AI</span>
-                </h1>
-                <p className="font-display mt-1.5 text-[13px] uppercase tracking-[0.18em] text-white/85">
+                {/* Row 2: figures */}
+                <p className="font-display mt-1 text-[15px] uppercase tracking-[0.16em] text-white/90">
                   <b className="font-bold">{TOOLS.length}</b> <span className="font-light">công cụ</span>
                   <span className="mx-2 text-sky-400">/</span>
                   <b className="font-bold">{local.length}</b> <span className="font-light">chạy trên máy</span>
