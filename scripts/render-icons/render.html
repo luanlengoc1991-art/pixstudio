@@ -117,17 +117,19 @@ const h = bb.max.y - bb.min.y;
 iconGeo.translate(-(bb.min.x + w / 2), -(bb.min.y + h / 2), 0);
 const icon = new THREE.Mesh(
   iconGeo,
-  // Light tint of the tile colour with a soft glow: stands out without a heavy white slab
+  // Overlay look: translucent white over the tile so its colour shows through, with a soft glow
   new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color("#ffffff").lerp(light, 0.55),
-    emissive: light,
-    emissiveIntensity: 0.6,
+    color: 0xffffff,
+    emissive: new THREE.Color("#ffffff").lerp(light, 0.4),
+    emissiveIntensity: 0.75,
     metalness: 0.0,
-    roughness: 0.45,
+    roughness: 0.35,
+    transparent: true,
+    opacity: 0.82,
     side: THREE.DoubleSide,
   }),
 );
-const s = 1.18 / Math.max(w, h);
+const s = 0.98 / Math.max(w, h);
 icon.scale.set(s, -s, s); // SVG y points down
 icon.position.z = 0.345;
 tile.add(icon);
