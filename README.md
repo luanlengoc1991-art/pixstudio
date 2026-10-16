@@ -1,4 +1,4 @@
-# PixStudio
+# Luan_MKT_Studio
 
 Bộ công cụ xử lý ảnh bằng AI cho Windows, chạy ngay trên máy tính.
 Dựa trên [Upscayl](https://github.com/upscayl/upscayl) (giấy phép AGPL-3.0). Hướng dẫn gốc của Upscayl: [docs/UPSCAYL-README.md](docs/UPSCAYL-README.md).
@@ -17,7 +17,7 @@ Dựa trên [Upscayl](https://github.com/upscayl/upscayl) (giấy phép AGPL-3.0
 
 ## Tải bản cài đặt
 
-- **Bản chính thức:** vào mục **Releases** ở cột bên phải trang GitHub, tải file `PixStudio-x.y.z-win.exe`.
+- **Bản chính thức:** vào mục **Releases** ở cột bên phải trang GitHub, tải file `Luan_MKT_Studio-x.y.z-win.exe`.
 - **Bản build mới nhất:** vào tab **Actions**, mở lần chạy "Build Windows" gần nhất, tải file trong mục **Artifacts**.
 
 ## Sửa code trên một máy mới

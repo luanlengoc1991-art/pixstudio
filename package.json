@@ -2,7 +2,7 @@
   "name": "pixstudio",
   "private": true,
   "version": "1.1.0",
-  "productName": "PixStudio",
+  "productName": "Luan_MKT_Studio",
   "author": {
     "name": "Nayam Amarshe",
     "email": "nayam.emikx@aleeas.com",
@@ -22,7 +22,7 @@
   ],
   "email": "nayam.emikx@aleeas.com",
   "license": "AGPL-3.0",
-  "description": "PixStudio - Bộ công cụ xử lý ảnh AI: kích nét, xóa nền, vector, bế file, ảnh thẻ (dựa trên Upscayl)",
+  "description": "Luan_MKT_Studio - Bộ công cụ xử lý ảnh AI: kích nét, xóa nền, vector, bế file, ảnh thẻ (dựa trên Upscayl)",
   "keywords": [
     "AI",
     "Upscaler",
@@ -70,7 +70,7 @@
     "validate-schema": "node scripts/validate-schema.js"
   },
   "build": {
-    "productName": "PixStudio",
+    "productName": "Luan_MKT_Studio",
     "appId": "com.pixstudio.app",
     "artifactName": "${productName}-${version}-${os}.${ext}",
     "asar": true,
@@ -180,7 +180,7 @@
       "icon": "resources/icons/"
     },
     "win": {
-      "publisherName": "PixStudio",
+      "publisherName": "Luan_MKT_Studio",
       "target": [
         "nsis"
       ],
@@ -191,7 +191,7 @@
       "oneClick": false,
       "allowElevation": true,
       "perMachine": true,
-      "shortcutName": "PixStudio"
+      "shortcutName": "Luan_MKT_Studio"
     },
     "files": [
       "export",

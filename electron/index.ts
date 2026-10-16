@@ -23,12 +23,21 @@ import pasteImage from "./commands/paste-image";
 import removeBackground from "./commands/remove-background";
 import { exportSvgToPdf, vectorizeImage } from "./commands/vectorize";
 import dieCut from "./commands/die-cut";
-import { attachFiles, nativePasteImage, resetChatGptLogin, setupChatGpt } from "./commands/chatgpt-bridge";
+import {
+  attachFiles,
+  hasChatGptSession,
+  nativePasteImage,
+  resetChatGptLogin,
+  setupChatGpt,
+} from "./commands/chatgpt-bridge";
 import { saveFileAs, saveFilesToFolder, saveTempImage } from "./utils/tool-files";
 import path from "path";
 import { getSystemStats } from "./utils/system-stats";
 
 // INITIALIZATION
+// The app was renamed from PixStudio: keep using its data folder so settings
+// and the saved ChatGPT login carry over
+app.setPath("userData", path.join(app.getPath("appData"), "PixStudio"));
 log.initialize({ preload: true });
 
 app.on("ready", async () => {
@@ -130,6 +139,8 @@ ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_NATIVE_PASTE, nativePasteImage);
 ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_ATTACH_FILES, attachFiles);
 
 ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_LOGOUT, resetChatGptLogin);
+
+ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_SESSION_STATUS, hasChatGptSession);
 
 ipcMain.handle(ELECTRON_COMMANDS.GET_SYSTEM_STATS, getSystemStats);
 

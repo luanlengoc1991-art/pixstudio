@@ -50,9 +50,9 @@ const isChatGptContents = (contents: Electron.WebContents) =>
 export const setupChatGpt = () => {
   const ses = session.fromPartition(CHATGPT_PARTITION);
   // Sites like Google refuse to sign in from a browser that says "Electron"
-  ses.setUserAgent(ses.getUserAgent().replace(/ (Electron|pixstudio|PixStudio)\/\S+/g, ""));
+  ses.setUserAgent(ses.getUserAgent().replace(/ (Electron|pixstudio|PixStudio|Luan_MKT_Studio)\/\S+/g, ""));
 
-  // Images saved by hand in the ChatGPT tab come back to PixStudio
+  // Images saved by hand in the ChatGPT tab come back to the app
   ses.on("will-download", (_event, item) => {
     let extension = extname(item.getFilename()).toLowerCase();
     if (!IMAGE_EXTENSIONS.includes(extension)) {
@@ -89,7 +89,7 @@ export const setupChatGpt = () => {
       const items: Electron.MenuItemConstructorOptions[] = [];
       if (params.mediaType === "image" && params.srcURL) {
         items.push(
-          { label: "Đưa ảnh này về PixStudio", click: () => contents.downloadURL(params.srcURL) },
+          { label: "Đưa ảnh này về Luan_MKT_Studio", click: () => contents.downloadURL(params.srcURL) },
           { type: "separator" },
         );
       }
@@ -194,6 +194,15 @@ export const nativePasteImage = async (
   } finally {
     clipboard.writeText(previousText);
   }
+};
+
+/** True when a ChatGPT login cookie is saved, without loading the page. */
+export const hasChatGptSession = async () => {
+  const cookies = await session.fromPartition(CHATGPT_PARTITION).cookies.get({ domain: "chatgpt.com" });
+  const now = Date.now() / 1000;
+  return cookies.some(
+    (c) => c.name.startsWith("__Secure-next-auth.session-token") && (!c.expirationDate || c.expirationDate > now),
+  );
 };
 
 /** Clears the saved ChatGPT login (cookies, storage and cache). */

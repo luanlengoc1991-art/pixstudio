@@ -14,7 +14,7 @@ const createMainWindow = () => {
   console.log("🚃 App Path: ", app.getAppPath());
 
   mainWindow = new BrowserWindow({
-    title: "PixStudio",
+    title: "Luan_MKT_Studio",
     icon: app.isPackaged
       ? join(process.resourcesPath, "512x512.png")
       : join(app.getAppPath(), "resources", "icons", "512x512.png"),

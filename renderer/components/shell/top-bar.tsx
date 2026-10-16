@@ -129,9 +129,18 @@ function SystemStats() {
 function ChatGptStatus() {
   const [activeTab, setActiveTab] = useAtom(activeTabAtom);
   const setActivated = useSetAtom(chatGptActivatedAtom);
-  const connection = useAtomValue(chatGptConnectionAtom);
+  const [connection, setConnection] = useAtom(chatGptConnectionAtom);
   const busy = useAtomValue(chatGptQueueAtom).length > 0;
   const connected = connection === "connected";
+
+  // Before the ChatGPT tab is opened, a saved login cookie is enough to show "đã kết nối"
+  useEffect(() => {
+    if (connection !== "idle") return;
+    window.electron
+      .invoke(ELECTRON_COMMANDS.CHATGPT_SESSION_STATUS, undefined)
+      .then((loggedIn: boolean) => loggedIn && setConnection((current) => (current === "idle" ? "connected" : current)))
+      .catch(() => {});
+  }, [connection]);
 
   return (
     <button
@@ -175,7 +184,7 @@ export default function TopBar({ version }: { version: string }) {
             <UpscaylSVGLogo className="h-6 w-6" />
           </span>
           <div className="leading-none">
-            <p className="text-base font-black tracking-tight">PixStudio</p>
+            <p className="text-base font-black tracking-tight">Luan_MKT_Studio</p>
             <p className="mt-0.5 text-[10px] font-light text-base-content/60">Bộ công cụ AI xử lý ảnh · {version}</p>
           </div>
         </div>

@@ -221,7 +221,7 @@ export default function ChatGptTool({ toolId }: { toolId: ToolId }) {
             <EmptyState
               icon={tool.icon}
               title="Kết quả sẽ hiển thị tại đây"
-              text={`Chọn ảnh và tùy chọn bên trái rồi bấm "${config.action}". PixStudio tự gửi sang ChatGPT (tài khoản của bạn), chờ tạo xong và lấy ảnh về đây.`}
+              text={`Chọn ảnh và tùy chọn bên trái rồi bấm "${config.action}". App tự gửi sang ChatGPT (tài khoản của bạn), chờ tạo xong và lấy ảnh về đây.`}
             />
           </div>
         ) : (
