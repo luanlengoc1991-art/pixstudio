@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import { ArrowRight, Cpu, Sparkles } from "lucide-react";
-import { ELECTRON_COMMANDS } from "@common/electron-commands";
 import { cn } from "@/lib/utils";
 import { ToolInfo, TOOLS } from "@/lib/tools";
 import { TOOL_ACCENT, toolImage } from "@/lib/tool-style";
 import { openToolAtom } from "@/atoms/workspace-atom";
-import { chatGptConnectionAtom } from "@/atoms/chatgpt-atom";
 import { useToast } from "@/components/ui/use-toast";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -20,28 +18,6 @@ const useNow = () => {
     return () => window.clearInterval(timer);
   }, []);
   return now;
-};
-
-type Stats = { ramUsedGb: number; ramTotalGb: number; gpuUsage: number | null; vramUsedGb: number | null; vramTotalGb: number | null };
-
-/** Machine load, refreshed every 3 seconds. */
-const useStats = () => {
-  const [stats, setStats] = useState<Stats | null>(null);
-  useEffect(() => {
-    let alive = true;
-    const read = () =>
-      window.electron
-        .invoke(ELECTRON_COMMANDS.GET_SYSTEM_STATS, undefined)
-        .then((s: Stats) => alive && setStats(s))
-        .catch(() => {});
-    read();
-    const timer = window.setInterval(read, 3000);
-    return () => {
-      alive = false;
-      window.clearInterval(timer);
-    };
-  }, []);
-  return stats;
 };
 
 /** Splits a title so the first half is heavy and the rest light, for contrast. */
@@ -178,36 +154,8 @@ function ToolRow({ tool, index, onOpen }: { tool: ToolInfo; index: number; onOpe
   );
 }
 
-function SidePanel({ title, live, children }: { title: string; live?: boolean; children: React.ReactNode }) {
-  return (
-    <section className="panel-cut-sm bg-gradient-to-b from-[#1b2346]/95 to-[#11173a]/95 shadow-[0_14px_30px_-18px_rgba(0,0,0,0.8)]">
-      <h3 className="font-display flex items-center gap-2 border-b border-white/10 px-4 py-2.5 text-base font-bold uppercase tracking-wide text-white">
-        <span className="h-4 w-[3px] bg-sky-400 shadow-[0_0_10px_#38bdf8]" />
-        {title}
-        {live && (
-          <span className="ml-auto flex items-center gap-1.5 text-[10px] font-semibold tracking-widest text-rose-300">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> Trực tiếp
-          </span>
-        )}
-      </h3>
-      <div className="divide-y divide-white/10 px-2.5 pb-1.5">{children}</div>
-    </section>
-  );
-}
-
-function StatusRow({ label, value, ok }: { label: string; value: string; ok?: boolean }) {
-  return (
-    <div className="flex items-center justify-between px-2 py-2">
-      <span className="font-display text-[13px] font-light uppercase tracking-wide text-white/75">{label}</span>
-      <span className={cn("font-display text-sm font-bold tabular-nums", ok === false ? "text-amber-300" : "text-cyan-300")}>{value}</span>
-    </div>
-  );
-}
-
 export default function HomeDashboard() {
   const openTool = useSetAtom(openToolAtom);
-  const connection = useAtomValue(chatGptConnectionAtom);
-  const stats = useStats();
   const { toast } = useToast();
   const local = TOOLS.filter((t) => t.status === "ready" && t.engine === "local");
   const viaChatGpt = TOOLS.filter((t) => t.status === "ready" && t.engine === "chatgpt");
@@ -225,7 +173,7 @@ export default function HomeDashboard() {
         </h2>
         <span className="font-display text-xs font-semibold uppercase tracking-widest text-sky-300">{tools.length} công cụ</span>
       </div>
-      <div className="grid grid-cols-1 gap-2.5 2xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
         {tools.map((tool, i) => (
           <ToolRow key={tool.id} tool={tool} index={offset + i} onOpen={() => open(tool)} />
         ))}
@@ -237,7 +185,7 @@ export default function HomeDashboard() {
     <div className="relative h-full overflow-hidden bg-[#050a24]">
       <Backdrop />
       <div className="relative h-full overflow-y-auto pb-12">
-        <div className="mx-auto max-w-[1600px] px-8 pt-6">
+        <div className="mx-auto max-w-[2100px] px-8 pt-6">
           {/* Masthead with overlay text behind the title */}
           <div className="relative">
             <span
@@ -279,47 +227,9 @@ export default function HomeDashboard() {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="flex flex-col gap-6">
-              {section("AI", "qua ChatGPT", viaChatGpt, 0)}
-              {section("Chạy", "trên máy", local, viaChatGpt.length)}
-            </div>
-
-            <aside className="flex flex-col gap-4">
-              <SidePanel title="Trạng thái" live>
-                <StatusRow label="Kết nối ChatGPT" value={connection === "connected" ? "Đã kết nối" : "Chưa kết nối"} ok={connection === "connected"} />
-                <StatusRow label="GPU" value={stats?.gpuUsage != null ? `${stats.gpuUsage}%` : "—"} />
-                <StatusRow
-                  label="VRAM"
-                  value={stats?.vramUsedGb != null ? `${stats.vramUsedGb}${stats.vramTotalGb ? ` / ${stats.vramTotalGb}` : ""} GB` : "—"}
-                />
-                <StatusRow label="RAM" value={stats ? `${stats.ramUsedGb} / ${stats.ramTotalGb} GB` : "—"} />
-                <StatusRow label="Công cụ sẵn sàng" value={`${TOOLS.filter((t) => t.status === "ready").length} / ${TOOLS.length}`} />
-              </SidePanel>
-
-              <SidePanel title="Danh sách công cụ">
-                {[...viaChatGpt, ...local].map((tool) => (
-                  <button
-                    key={tool.id}
-                    onClick={() => open(tool)}
-                    className="flex w-full items-center gap-2.5 px-1.5 py-1.5 text-left transition-colors hover:bg-white/5"
-                  >
-                    <img src={toolImage(tool.id)} alt="" className="h-7 w-7 object-contain" draggable={false} />
-                    <span className="font-display min-w-0 flex-1 truncate pt-0.5 text-[13px] font-semibold uppercase leading-[1.4] text-white">
-                      {tool.title}
-                    </span>
-                    <span
-                      className={cn(
-                        "font-display text-[10px] font-light uppercase tracking-wider",
-                        tool.engine === "chatgpt" ? "text-emerald-300" : "text-sky-300",
-                      )}
-                    >
-                      {tool.engine === "chatgpt" ? "GPT" : "Máy"}
-                    </span>
-                  </button>
-                ))}
-              </SidePanel>
-            </aside>
+          <div className="mt-6 flex flex-col gap-6">
+            {section("AI", "qua ChatGPT", viaChatGpt, 0)}
+            {section("Chạy", "trên máy", local, viaChatGpt.length)}
           </div>
         </div>
       </div>
