@@ -24,13 +24,6 @@ const useNow = () => {
   return now;
 };
 
-/** Splits a title so the first half is heavy and the rest light, for contrast. */
-const splitTitle = (title: string) => {
-  const words = title.split(" ");
-  const strong = Math.ceil(words.length / 2);
-  return [words.slice(0, strong).join(" "), words.slice(strong).join(" ")];
-};
-
 /** Deep blue stage: gradient, glowing horizon, perspective floor grid, light streaks and a giant faded mark. */
 function Backdrop() {
   return (
@@ -69,21 +62,21 @@ function Backdrop() {
   );
 }
 
-/** Live clock: big HH:MM with light seconds, weekday and date underneath. */
+/** Live clock: HH:MM bold, seconds extra-light, weekday and date underneath. */
 function LiveClock() {
   const now = useNow();
   if (!now) return <div className="h-12" />;
   return (
     <div className="text-right">
       <div className="font-display leading-none text-white">
-        <span className="text-[32px] font-bold tabular-nums">
+        <span className="text-[30px] font-bold tabular-nums">
           {pad(now.getHours())}:{pad(now.getMinutes())}
         </span>
         <span className="ml-0.5 text-lg font-extralight tabular-nums text-cyan-300">:{pad(now.getSeconds())}</span>
       </div>
       <div className="mt-1 flex items-center justify-end gap-2">
-        <span className="font-display text-xs font-light uppercase tracking-[0.25em] text-white/70">{WEEKDAYS[now.getDay()]}</span>
-        <span className="font-display bg-blue-600 px-2.5 py-0.5 text-xs font-bold uppercase tracking-widest text-white shadow-[0_0_16px_rgba(37,99,235,0.6)]">
+        <span className="font-display text-xs font-extralight text-white/80">{WEEKDAYS[now.getDay()]}</span>
+        <span className="font-display bg-blue-600 px-2.5 py-0.5 text-xs font-bold text-white shadow-[0_0_16px_rgba(37,99,235,0.6)]">
           Hôm nay · {pad(now.getDate())}.{pad(now.getMonth() + 1)}.{now.getFullYear()}
         </span>
       </div>
@@ -96,35 +89,34 @@ function EngineTag({ tool }: { tool: ToolInfo }) {
   return (
     <span
       className={cn(
-        "font-display inline-flex items-center gap-1 px-2 py-px text-[10px] font-semibold uppercase tracking-wider",
+        "font-display inline-flex items-center gap-1 px-2 py-px text-[11px] font-semibold",
         chatgpt ? "bg-emerald-500/20 text-emerald-300" : "bg-blue-600 text-white",
       )}
     >
-      {chatgpt ? <Sparkles className="h-2.5 w-2.5" /> : <Cpu className="h-2.5 w-2.5" />}
+      {chatgpt ? <Sparkles className="h-3 w-3" /> : <Cpu className="h-3 w-3" />}
       {chatgpt ? "ChatGPT" : "Trên máy"}
     </span>
   );
 }
 
-/** One tool as a broadcast "match" row: number box, logo, name with weight contrast, tag and an open button. */
+/** One tool as a broadcast-style row: number box, logo, bold name, extra-light description, tag and open button. */
 function ToolRow({ tool, index, onOpen }: { tool: ToolInfo; index: number; onOpen: () => void }) {
   const [light, main] = TOOL_ACCENT[tool.id];
-  const [strong, soft] = splitTitle(tool.title);
   return (
     <button
       onClick={onOpen}
       className="panel-cut-sm group relative flex w-full items-stretch overflow-hidden bg-gradient-to-r from-[#26315f] via-[#1d2650] to-[#161d44] text-left shadow-[0_14px_30px_-18px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-inset ring-white/10 transition-all duration-200 hover:from-[#2e3b72] hover:via-[#232e5e] hover:to-[#1b2350] hover:ring-white/25"
     >
       {/* Overlay number behind the row */}
-      <span className="font-display pointer-events-none absolute -bottom-6 right-28 select-none text-[120px] font-bold leading-none text-white/[0.05] mix-blend-overlay">
+      <span className="font-display pointer-events-none absolute -bottom-6 right-28 select-none text-[110px] font-bold leading-none text-white/[0.05] mix-blend-overlay">
         {pad(index + 1)}
       </span>
       <span className="absolute inset-y-3 left-0 w-1" style={{ background: main, boxShadow: `0 0 12px ${main}` }} />
-      <div className="flex w-[72px] shrink-0 flex-col items-center justify-center border-r border-white/15 py-3">
-        <span className="font-display text-[32px] font-bold leading-none text-white">{pad(index + 1)}</span>
-        <span className="mt-1 font-display text-[10px] font-medium uppercase tracking-[0.2em] text-white/60">Công cụ</span>
+      <div className="flex w-[76px] shrink-0 flex-col items-center justify-center border-r border-white/15 py-4">
+        <span className="font-display text-[30px] font-bold leading-none text-white">{pad(index + 1)}</span>
+        <span className="mt-1.5 font-display text-[11px] font-extralight text-white/75">Công cụ</span>
       </div>
-      <div className="relative flex min-w-0 flex-1 items-center gap-4 px-4 py-3.5">
+      <div className="relative flex min-w-0 flex-1 items-center gap-4 px-5 py-4">
         <img
           src={toolImage(tool.id)}
           alt=""
@@ -133,23 +125,18 @@ function ToolRow({ tool, index, onOpen }: { tool: ToolInfo; index: number; onOpe
           style={{ filter: `drop-shadow(0 6px 10px ${main}66)` }}
         />
         <div className="min-w-0">
-          {/* Room above the caps so Vietnamese marks (Ấ, Ổ...) are not clipped by truncate */}
-          <h3
-            className="font-display truncate pt-0.5 text-[24px] uppercase leading-[1.3] tracking-wide text-white"
-            style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}
-          >
-            <span className="font-bold">{strong}</span>
-            {soft && <span className="font-normal text-white/90"> {soft}</span>}
+          <h3 className="font-display truncate text-[21px] font-bold leading-snug text-white" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}>
+            {tool.title}
           </h3>
-          <p className="line-clamp-1 text-[13.5px] leading-5 text-white/85">{tool.description}</p>
+          <p className="font-display line-clamp-1 text-[13.5px] font-extralight leading-6 text-white/90">{tool.description}</p>
           <div className="mt-1.5">
             <EngineTag tool={tool} />
           </div>
         </div>
       </div>
-      <div className="relative flex shrink-0 items-center pr-4">
+      <div className="relative flex shrink-0 items-center pr-5">
         <span
-          className="font-display flex items-center gap-1.5 px-4 py-2 text-sm font-bold uppercase tracking-wider text-white transition-all group-hover:gap-2.5"
+          className="font-display flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white transition-all group-hover:gap-2.5"
           style={{ background: `linear-gradient(135deg, ${light}, ${main})`, boxShadow: `0 6px 16px -8px ${main}`, textShadow: "0 1px 2px rgba(0,0,0,0.35)" }}
         >
           Mở <ArrowRight className="h-4 w-4" />
@@ -169,16 +156,17 @@ export default function HomeDashboard() {
       ? toast({ title: `${tool.title} · sắp ra mắt`, description: "Công cụ này sẽ có trong bản cập nhật tiếp theo." })
       : openTool(tool.id);
 
-  const section = (strong: string, soft: string, tools: ToolInfo[], offset: number) => (
+  const section = (title: string, tools: ToolInfo[], offset: number, aside?: React.ReactNode) => (
     <div>
-      <div className="mb-2.5 flex items-center gap-2.5">
-        <span className="h-5 w-[3px] bg-sky-400 shadow-[0_0_10px_#38bdf8]" />
-        <h2 className="font-display text-lg uppercase tracking-wide text-white">
-          <span className="font-bold">{strong}</span> <span className="font-extralight">{soft}</span>
-        </h2>
-        <span className="font-display text-xs font-semibold uppercase tracking-widest text-sky-300">{tools.length} công cụ</span>
+      <div className="mb-3 flex items-end justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          <span className="h-5 w-1 bg-sky-400 shadow-[0_0_10px_#38bdf8]" />
+          <h2 className="font-display text-lg font-bold text-white">{title}</h2>
+          <span className="font-display text-sm font-extralight text-sky-200">{tools.length} công cụ</span>
+        </div>
+        {aside}
       </div>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         {tools.map((tool, i) => (
           <ToolRow key={tool.id} tool={tool} index={offset + i} onOpen={() => open(tool)} />
         ))}
@@ -189,53 +177,11 @@ export default function HomeDashboard() {
   return (
     <div className="relative h-full overflow-hidden bg-[#050a24]">
       <Backdrop />
-      <div className="relative h-full overflow-y-auto pb-12">
-        {/* Compact masthead in the top-left corner, clock in the top-right corner */}
-        <div className="relative px-6 pt-4">
-          <span
-            className="font-display pointer-events-none absolute -top-3 left-4 select-none text-[90px] font-bold uppercase leading-none text-white/[0.07] mix-blend-overlay"
-            style={{ WebkitTextStroke: "1px rgba(255,255,255,0.3)" }}
-            aria-hidden
-          >
-            Studio
-          </span>
-          <div className="relative flex items-start justify-between gap-6">
-            <div>
-              {/* Row 1: title with the brand block beside it */}
-              <div className="flex items-center gap-3">
-                <h1 className="font-display text-[34px] uppercase leading-[1.15] tracking-tight text-white">
-                  <span className="font-light">Bộ công cụ </span>
-                  <span className="font-bold text-cyan-300 drop-shadow-[0_0_18px_rgba(103,232,249,0.45)]">AI</span>
-                </h1>
-                <span className="h-8 w-px bg-white/30" />
-                <div className="font-display uppercase">
-                  <p className="text-base leading-tight tracking-tight text-white">
-                    <span className="font-bold">Luan_MKT</span>
-                    <span className="font-light">_Studio</span>
-                  </p>
-                  <p className="text-[9px] font-medium tracking-[0.22em] text-white/70">Bộ công cụ AI · Sáng tạo không giới hạn</p>
-                </div>
-              </div>
-              {/* Row 2: figures */}
-              <p className="font-display mt-0.5 text-[11px] uppercase tracking-[0.16em] text-white/85">
-                  <b className="font-bold">{TOOLS.length}</b> <span className="font-light">công cụ</span>
-                  <span className="mx-2 text-sky-400">/</span>
-                  <b className="font-bold">{local.length}</b> <span className="font-light">chạy trên máy</span>
-                  <span className="mx-2 text-sky-400">/</span>
-                  <b className="font-bold">{viaChatGpt.length}</b> <span className="font-light">qua ChatGPT</span>
-                  <span className="mx-2 text-sky-400">/</span>
-                  <span className="font-light">mở nhiều tab cùng lúc</span>
-                </p>
-              </div>
-              <LiveClock />
-            </div>
-          </div>
-
-        <div className="mx-auto max-w-[2100px] px-8">
-          <div className="mt-5 flex flex-col gap-6">
-            {section("AI", "qua ChatGPT", viaChatGpt, 0)}
-            {section("Chạy", "trên máy", local, viaChatGpt.length)}
-          </div>
+      <div className="relative h-full overflow-y-auto pb-14">
+        {/* Rows fill the width; the clock sits on the first section line, aligned with the rows' right edge */}
+        <div className="flex flex-col gap-7 px-6 pt-5">
+          {section("AI qua ChatGPT", viaChatGpt, 0, <LiveClock />)}
+          {section("Chạy trên máy", local, viaChatGpt.length)}
         </div>
       </div>
 
@@ -243,7 +189,7 @@ export default function HomeDashboard() {
       <div className="absolute inset-x-0 bottom-0 overflow-hidden border-t border-blue-400/40 bg-blue-700/90 py-1.5">
         <div className="animate-ticker flex w-max gap-14 whitespace-nowrap">
           {Array.from({ length: 16 }).map((_, i) => (
-            <span key={i} className={cn("font-display text-xs uppercase tracking-[0.2em]", i % 2 ? "font-light text-cyan-200" : "font-bold text-white")}>
+            <span key={i} className={cn("font-display text-xs", i % 2 ? "font-extralight text-cyan-200" : "font-bold text-white")}>
               Luan_MKT_Studio · Sáng tạo không giới hạn
             </span>
           ))}

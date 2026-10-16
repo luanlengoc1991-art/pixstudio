@@ -1,12 +1,11 @@
-/* Oswald (OFL, fonts/oswald/OFL.txt): condensed display face for broadcast-style headings */
+/* Be Vietnam Pro (OFL, fonts/be-vietnam-pro/OFL.txt): designed for Vietnamese diacritics */
 @font-face {
-  font-family: "Oswald";
-  src: url("../fonts/oswald/Oswald-Variable.ttf") format("truetype");
-  font-weight: 200 700;
+  font-family: "Be Vietnam Pro";
+  src: url("../fonts/be-vietnam-pro/BeVietnamPro-ExtraLight.ttf");
+  font-weight: 200;
   font-style: normal;
   font-display: swap;
 }
-/* Be Vietnam Pro (OFL, fonts/be-vietnam-pro/OFL.txt): designed for Vietnamese diacritics */
 @font-face {
   font-family: "Be Vietnam Pro";
   src: url("../fonts/be-vietnam-pro/BeVietnamPro-Light.ttf");
@@ -403,9 +402,9 @@
 .animate-float-slow { animation: float-y 7s ease-in-out infinite; }
 
 /* Broadcast-style home screen (esports schedule look) */
+/* One typeface everywhere: contrast comes from weight (bold titles, extra-light small text) */
 .font-display {
-  font-family: "Oswald", "Be Vietnam Pro", sans-serif;
-  letter-spacing: 0.01em;
+  font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
 }
 /* Panel with two cut corners */
 .panel-cut {
