@@ -205,7 +205,18 @@ export default function LayerSeparationTool() {
   );
 
   return (
-    <ToolLayout toolId="layer-separation" aside={aside} footer={footer}>
+    <ToolLayout
+      toolId="layer-separation"
+      aside={aside}
+      footer={footer}
+      actions={
+        layers.length > 0 && (
+          <button className="btn btn-primary btn-sm" onClick={saveAll}>
+            <FolderDown className="h-4 w-4" /> Tải toàn bộ ({layers.length} ảnh)
+          </button>
+        )
+      }
+    >
       <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-5">
         {started && (
           <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-base-content/10 bg-base-100 p-4 shadow-sm">
@@ -240,11 +251,6 @@ export default function LayerSeparationTool() {
             {!running && !complete && layers.length > 0 && (
               <button className="btn btn-sm" onClick={continueSeparation}>
                 <Layers className="h-4 w-4" /> Tách tiếp các lớp ({layers.length}/{total})
-              </button>
-            )}
-            {layers.length > 0 && (
-              <button className="btn btn-primary btn-sm" onClick={saveAll}>
-                <FolderDown className="h-4 w-4" /> Tải tất cả ({layers.length} ảnh)
               </button>
             )}
           </div>

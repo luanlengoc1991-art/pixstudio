@@ -74,42 +74,46 @@ export function ToolLayout({
   aside,
   children,
   footer,
+  actions,
 }: {
   toolId: ToolId;
   aside: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  /** Buttons on the right of the tool header (e.g. "Tải toàn bộ") */
+  actions?: React.ReactNode;
 }) {
   const tool = getTool(toolId);
   const setActiveTab = useSetAtom(activeTabAtom);
   const Icon = tool.icon;
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-base-300 text-base-content">
-      <aside className="flex w-[370px] shrink-0 flex-col overflow-hidden border-r border-base-content/10 bg-base-200">
-        <div className="flex items-center gap-3 border-b border-base-content/10 px-4 py-3">
-          <button
-            className="btn btn-ghost btn-sm btn-square"
-            onClick={() => setActiveTab("home")}
-            data-tooltip-id="tooltip"
-            data-tooltip-content="Về Trang chủ"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <span className={cn("flex h-9 w-9 items-center justify-center rounded-xl", tool.tint)}>
-            <Icon className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <h2 className="truncate text-sm font-extrabold">{tool.title}</h2>
-            <p className="truncate text-xs text-base-content/60">{tool.description}</p>
-          </div>
+    <div className="flex h-full w-full flex-col overflow-hidden bg-base-300 text-base-content">
+      <header className="flex shrink-0 items-center gap-3 border-b border-base-content/10 bg-base-100/70 px-5 py-3">
+        <button
+          className="btn btn-ghost btn-sm btn-square"
+          onClick={() => setActiveTab("home")}
+          data-tooltip-id="tooltip"
+          data-tooltip-content="Về Trang chủ"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm", tool.tint)}>
+          <Icon className="h-6 w-6" strokeWidth={2.2} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-base font-extrabold tracking-tight">{tool.title}</h2>
+          <p className="truncate text-xs font-light text-base-content/70">{tool.description}</p>
         </div>
-        <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">{aside}</div>
-        {footer && (
-          <div className="border-t border-base-content/10 bg-base-200 p-4">{footer}</div>
-        )}
-      </aside>
-      <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">{children}</main>
+        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      </header>
+      <div className="flex min-h-0 flex-1">
+        <aside className="flex w-[370px] shrink-0 flex-col overflow-hidden border-r border-base-content/10 bg-base-200">
+          <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">{aside}</div>
+          {footer && <div className="border-t border-base-content/10 bg-base-200 p-4">{footer}</div>}
+        </aside>
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">{children}</main>
+      </div>
     </div>
   );
 }

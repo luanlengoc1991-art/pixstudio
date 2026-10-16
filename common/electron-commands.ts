@@ -42,6 +42,7 @@ const ELECTRON_COMMANDS = {
   CHATGPT_ATTACH_FILES: "Put files into the ChatGPT upload input",
   CHATGPT_DOWNLOADED: "Send an image downloaded in the ChatGPT tab to Renderer",
   CHATGPT_LOGOUT: "Clear the saved ChatGPT login",
+  GET_SYSTEM_STATS: "Read RAM, VRAM and GPU usage",
   SAVE_FILES_TO_FOLDER: "Save several result files into a chosen folder",
 } as const;
 

@@ -26,6 +26,7 @@ import dieCut from "./commands/die-cut";
 import { attachFiles, nativePasteImage, resetChatGptLogin, setupChatGpt } from "./commands/chatgpt-bridge";
 import { saveFileAs, saveFilesToFolder, saveTempImage } from "./utils/tool-files";
 import path from "path";
+import { getSystemStats } from "./utils/system-stats";
 
 // INITIALIZATION
 log.initialize({ preload: true });
@@ -129,6 +130,8 @@ ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_NATIVE_PASTE, nativePasteImage);
 ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_ATTACH_FILES, attachFiles);
 
 ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_LOGOUT, resetChatGptLogin);
+
+ipcMain.handle(ELECTRON_COMMANDS.GET_SYSTEM_STATS, getSystemStats);
 
 ipcMain.handle("get-gpu-info", async () => {
   try {
