@@ -151,8 +151,8 @@ export default function ChatGptPanel() {
     for (let i = 0; i < 60 && !readyRef.current; i++) await sleep(250);
     if (!readyRef.current) return fail("ChatGPT chưa sẵn sàng. Hãy thử lại sau vài giây.");
 
-    update({ status: "sending", message: "Đang mở ChatGPT..." });
-    if (job.newChat) await loadAndWait(CHATGPT_URL);
+    update({ status: "sending", message: job.collectOnly ? "Đang quét kết quả trong ChatGPT..." : "Đang mở ChatGPT..." });
+    if (job.newChat && !job.collectOnly) await loadAndWait(CHATGPT_URL);
     await exec(CAPTURE_SCRIPT);
 
     let loggedIn = false;
@@ -173,7 +173,8 @@ export default function ChatGptPanel() {
       files.push({ name: `pix-input-${index + 1}.${mimeExtension(dataUrl)}`, dataUrl });
     }
     const fileNames = job.imagePaths.map((p) => p.split(/[\\/]/).pop()!.toLowerCase());
-    await exec(RESET_CAPTURE_SCRIPT(job.newChat, [...fileNames, ...files.map((f) => f.name)]));
+    await exec(RESET_CAPTURE_SCRIPT(job.newChat || !!job.collectOnly, [...fileNames, ...files.map((f) => f.name)], !job.collectOnly));
+    if (job.collectOnly) return collect(job, files, isCurrent, update, fail);
 
     // Attach the images before typing, and only send once they show in the composer
     let attachedSynthetic = false;
@@ -216,20 +217,36 @@ export default function ChatGptPanel() {
     if (!result?.ok) return fail(FILL_ERRORS[result?.reason ?? ""] ?? "Không gửi được yêu cầu sang ChatGPT. Hãy thử lại.");
     await sleep(1500);
     await exec(REGISTER_UPLOADS_SCRIPT);
+    return collect(job, files, isCurrent, update, fail);
+  };
 
-    update({ status: "waiting", message: "ChatGPT đang tạo ảnh..." });
+  /**
+   * Waits for the results and brings every new image back. It never gives up
+   * early: ChatGPT can work for several minutes before images appear.
+   */
+  const collect = async (
+    job: ChatGptJob,
+    files: ReferenceFile[],
+    isCurrent: () => boolean,
+    update: (patch: Parameters<typeof updateState>[0]["patch"]) => void,
+    fail: (message: string) => void,
+  ) => {
+    update({ status: "waiting", message: job.collectOnly ? "Đang lấy ảnh từ ChatGPT..." : "ChatGPT đang tạo ảnh..." });
     const inputs = files.map((f) => f.dataUrl);
     const collected: string[] = [];
     const multi = job.expected > 1;
     const sentAt = Date.now();
     let lastImageAt = Date.now();
     let idlePolls = 0;
-    const limit = multi ? 15 * 60 * 1000 : 6 * 60 * 1000;
+    // Collect-only scans what is already there; real jobs may take many minutes
+    const limit = job.collectOnly ? 60 * 1000 : multi ? 25 * 60 * 1000 : 15 * 60 * 1000;
+    let emptyPolls = 0;
 
     for (let step = 0; Date.now() - sentAt < limit; step++) {
       if (!isCurrent()) return;
       const poll = await exec<{ candidates: Candidate[]; generating: boolean; missing?: boolean }>(POLL_SCRIPT(multi, step));
       if (poll?.missing) await exec(CAPTURE_SCRIPT);
+      emptyPolls = poll?.candidates?.length ? 0 : emptyPolls + 1;
       for (const candidate of poll?.candidates ?? []) {
         const dataUrl = await exec<string>(FETCH_IMAGE_SCRIPT(candidate.url));
         if (!dataUrl) continue;
@@ -259,20 +276,39 @@ export default function ChatGptPanel() {
       const generating = Boolean(poll?.generating);
       idlePolls = generating ? 0 : idlePolls + 1;
       const quietFor = Date.now() - lastImageAt;
-      if (!multi && collected.length > 0 && !generating) return update({ status: "done", message: "Hoàn tất." });
-      if (multi && collected.length > 0 && idlePolls > 40 && quietFor > 30000) {
-        return update({
-          status: "partial",
-          message: `ChatGPT đã dừng ở ${collected.length}/${job.expected} ảnh. Bấm "Tạo tiếp" để lấy phần còn lại.`,
-        });
-      }
-      if (collected.length === 0 && idlePolls > 60 && Date.now() - sentAt > 45000) {
-        return fail("ChatGPT chưa trả ảnh (có thể đang hỏi lại hoặc hết lượt tạo ảnh). Hãy xem ở tab ChatGPT.");
+      if (job.collectOnly) {
+        if (emptyPolls > 12) {
+          if (!collected.length) return fail("Không thấy ảnh kết quả nào trong cuộc chat hiện tại của ChatGPT.");
+          return update({
+            status: collected.length >= job.expected ? "done" : "partial",
+            message: `Đã lấy ${collected.length} ảnh từ ChatGPT.`,
+          });
+        }
+      } else {
+        // One image: done once it arrived and ChatGPT stopped working
+        if (!multi && collected.length > 0 && !generating && quietFor > 4000) return update({ status: "done", message: "Hoàn tất." });
+        // Several images: stop early only when some arrived and ChatGPT has been quiet for 2 minutes
+        if (multi && collected.length > 0 && idlePolls > 100 && quietFor > 120000) {
+          return update({
+            status: "partial",
+            message: `ChatGPT đã dừng ở ${collected.length}/${job.expected} ảnh. Bấm "Tách tiếp" để lấy phần còn lại.`,
+          });
+        }
+        const waited = Math.round((Date.now() - sentAt) / 1000);
+        if (collected.length === 0 && waited > 60 && step % 10 === 0) {
+          update({
+            message: `ChatGPT vẫn đang xử lý (${Math.floor(waited / 60)} phút ${waited % 60} giây). App sẽ tự lấy ảnh ngay khi có.`,
+          });
+        }
       }
       await sleep(700);
     }
     if (collected.length > 0) return update({ status: "partial", message: `Hết thời gian chờ, đã nhận ${collected.length} ảnh.` });
-    fail("Hết thời gian chờ ChatGPT. Hãy xem ở tab ChatGPT.");
+    fail(
+      job.collectOnly
+        ? "Không lấy được ảnh từ ChatGPT."
+        : 'Đã chờ quá lâu mà ChatGPT chưa trả ảnh. Xem ở tab ChatGPT; khi có ảnh, bấm "Lấy kết quả từ ChatGPT".',
+    );
   };
 
   // Run queued jobs one at a time

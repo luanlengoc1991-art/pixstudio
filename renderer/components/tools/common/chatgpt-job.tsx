@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Square } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Download, Loader2, MessageCircle, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ToolId } from "@/lib/tools";
 import { activeTabAtom } from "@/atoms/workspace-atom";
@@ -32,7 +32,18 @@ export const useChatGptJob = (toolId: ToolId) => {
  * Progress banner for a ChatGPT job: cycles the tool's progress lines while
  * waiting and offers Stop and "Xem ChatGPT".
  */
-export function ChatGptJobBanner({ toolId, steps, className }: { toolId: ToolId; steps: string[]; className?: string }) {
+export function ChatGptJobBanner({
+  toolId,
+  steps,
+  className,
+  onFetch,
+}: {
+  toolId: ToolId;
+  steps: string[];
+  className?: string;
+  /** Collects the images already made in the ChatGPT chat (shown after an error or partial result) */
+  onFetch?: () => void;
+}) {
   const { state, running, cancel } = useChatGptJob(toolId);
   const setActiveTab = useSetAtom(activeTabAtom);
   const [tick, setTick] = useState(0);
@@ -87,6 +98,11 @@ export function ChatGptJobBanner({ toolId, steps, className }: { toolId: ToolId;
       <button className="btn btn-ghost btn-xs" onClick={() => setActiveTab("chatgpt")}>
         <MessageCircle className="h-3.5 w-3.5" /> Xem ChatGPT
       </button>
+      {onFetch && (failed || partial) && (
+        <button className="btn btn-secondary btn-xs" onClick={onFetch}>
+          <Download className="h-3.5 w-3.5" /> Lấy kết quả từ ChatGPT
+        </button>
+      )}
       {running && (
         <button className="btn btn-ghost btn-xs text-error" onClick={cancel}>
           <Square className="h-3.5 w-3.5" /> Dừng

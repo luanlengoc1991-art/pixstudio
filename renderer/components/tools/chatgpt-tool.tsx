@@ -200,7 +200,21 @@ export default function ChatGptTool({ toolId }: { toolId: ToolId }) {
   return (
     <ToolLayout toolId={toolId} aside={aside} footer={footer}>
       <div className="flex h-full min-h-0 flex-col gap-3 p-4">
-        <ChatGptJobBanner toolId={toolId} steps={config.steps} />
+        <ChatGptJobBanner
+          toolId={toolId}
+          steps={config.steps}
+          onFetch={() =>
+            job.submit({
+              prompt: "",
+              // Inputs and earlier results are listed so they are not taken again
+              imagePaths: [...imagePaths, ...job.history],
+              expected: config.expected?.(values) ?? 1,
+              newChat: false,
+              collectOnly: true,
+              steps: ["Đang quét các ảnh ChatGPT đã tạo..."],
+            })
+          }
+        />
 
         {!current ? (
           <div className="min-h-0 flex-1">

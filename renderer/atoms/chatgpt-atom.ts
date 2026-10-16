@@ -16,6 +16,8 @@ export type ChatGptJob = {
   newChat: boolean;
   /** Use ChatGPT's "Edit" on the last generated image */
   nativeEdit?: boolean;
+  /** Do not send anything: collect the images already in the current conversation */
+  collectOnly?: boolean;
   /** Progress lines shown while waiting, cycled by the tool */
   steps?: string[];
 };

@@ -156,13 +156,14 @@ export const LOGIN_CHECK_SCRIPT = String.raw`
 `;
 
 /** Marks every image already in the conversation as seen, so only new results count. */
-export const RESET_CAPTURE_SCRIPT = (newChat: boolean, inputNames: string[]) => String.raw`
+export const RESET_CAPTURE_SCRIPT = (newChat: boolean, inputNames: string[], markExisting = true) => String.raw`
 (() => {
   const cap = window.__PIX_CAPTURE__;
   if (!cap) return false;
   cap.candidates = [];
   if (${newChat}) { cap.seenIds.clear(); cap.seenUrls.clear(); }
   ${JSON.stringify(inputNames)}.forEach((n) => cap.inputNames.add(n.toLowerCase()));
+  if (!${markExisting}) return true;
   document.querySelectorAll("img").forEach((img) => {
     const src = img.currentSrc || img.src || "";
     if (!src) return;
@@ -385,10 +386,17 @@ export const POLL_SCRIPT = (multi: boolean, step: number) => String.raw`
     if (thumb) { try { thumb.click(); } catch (e) {} }
   }
   const candidates = cap.candidates.splice(0);
-  const generating = Array.from(document.querySelectorAll('button, [role="button"]')).some((b) => {
+  // ChatGPT shows work in many ways (stop button, streaming text, image shimmer, "Thinking", "Creating image")
+  const stopButton = Array.from(document.querySelectorAll('button, [role="button"]')).some((b) => {
     const label = ((b.getAttribute("aria-label") || "") + " " + (b.getAttribute("data-testid") || "")).toLowerCase();
-    return /stop generating|stop streaming|dừng|stop-button/.test(label);
-  }) || Boolean(document.querySelector('.result-streaming, [class*="result-streaming"]'));
+    return /stop generating|stop streaming|dừng|stop-button|stop/.test(label);
+  });
+  const turns = document.querySelectorAll('[data-message-author-role="assistant"]');
+  const lastTurn = turns[turns.length - 1];
+  const busyUi = Boolean(document.querySelector('.result-streaming, [class*="result-streaming"], main [aria-busy="true"], main [class*="shimmer"], main [class*="skeleton"]'));
+  const lastText = ((lastTurn && lastTurn.innerText) || "").slice(-300).toLowerCase();
+  const busyText = /thinking|creating image|generating|đang suy nghĩ|đang tạo|đang xử lý/.test(lastText);
+  const generating = stopButton || busyUi || busyText;
   return { candidates, generating };
 })()
 `;

@@ -331,23 +331,29 @@ export function ImageInput({
         acceptFile(e.dataTransfer.files[0]);
       }}
       className={cn(
-        "group relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed text-center transition-all",
-        compact ? "h-28" : "h-40",
-        dragging
-          ? "border-primary bg-primary/10"
-          : "border-base-content/20 bg-base-100 hover:border-primary/60",
+        "group relative flex cursor-pointer flex-col items-center justify-center text-center transition-all",
+        // With a picture the frame takes the picture's own shape (portrait or landscape)
+        imagePath
+          ? cn("rounded-2xl border-2 p-2", dragging ? "border-primary bg-primary/10" : "border-primary/30 bg-base-100 hover:border-primary/70")
+          : cn(
+              "overflow-hidden rounded-2xl border-2 border-dashed",
+              compact ? "h-28" : "h-40",
+              dragging ? "border-primary bg-primary/10" : "border-base-content/20 bg-base-100 hover:border-primary/60",
+            ),
       )}
     >
       {imagePath ? (
         <>
-          <img
-            src={fileUrl(imagePath)}
-            alt=""
-            className="checkerboard h-full w-full object-contain"
-            draggable={false}
-          />
-          <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-[11px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
-            Bấm để đổi ảnh khác
+          <span className="relative block overflow-hidden rounded-xl">
+            <img
+              src={fileUrl(imagePath)}
+              alt=""
+              className={cn("checkerboard block h-auto w-auto max-w-full object-contain", compact ? "max-h-40" : "max-h-72")}
+              draggable={false}
+            />
+            <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-[11px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
+              Bấm để đổi ảnh khác
+            </span>
           </span>
         </>
       ) : (

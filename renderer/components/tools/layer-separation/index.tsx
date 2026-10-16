@@ -54,7 +54,7 @@ export default function LayerSeparationTool() {
   const [jobIds, setJobIds] = useState<string[]>([]);
   const [total, setTotal] = useState(AUTO_LAYER_COUNT);
   // Settings of the separation shown in the grid (mode and regions may be edited afterwards)
-  const runSettings = useRef<{ mode: Mode; regions: Region[] }>({ mode: "auto", regions: [] });
+  const runSettings = useRef<{ mode: Mode; regions: Region[]; source?: string }>({ mode: "auto", regions: [] });
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
 
   usePendingToolImage("layer-separation", (path) => {
@@ -95,10 +95,26 @@ export default function LayerSeparationTool() {
       prompt = customPrompt(regions);
       expected = regions.length + 1;
     }
+    runSettings.current.source = source;
     setBase([]);
     setTotal(expected);
     const id = job.submit({ prompt, imagePaths: [source], expected, steps: STEPS });
     setJobIds([id]);
+  };
+
+  // Picks up the layers ChatGPT already made in the current chat (after a stop or error)
+  const fetchResults = () => {
+    setBase(layers);
+    const id = job.submit({
+      prompt: "",
+      // Listed so the source image and the layers already here are not taken again
+      imagePaths: [runSettings.current.source || imagePath, ...layers].filter(Boolean),
+      expected: total - layers.length,
+      newChat: false,
+      collectOnly: true,
+      steps: ["Đang quét các ảnh ChatGPT đã tạo..."],
+    });
+    setJobIds((prev) => [...prev, id]);
   };
 
   // Asks ChatGPT, in the same conversation, for the layers still missing
@@ -245,9 +261,19 @@ export default function LayerSeparationTool() {
                   ? "Tất cả các lớp PNG không nền và ảnh nền đã sẵn sàng để tải về hoặc sử dụng."
                   : running
                     ? "Các lớp hiện ra ngay khi ChatGPT tạo xong từng ảnh."
-                    : "ChatGPT chưa trả đủ các lớp. Bấm \"Tách tiếp\" để lấy phần còn lại."}
+                    : "Nếu ChatGPT đã tạo xong mà ảnh chưa hiện, bấm \"Lấy kết quả từ ChatGPT\"; nếu còn thiếu lớp, bấm \"Tách tiếp\"."}
               </p>
             </div>
+            {!running && !complete && (
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={fetchResults}
+                data-tooltip-id="tooltip"
+                data-tooltip-content="Lấy các ảnh ChatGPT đã tạo trong cuộc chat hiện tại về app"
+              >
+                <Download className="h-4 w-4" /> Lấy kết quả từ ChatGPT
+              </button>
+            )}
             {!running && !complete && layers.length > 0 && (
               <button className="btn btn-sm" onClick={continueSeparation}>
                 <Layers className="h-4 w-4" /> Tách tiếp các lớp ({layers.length}/{total})
