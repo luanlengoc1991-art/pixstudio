@@ -2,7 +2,11 @@ const daisyuiColorObj = require("daisyui/src/theming/index");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ["class"],
+  // The app switches themes with data-theme, so dark: follows the dark themes
+  darkMode: [
+    "variant",
+    ['&:is([data-theme="pixstudio-dark"] *)', '&:is([data-theme="dark"] *)'],
+  ],
   content: [
     "./renderer/pages/**/*.{js,ts,jsx,tsx}",
     "./renderer/components/**/*.{js,ts,jsx,tsx}",
