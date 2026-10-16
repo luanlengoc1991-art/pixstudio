@@ -103,11 +103,11 @@ const svgText = await (await fetch(`./filled/${id}.svg`)).text();
 const data = new SVGLoader().parse(svgText);
 const shapes = data.paths.flatMap((p) => SVGLoader.createShapes(p));
 const iconGeo = new THREE.ExtrudeGeometry(shapes, {
-  depth: 110,
+  depth: 30,
   bevelEnabled: true,
-  bevelThickness: 20,
-  bevelSize: 8,
-  bevelSegments: 4,
+  bevelThickness: 8,
+  bevelSize: 3,
+  bevelSegments: 3,
   curveSegments: 24,
 });
 iconGeo.computeBoundingBox();
@@ -117,19 +117,19 @@ const h = bb.max.y - bb.min.y;
 iconGeo.translate(-(bb.min.x + w / 2), -(bb.min.y + h / 2), 0);
 const icon = new THREE.Mesh(
   iconGeo,
+  // Light tint of the tile colour with a soft glow: stands out without a heavy white slab
   new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    emissive: new THREE.Color("#ffffff").lerp(light, 0.35),
-    emissiveIntensity: 0.35,
-    metalness: 0.05,
-    roughness: 0.3,
-    clearcoat: 1,
+    color: new THREE.Color("#ffffff").lerp(light, 0.55),
+    emissive: light,
+    emissiveIntensity: 0.6,
+    metalness: 0.0,
+    roughness: 0.45,
     side: THREE.DoubleSide,
   }),
 );
-const s = 1.25 / Math.max(w, h);
+const s = 1.18 / Math.max(w, h);
 icon.scale.set(s, -s, s); // SVG y points down
-icon.position.z = 0.34;
+icon.position.z = 0.345;
 tile.add(icon);
 
 tile.position.y = 0.0;

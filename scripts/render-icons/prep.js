@@ -35,7 +35,7 @@ fs.mkdirSync(out, { recursive: true });
       : fs.readFileSync(path.join(__dirname, "node_modules/lucide-static/icons", name + ".svg"), "utf8");
     svg = svg.replace(/fill="currentColor"/g, 'fill="#000"');
     // Black strokes on white, slightly bolder so the extrusion reads well
-    svg = svg.replace(/stroke="currentColor"/, 'stroke="#000"').replace(/stroke-width="2"/, 'stroke-width="2.4"');
+    svg = svg.replace(/stroke="currentColor"/, 'stroke="#000"').replace(/stroke-width="2"/, 'stroke-width="1.9"');
     svg = svg.replace("<svg", '<svg style="background:#fff"');
     const size = 1024;
     const pad = 64;
