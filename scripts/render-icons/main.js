@@ -23,6 +23,26 @@ const COLORS = {
   "stat-cloud": ["7dd3fc", "0ea5e9", "0369a1"],
 };
 
+// One shape per tool so the set has variety
+const VARIANTS = {
+  upscayl: "orb",
+  "remove-bg": "glass-cube",
+  "layer-separation": "stack",
+  "print-restoration": "tile",
+  "product-retoucher": "hex",
+  "render-2d-to-3d": "cube",
+  vector: "disc",
+  "ad-designer": "tilted",
+  "fake-model": "float",
+  "signboard-mockup": "tile",
+  "old-photo-restoration": "coin-ring",
+  "die-cut": "hex",
+  "id-photo": "tilted",
+  "stat-tools": "float",
+  "stat-local": "float",
+  "stat-cloud": "float",
+};
+
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const outDir = path.resolve(args[0]);
 const style = args[1] || "glass";
@@ -40,7 +60,7 @@ app.whenReady().then(async () => {
   });
   win.webContents.on("console-message", (_e, _l, msg) => console.log("[page]", msg));
   for (const id of ids) {
-    const url = `file://${path.join(__dirname, "render.html")}?id=${id}&colors=${COLORS[id].join(",")}&style=${style}&out=${encodeURIComponent(outDir)}`;
+    const url = `file://${path.join(__dirname, "render.html")}?id=${id}&colors=${COLORS[id].join(",")}&style=${style}&variant=${VARIANTS[id] || "tile"}&out=${encodeURIComponent(outDir)}`;
     const done = new Promise((resolve) => {
       const onTitle = (_e, title) => {
         if (title === "done") {

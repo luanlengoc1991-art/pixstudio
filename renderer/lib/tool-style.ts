@@ -22,7 +22,7 @@ export const TOOL_ACCENT: Record<ToolId, [string, string, string]> = {
  * glass tile, rendered with three.js into public/icons3d.
  * Bump ICON_VERSION when the files are replaced so no cached copy shows.
  */
-const ICON_VERSION = 7;
+const ICON_VERSION = 8;
 
 export const toolImage = (id: ToolId) => `public:///icons3d/${id}.png?v=${ICON_VERSION}`;
 
