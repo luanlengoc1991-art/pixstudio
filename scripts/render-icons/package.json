@@ -1,0 +1,9 @@
+{
+  "name": "render-icons",
+  "private": true,
+  "description": "Renders the 3D tool icons in renderer/public/icons3d",
+  "dependencies": {
+    "three": "0.169.0",
+    "lucide-static": "0.469.0"
+  }
+}

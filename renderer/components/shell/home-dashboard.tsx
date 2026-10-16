@@ -34,7 +34,6 @@ function HeroArt() {
           </div>
         </div>
       </div>
-      <img src={STAT_IMAGES.palette} alt="" className="animate-float-slow absolute bottom-0 left-6 h-20 w-20 drop-shadow-[0_12px_14px_rgba(0,0,0,0.5)]" />
       <MousePointer2 className="animate-float-slow absolute bottom-6 right-24 h-9 w-9 fill-white/90 text-sky-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.9)]" />
       <Sparkles className="absolute left-36 top-0 h-6 w-6 text-sky-200/80" />
     </div>

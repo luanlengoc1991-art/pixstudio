@@ -17,15 +17,17 @@ export const TOOL_ACCENT: Record<ToolId, [string, string, string]> = {
   "id-photo": ["#93c5fd", "#3b82f6", "#1d4ed8"],
 };
 
-/** Rendered 3D object for each tool (Microsoft Fluent 3D, MIT, in public/icons3d) */
-/** Bump when an icon file is replaced so the app does not show a cached copy */
-const ICON_VERSION = 2;
+/**
+ * Rendered 3D icon for each tool: chrome glyph (lucide) extruded on a tinted
+ * glass tile, rendered with three.js into public/icons3d.
+ * Bump ICON_VERSION when the files are replaced so no cached copy shows.
+ */
+const ICON_VERSION = 4;
 
 export const toolImage = (id: ToolId) => `public:///icons3d/${id}.png?v=${ICON_VERSION}`;
 
 export const STAT_IMAGES = {
-  tools: "public:///icons3d/stat-tools.png",
-  local: "public:///icons3d/stat-local.png",
-  cloud: "public:///icons3d/stat-cloud.png",
-  palette: "public:///icons3d/hero-palette.png",
+  tools: `public:///icons3d/stat-tools.png?v=${ICON_VERSION}`,
+  local: `public:///icons3d/stat-local.png?v=${ICON_VERSION}`,
+  cloud: `public:///icons3d/stat-cloud.png?v=${ICON_VERSION}`,
 };

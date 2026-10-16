@@ -35,7 +35,7 @@ export default function Icon3D({
 }) {
   const [light, main, deep] = colors;
   const s = SIZES[size];
-  const withPodium = podium ?? (size === "lg" || size === "xl");
+  const withPodium = podium ?? (!image && (size === "lg" || size === "xl"));
   const base = withPodium ? Math.round(s.box * 0.32) : 0;
 
   return (
@@ -69,46 +69,22 @@ export default function Icon3D({
       <span
         className={cn(
           "relative block transition-transform duration-300 ease-out",
-          tilt && "[transform:rotateX(14deg)_rotateY(-14deg)] group-hover:[transform:rotateX(0deg)_rotateY(0deg)_translateY(-3px)]",
+          tilt && !image && "[transform:rotateX(14deg)_rotateY(-14deg)] group-hover:[transform:rotateX(0deg)_rotateY(0deg)_translateY(-3px)]",
         )}
         style={{ width: s.box, height: s.box, transformStyle: "preserve-3d" }}
       >
         {image ? (
-          <>
-            {/* Frosted glass tile tinted with the tool colour */}
-            <span
-              className="absolute inset-0 overflow-hidden backdrop-blur-md"
-              style={{
-                borderRadius: s.radius,
-                background: `linear-gradient(145deg, ${light}66 0%, ${main}40 50%, ${deep}66 100%)`,
-                border: "1px solid rgba(255,255,255,0.28)",
-                boxShadow: [
-                  `0 ${s.depth}px 0 ${deep}aa`,
-                  `0 ${s.depth + 2}px 0 rgba(0,0,0,0.3)`,
-                  "inset 0 2px 1px rgba(255,255,255,0.45)",
-                  `inset 0 -10px 20px ${deep}55`,
-                ].join(", "),
-              }}
-            >
-              <span
-                className="pointer-events-none absolute inset-x-0 top-0 h-1/2"
-                style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0))" }}
-              />
-            </span>
-            {/* The 3D object pops out of the tile */}
-            <img
-              src={image}
-              alt=""
-              draggable={false}
-              className="absolute left-1/2 max-w-none -translate-x-1/2 transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:rotate-[-6deg] group-hover:scale-110"
-              style={{
-                width: s.box * 0.98,
-                height: s.box * 0.98,
-                top: -s.box * 0.1,
-                filter: `drop-shadow(0 ${Math.round(s.box * 0.1)}px ${Math.round(s.box * 0.1)}px rgba(0,0,0,0.5)) drop-shadow(0 0 ${Math.round(s.box * 0.12)}px ${main}aa)`,
-              }}
-            />
-          </>
+          <img
+            src={image}
+            alt=""
+            draggable={false}
+            className="absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 ease-out group-hover:-translate-y-[56%] group-hover:scale-105"
+            style={{
+              width: s.box * 1.12,
+              height: s.box * 1.12,
+              filter: `drop-shadow(0 ${Math.round(s.box * 0.08)}px ${Math.round(s.box * 0.1)}px rgba(0,0,0,0.55))`,
+            }}
+          />
         ) : (
         /* Face with a thick darker edge underneath (the extrusion) */
         <span

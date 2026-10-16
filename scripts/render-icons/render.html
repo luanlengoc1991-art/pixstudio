@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>html,body{margin:0;background:transparent;overflow:hidden}</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./node_modules/three/build/three.module.js",
+  "three/addons/": "./node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from "three";
+import { SVGLoader } from "three/addons/loaders/SVGLoader.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const [light, main, deep] = params.get("colors").split(",").map((c) => "#" + c);
+const style = params.get("style") || "glass";
+const SIZE = 512;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(SIZE, SIZE);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.setClearColor(0x000000, 0);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
+
+const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
+camera.position.set(1.9, 2.0, 7.4);
+camera.lookAt(0, -0.05, 0);
+
+// Lights: soft key, coloured rim from behind, cool fill
+const key = new THREE.DirectionalLight(0xffffff, 2.2);
+key.position.set(3, 5, 6);
+scene.add(key);
+const rim = new THREE.DirectionalLight(new THREE.Color(light), 6);
+rim.position.set(-4, 3, -4);
+scene.add(rim);
+const fill = new THREE.DirectionalLight(0x9fb8ff, 0.8);
+fill.position.set(-5, -1, 4);
+scene.add(fill);
+
+const group = new THREE.Group();
+scene.add(group);
+
+// Tile: tinted glass slab (or glossy coloured ceramic)
+const tileGeo = new RoundedBoxGeometry(2.3, 2.3, 0.42, 10, 0.42);
+const tileMat =
+  style === "glass"
+    ? new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color(main),
+        metalness: 0.05,
+        roughness: 0.12,
+        transmission: 0.55,
+        thickness: 0.8,
+        ior: 1.5,
+        clearcoat: 1,
+        clearcoatRoughness: 0.04,
+        iridescence: 0.35,
+        iridescenceIOR: 1.3,
+        attenuationColor: new THREE.Color(deep),
+        attenuationDistance: 0.9,
+        emissive: new THREE.Color(deep),
+        emissiveIntensity: 0.25,
+        transparent: true,
+      })
+    : new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color(main),
+        metalness: 0.2,
+        roughness: 0.22,
+        clearcoat: 1,
+        clearcoatRoughness: 0.05,
+        sheen: 0.4,
+        sheenColor: new THREE.Color(light),
+      });
+const tile = new THREE.Mesh(tileGeo, tileMat);
+group.add(tile);
+
+
+// Icon: extruded chrome with a bevel
+const svgText = await (await fetch(`./filled/${id}.svg`)).text();
+const data = new SVGLoader().parse(svgText);
+const shapes = data.paths.flatMap((p) => SVGLoader.createShapes(p));
+const iconGeo = new THREE.ExtrudeGeometry(shapes, {
+  depth: 150,
+  bevelEnabled: true,
+  bevelThickness: 26,
+  bevelSize: 11,
+  bevelSegments: 5,
+  curveSegments: 24,
+});
+iconGeo.computeBoundingBox();
+const box = iconGeo.boundingBox;
+const w = box.max.x - box.min.x;
+const h = box.max.y - box.min.y;
+iconGeo.translate(-(box.min.x + w / 2), -(box.min.y + h / 2), 0);
+const iconMat = new THREE.MeshPhysicalMaterial({
+  color: new THREE.Color("#ffffff").lerp(new THREE.Color(light), 0.18),
+  metalness: 1,
+  roughness: 0.14,
+  clearcoat: 1,
+  clearcoatRoughness: 0.03,
+  side: THREE.DoubleSide,
+});
+const icon = new THREE.Mesh(iconGeo, iconMat);
+const s = 1.3 / Math.max(w, h);
+// SVG y points down, three.js y points up: mirror vertically
+icon.scale.set(s, -s, s);
+icon.position.z = 0.22;
+group.add(icon);
+
+group.rotation.set(-0.08, -0.32, 0.0);
+
+renderer.render(scene, camera);
+const dataUrl = renderer.domElement.toDataURL("image/png");
+const fs = window.require("fs");
+const outDir = params.get("out");
+fs.writeFileSync(`${outDir}/${id}.png`, Buffer.from(dataUrl.split(",")[1], "base64"));
+document.title = "done";
+</script>
+</body>
+</html>
