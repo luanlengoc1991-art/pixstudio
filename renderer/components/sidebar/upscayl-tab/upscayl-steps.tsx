@@ -110,7 +110,7 @@ function UpscaylSteps({
 
   return (
     <div
-      className={`animate-step-in animate flex h-screen flex-col gap-7 overflow-y-auto overflow-x-hidden p-5`}
+      className={`animate-step-in animate flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto overflow-x-hidden p-5`}
     >
       {/* BATCH OPTION */}
       <div className="flex flex-row items-center gap-2">

@@ -1,7 +1,7 @@
 {
   "name": "pixstudio",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "productName": "PixStudio",
   "author": {
     "name": "Nayam Amarshe",
@@ -22,7 +22,7 @@
   ],
   "email": "nayam.emikx@aleeas.com",
   "license": "AGPL-3.0",
-  "description": "PixStudio - Phóng to & tách nền ảnh bằng AI (dựa trên Upscayl)",
+  "description": "PixStudio - Bộ công cụ xử lý ảnh AI: kích nét, xóa nền, vector, bế file, ảnh thẻ (dựa trên Upscayl)",
   "keywords": [
     "AI",
     "Upscaler",

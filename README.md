@@ -1,7 +1,18 @@
 # PixStudio
 
-Phần mềm **phóng to ảnh** và **tách nền ảnh** bằng AI, chạy ngay trên máy tính.
+Bộ công cụ xử lý ảnh bằng AI cho Windows, chạy ngay trên máy tính.
 Dựa trên [Upscayl](https://github.com/upscayl/upscayl) (giấy phép AGPL-3.0). Hướng dẫn gốc của Upscayl: [docs/UPSCAYL-README.md](docs/UPSCAYL-README.md).
+
+## Công cụ
+
+| Công cụ | Trạng thái | Cách chạy |
+|---|---|---|
+| Kích nét ảnh (phóng to 4x, cả thư mục, 7 model) | ✅ | Trên máy, GPU (`upscayl-bin`) |
+| Xóa Nền PNG | ✅ | Trên máy, model ONNX tự tải lần đầu (~170 MB) |
+| Chuyển Vector (8 kiểu, SVG / PDF) | ✅ | Trên máy (`vtracer`, `potrace`) |
+| Bế file in ấn (theo viền, bao cụm, bo tròn, chữ nhật) | ✅ | Trên máy, xuất PNG + SVG có lớp `CutContour` |
+| Chỉnh sửa ảnh thẻ: Cắt ảnh + Xếp in | ✅ | Trên máy (2x3, 3x4, 4x6, Visa; khổ 10x15, A5, A4) |
+| Bóc Tách Layer, Phục hồi ấn phẩm, Retoucher, Render 3D, Thiết kế quảng cáo, Fake Model, Phối cảnh biển hiệu, Phục hồi ảnh cũ, Ảnh thẻ AI | 🕓 Đợt 2 | Qua cửa sổ ChatGPT |
 
 ## Tải bản cài đặt
 
@@ -53,13 +64,18 @@ Trước khi bắt đầu sửa, luôn chạy `git pull` để lấy thay đổi
 | Thư mục / file | Nội dung |
 |---|---|
 | `renderer/` | Giao diện (Next.js + React + Tailwind) |
-| `renderer/components/sidebar/` | Thanh bên: tab Phóng to, Tách nền, Cài đặt |
-| `renderer/locales/vi.json` | Toàn bộ chữ tiếng Việt |
+| `renderer/lib/tools.ts` | Danh sách 13 công cụ trên Trang chủ (tên, mô tả, trạng thái) |
+| `renderer/components/shell/` | Thanh tab trên cùng và Trang chủ |
+| `renderer/components/tools/` | Giao diện từng công cụ (`common/` là phần dùng chung) |
+| `renderer/components/sidebar/` | Giao diện Kích nét ảnh (gốc Upscayl) |
+| `renderer/locales/vi.json` | Chữ tiếng Việt của phần Kích nét ảnh |
 | `electron/` | Phần xử lý chính (main process) |
-| `electron/commands/remove-background.ts` | Tách nền (ONNX, model của rembg) |
+| `electron/commands/remove-background.ts` | Xóa nền (ONNX, model của rembg) |
+| `electron/commands/vectorize.ts` | Chuyển Vector và xuất PDF |
+| `electron/commands/die-cut.ts` | Tạo đường bế |
 | `electron/commands/image-upscayl.ts` | Phóng to ảnh (gọi `upscayl-bin`) |
 | `resources/models/` | 7 model phóng to |
-| `resources/win/bin/` | `upscayl-bin.exe` |
+| `resources/win/bin/` | `upscayl-bin.exe`, `vtracer.exe` (MIT), `potrace.exe` (GPL, xem `licenses/`) |
 | `.github/workflows/build-windows.yml` | Cấu hình tự build trên GitHub |
 
 ## Giấy phép

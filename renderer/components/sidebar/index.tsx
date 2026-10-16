@@ -31,7 +31,6 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import UpscaylSteps from "./upscayl-tab/upscayl-steps";
 import SettingsTab from "./settings-tab";
-import BackgroundRemovalSteps from "./background-removal-tab/background-removal-steps";
 import Footer from "../footer";
 import Tabs from "../tabs";
 import Header from "../header";
@@ -204,7 +203,7 @@ const Sidebar = ({
       />
 
       <div
-        className={`relative flex h-screen min-w-[350px] max-w-[350px] flex-col bg-base-100 ${showSidebar ? "" : "hidden"}`}
+        className={`relative flex h-full min-w-[350px] max-w-[350px] flex-col bg-base-100 ${showSidebar ? "" : "hidden"}`}
       >
         <button
           className="absolute -right-0 top-1/2 z-50 -translate-y-1/2 translate-x-1/2 rounded-full bg-base-100 p-4"
@@ -219,15 +218,7 @@ const Sidebar = ({
 
         <Header version={version} />
 
-
-        <Tabs
-          selectedTab={selectedTab}
-          setSelectedTab={(tab) => {
-            // Background removal works on a single image only
-            if (tab === 1) setBatchMode(false);
-            setSelectedTab(tab);
-          }}
-        />
+        <Tabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
 
         {selectedTab === 0 && (
           <UpscaylSteps
@@ -246,14 +237,6 @@ const Sidebar = ({
         )}
 
         {selectedTab === 1 && (
-          <BackgroundRemovalSteps
-            imagePath={imagePath}
-            selectImageHandler={selectImageHandler}
-            setUpscaledImagePath={setUpscaledImagePath}
-          />
-        )}
-
-        {selectedTab === 2 && (
           <SettingsTab
             batchMode={batchMode}
             compression={compression}

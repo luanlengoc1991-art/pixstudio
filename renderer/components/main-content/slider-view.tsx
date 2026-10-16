@@ -65,7 +65,7 @@ const SliderView = ({
           />
         </>
       }
-      className="group h-screen"
+      className="group h-full"
     />
   );
 };

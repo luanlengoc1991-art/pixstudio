@@ -5,6 +5,8 @@ import { themeChange } from "theme-change";
 
 const SelectTheme = ({ hideLabel }: { hideLabel?: boolean }) => {
   const availableThemes = [
+    { label: "PixStudio sáng", value: "pixstudio" },
+    { label: "PixStudio tối", value: "pixstudio-dark" },
     { label: "upscayl", value: "upscayl" },
     { label: "light", value: "light" },
     { label: "dark", value: "dark" },

@@ -21,6 +21,9 @@ import { FEATURE_FLAGS } from "../common/feature-flags";
 import settings from "electron-settings";
 import pasteImage from "./commands/paste-image";
 import removeBackground from "./commands/remove-background";
+import { exportSvgToPdf, vectorizeImage } from "./commands/vectorize";
+import dieCut from "./commands/die-cut";
+import { saveFileAs, saveTempImage } from "./utils/tool-files";
 import path from "path";
 
 // INITIALIZATION
@@ -106,6 +109,16 @@ ipcMain.on(ELECTRON_COMMANDS.DOUBLE_UPSCAYL, doubleUpscayl);
 ipcMain.on(ELECTRON_COMMANDS.PASTE_IMAGE, pasteImage);
 
 ipcMain.handle(ELECTRON_COMMANDS.REMOVE_BACKGROUND, removeBackground);
+
+ipcMain.handle(ELECTRON_COMMANDS.SAVE_TEMP_IMAGE, saveTempImage);
+
+ipcMain.handle(ELECTRON_COMMANDS.SAVE_FILE_AS, saveFileAs);
+
+ipcMain.handle(ELECTRON_COMMANDS.VECTORIZE_IMAGE, vectorizeImage);
+
+ipcMain.handle(ELECTRON_COMMANDS.EXPORT_VECTOR_PDF, exportSvgToPdf);
+
+ipcMain.handle(ELECTRON_COMMANDS.DIE_CUT, dieCut);
 
 ipcMain.handle("get-gpu-info", async () => {
   try {

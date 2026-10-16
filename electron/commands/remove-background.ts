@@ -6,6 +6,7 @@ import sharp from "sharp";
 import * as ort from "onnxruntime-node";
 import { getMainWindow } from "../main-window";
 import logit from "../utils/logit";
+import { getToolTempDir, uniqueName } from "../utils/tool-files";
 import { ELECTRON_COMMANDS } from "../../common/electron-commands";
 import {
   BackgroundRemovalModel,
@@ -104,36 +105,33 @@ const getSession = async (model: BackgroundRemovalModel) => {
   return session;
 };
 
-const parseHexColor = (hex: string) => {
-  const value = hex.replace("#", "");
+/** Size of the image after EXIF rotation. */
+export const getOrientedSize = async (imagePath: string) => {
+  const meta = await sharp(imagePath).metadata();
+  // EXIF orientations 5–8 swap width and height after rotate()
+  const swapped = (meta.orientation ?? 1) >= 5;
   return {
-    r: parseInt(value.slice(0, 2), 16),
-    g: parseInt(value.slice(2, 4), 16),
-    b: parseInt(value.slice(4, 6), 16),
+    width: swapped ? meta.height! : meta.width!,
+    height: swapped ? meta.width! : meta.height!,
+    density: meta.density,
   };
 };
 
-const removeBackground = async (
-  _event: IpcMainInvokeEvent,
-  payload: RemoveBackgroundPayload,
-): Promise<string> => {
-  const { imagePath, outputPath, model, background } = payload;
+/**
+ * Runs the segmentation model and returns a single-channel foreground mask
+ * (0 = background, 255 = subject) at the image's oriented size.
+ */
+export const predictForegroundMask = async (
+  imagePath: string,
+  model: BackgroundRemovalModel,
+) => {
   const spec = MODEL_SPECS[model];
   const session = await getSession(model);
 
   sendProgress("AI đang tách nền...");
-  const source = sharp(imagePath).rotate();
-  const { width, height } = await source.metadata().then(async (meta) => {
-    // EXIF orientations 5–8 swap width and height after rotate()
-    const swapped = (meta.orientation ?? 1) >= 5;
-    return {
-      width: swapped ? meta.height! : meta.width!,
-      height: swapped ? meta.width! : meta.height!,
-    };
-  });
-
-  const { data: pixels } = await source
-    .clone()
+  const { width, height } = await getOrientedSize(imagePath);
+  const { data: pixels } = await sharp(imagePath)
+    .rotate()
     .removeAlpha()
     .resize(spec.size, spec.size, { fit: "fill", kernel: "lanczos3" })
     .raw()
@@ -174,7 +172,6 @@ const removeBackground = async (
     mask[i] = Math.round(((prediction[i] - min) / range) * 255);
   }
 
-  sendProgress("Đang hoàn thiện ảnh...");
   const alpha = await sharp(mask, {
     raw: { width: spec.size, height: spec.size, channels: 1 },
   })
@@ -183,9 +180,32 @@ const removeBackground = async (
     .raw()
     .toBuffer();
 
+  return { alpha, width, height };
+};
+
+const parseHexColor = (hex: string) => {
+  const value = hex.replace("#", "");
+  return {
+    r: parseInt(value.slice(0, 2), 16),
+    g: parseInt(value.slice(2, 4), 16),
+    b: parseInt(value.slice(4, 6), 16),
+  };
+};
+
+const removeBackground = async (
+  _event: IpcMainInvokeEvent,
+  payload: RemoveBackgroundPayload,
+): Promise<string> => {
+  const { imagePath, outputPath, model, background } = payload;
+  const { alpha, width, height } = await predictForegroundMask(
+    imagePath,
+    model,
+  );
+
+  sendProgress("Đang hoàn thiện ảnh...");
   // sharp applies removeAlpha() after joinChannel() regardless of call
   // order, so flatten to raw RGB first and attach the mask to that.
-  const rgb = await source.clone().removeAlpha().raw().toBuffer();
+  const rgb = await sharp(imagePath).rotate().removeAlpha().raw().toBuffer();
   const cutout = sharp(rgb, { raw: { width, height, channels: 3 } }).joinChannel(
     alpha,
     { raw: { width, height, channels: 1 } },
@@ -193,7 +213,10 @@ const removeBackground = async (
 
   const { name } = parse(imagePath);
   const suffix = background === "transparent" ? "tach-nen" : "nen-mau";
-  const outFile = join(outputPath, `${name}_${suffix}.png`);
+  // Without an output folder the result stays in temp until the user saves it
+  const outFile = outputPath
+    ? join(outputPath, `${name}_${suffix}.png`)
+    : join(getToolTempDir("remove-bg"), uniqueName(`${name}_${suffix}`, "png"));
 
   if (background === "transparent") {
     await cutout.png().toFile(outFile);

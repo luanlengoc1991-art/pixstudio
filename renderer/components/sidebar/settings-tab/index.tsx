@@ -130,7 +130,7 @@ function SettingsTab({
   return (
     <div
       className={cn(
-        "animate-step-in animate z-50 flex h-screen flex-col gap-7 overflow-y-auto overflow-x-hidden p-5",
+        "animate-step-in animate z-50 flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto overflow-x-hidden p-5",
         enableScrollbar ? "" : "hide-scrollbar",
       )}
       onScroll={() => {

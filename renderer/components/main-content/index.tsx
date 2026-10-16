@@ -267,7 +267,7 @@ const MainContent = ({
 
   return (
     <div
-      className="relative flex h-screen w-full flex-col items-center justify-center"
+      className="relative flex h-full w-full flex-col items-center justify-center"
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragEnter={handleDragEnter}

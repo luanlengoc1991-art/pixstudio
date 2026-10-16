@@ -6,6 +6,7 @@ module.exports = {
   content: [
     "./renderer/pages/**/*.{js,ts,jsx,tsx}",
     "./renderer/components/**/*.{js,ts,jsx,tsx}",
+    "./renderer/lib/**/*.{js,ts,jsx,tsx}",
   ],
   safelist: [
     ...[...Array(101).keys()].flatMap((index) => [
@@ -103,8 +104,42 @@ module.exports = {
     require("@tailwindcss/typography"),
   ],
   daisyui: {
-    darkTheme: "upscayl",
+    darkTheme: "pixstudio-dark",
     themes: [
+      {
+        pixstudio: {
+          primary: "#35a9e8",
+          "primary-content": "#ffffff",
+          secondary: "#167fb8",
+          "secondary-content": "#ffffff",
+          accent: "#f59e0b",
+          neutral: "#38546d",
+          "base-100": "#f5faff",
+          "base-200": "#eaf5ff",
+          "base-300": "#dceffc",
+          "base-content": "#243b53",
+          "--rounded-btn": "0.75rem",
+          "--rounded-box": "1rem",
+          "--tab-radius": "0.5rem",
+        },
+      },
+      {
+        "pixstudio-dark": {
+          primary: "#38bdf8",
+          "primary-content": "#04263a",
+          secondary: "#0ea5e9",
+          "secondary-content": "#ffffff",
+          accent: "#fbbf24",
+          neutral: "#334155",
+          "base-100": "#1e293b",
+          "base-200": "#0f172a",
+          "base-300": "#020617",
+          "base-content": "#e2e8f0",
+          "--rounded-btn": "0.75rem",
+          "--rounded-box": "1rem",
+          "--tab-radius": "0.5rem",
+        },
+      },
       {
         upscayl: {
           primary: "#334155",

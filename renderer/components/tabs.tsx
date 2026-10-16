@@ -10,11 +10,7 @@ type TabsProps = {
 const Tabs = ({ selectedTab, setSelectedTab }: TabsProps) => {
   const t = useAtomValue(translationAtom);
 
-  const labels = [
-    t("TABS.UPSCALE"),
-    t("TABS.BG_REMOVAL"),
-    t("SETTINGS.TITLE"),
-  ];
+  const labels = [t("TABS.UPSCALE"), t("SETTINGS.TITLE")];
 
   return (
     <div className="tabs-boxed tabs mx-auto mb-2">

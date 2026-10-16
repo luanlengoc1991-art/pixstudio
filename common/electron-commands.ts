@@ -33,6 +33,11 @@ const ELECTRON_COMMANDS = {
   REMOVE_BACKGROUND: "Remove Background",
   REMOVE_BACKGROUND_PROGRESS:
     "Send Remove Background Progress from Main to Renderer",
+  SAVE_TEMP_IMAGE: "Save dropped or pasted image to a temp file",
+  SAVE_FILE_AS: "Save a result file with a dialog",
+  VECTORIZE_IMAGE: "Vectorize Image",
+  EXPORT_VECTOR_PDF: "Export Vector PDF",
+  DIE_CUT: "Create die-cut line",
 } as const;
 
 export { ELECTRON_COMMANDS };
