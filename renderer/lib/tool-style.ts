@@ -16,3 +16,13 @@ export const TOOL_ACCENT: Record<ToolId, [string, string, string]> = {
   "die-cut": ["#fca5a5", "#ef4444", "#b91c1c"],
   "id-photo": ["#93c5fd", "#3b82f6", "#1d4ed8"],
 };
+
+/** Rendered 3D object for each tool (Microsoft Fluent 3D, MIT, in public/icons3d) */
+export const toolImage = (id: ToolId) => `public:///icons3d/${id}.png`;
+
+export const STAT_IMAGES = {
+  tools: "public:///icons3d/stat-tools.png",
+  local: "public:///icons3d/stat-local.png",
+  cloud: "public:///icons3d/stat-cloud.png",
+  palette: "public:///icons3d/hero-palette.png",
+};

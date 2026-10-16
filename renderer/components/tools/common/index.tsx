@@ -17,7 +17,7 @@ import { ELECTRON_COMMANDS } from "@common/electron-commands";
 import { SaveFilePayload, SaveFilesToFolderPayload } from "@common/types/types";
 import { sanitizePath } from "@common/sanitize-path";
 import { cn } from "@/lib/utils";
-import { TOOL_ACCENT } from "@/lib/tool-style";
+import { TOOL_ACCENT, toolImage } from "@/lib/tool-style";
 import Icon3D from "@/components/ui/icon-3d";
 import { getTool, ToolId } from "@/lib/tools";
 import { activeTabAtom, pendingToolImageAtom } from "@/atoms/workspace-atom";
@@ -100,7 +100,7 @@ export function ToolLayout({
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <Icon3D icon={Icon} colors={TOOL_ACCENT[toolId]} size="md" tilt={false} />
+        <Icon3D icon={Icon} image={toolImage(toolId)} colors={TOOL_ACCENT[toolId]} size="md" tilt={false} />
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-base font-extrabold tracking-tight">{tool.title}</h2>
           <p className="truncate text-xs font-light text-base-content/70">{tool.description}</p>

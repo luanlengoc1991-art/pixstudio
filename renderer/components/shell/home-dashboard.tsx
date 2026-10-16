@@ -3,7 +3,7 @@ import { useSetAtom } from "jotai";
 import { ArrowRight, Cloud, Cpu, Image as ImageIcon, MousePointer2, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TOOLS } from "@/lib/tools";
-import { TOOL_ACCENT } from "@/lib/tool-style";
+import { STAT_IMAGES, TOOL_ACCENT, toolImage } from "@/lib/tool-style";
 import { openToolAtom } from "@/atoms/workspace-atom";
 import { useToast } from "@/components/ui/use-toast";
 import Icon3D from "@/components/ui/icon-3d";
@@ -34,16 +34,17 @@ function HeroArt() {
           </div>
         </div>
       </div>
+      <img src={STAT_IMAGES.palette} alt="" className="animate-float-slow absolute bottom-0 left-6 h-20 w-20 drop-shadow-[0_12px_14px_rgba(0,0,0,0.5)]" />
       <MousePointer2 className="animate-float-slow absolute bottom-6 right-24 h-9 w-9 fill-white/90 text-sky-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.9)]" />
       <Sparkles className="absolute left-36 top-0 h-6 w-6 text-sky-200/80" />
     </div>
   );
 }
 
-function StatRow({ icon, colors, value, title, text }: { icon: React.ElementType; colors: [string, string, string]; value: number; title: string; text: string }) {
+function StatRow({ icon, image, colors, value, title, text }: { icon: React.ElementType; image: string; colors: [string, string, string]; value: number; title: string; text: string }) {
   return (
     <div className="flex items-center gap-4 py-2.5">
-      <Icon3D icon={icon} colors={colors} size="md" tilt={false} />
+      <Icon3D icon={icon} image={image} colors={colors} size="md" tilt={false} />
       <span className="w-10 text-3xl font-black tabular-nums">{value}</span>
       <div className="min-w-0">
         <p className="text-sm font-bold">{title}</p>
@@ -80,9 +81,9 @@ export default function HomeDashboard() {
           </div>
 
           <div className="glass flex flex-col justify-center divide-y divide-base-content/10 rounded-3xl px-6 py-3 xl:w-[400px]">
-            <StatRow icon={Sparkles} colors={["#c4b5fd", "#8b5cf6", "#5b21b6"]} value={TOOLS.length} title="Công cụ AI xử lý ảnh" text="Đa dạng tác vụ · Hiệu quả vượt trội" />
-            <StatRow icon={Zap} colors={["#fde68a", "#f59e0b", "#b45309"]} value={local} title="Chạy trực tiếp trên máy" text="Nhanh chóng · Bảo mật · Ổn định" />
-            <StatRow icon={Cloud} colors={["#7dd3fc", "#0ea5e9", "#0369a1"]} value={viaChatGpt} title="Chạy qua ChatGPT" text="Sức mạnh AI · Linh hoạt · Chất lượng cao" />
+            <StatRow icon={Sparkles} image={STAT_IMAGES.tools} colors={["#c4b5fd", "#8b5cf6", "#5b21b6"]} value={TOOLS.length} title="Công cụ AI xử lý ảnh" text="Đa dạng tác vụ · Hiệu quả vượt trội" />
+            <StatRow icon={Zap} image={STAT_IMAGES.local} colors={["#fde68a", "#f59e0b", "#b45309"]} value={local} title="Chạy trực tiếp trên máy" text="Nhanh chóng · Bảo mật · Ổn định" />
+            <StatRow icon={Cloud} image={STAT_IMAGES.cloud} colors={["#7dd3fc", "#0ea5e9", "#0369a1"]} value={viaChatGpt} title="Chạy qua ChatGPT" text="Sức mạnh AI · Linh hoạt · Chất lượng cao" />
           </div>
         </section>
 
@@ -117,7 +118,7 @@ export default function HomeDashboard() {
                 />
 
                 <div className="relative flex w-full items-start justify-between gap-2">
-                  <Icon3D icon={tool.icon} colors={TOOL_ACCENT[tool.id]} size="lg" />
+                  <Icon3D icon={tool.icon} image={toolImage(tool.id)} colors={TOOL_ACCENT[tool.id]} size="xl" />
                   {soon ? (
                     <span className="rounded-full bg-base-content/10 px-2.5 py-1 text-[11px] font-semibold text-base-content/60">Sắp có</span>
                   ) : (

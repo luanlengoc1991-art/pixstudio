@@ -14,6 +14,7 @@ const SIZES = {
  */
 export default function Icon3D({
   icon: Icon,
+  image,
   colors,
   size = "lg",
   tilt = true,
@@ -21,6 +22,8 @@ export default function Icon3D({
   className,
 }: {
   icon: React.ElementType;
+  /** A rendered 3D object (PNG) shown in front of a glass tile instead of the flat icon */
+  image?: string;
   /** [light, main, deep] */
   colors: [string, string, string];
   size?: keyof typeof SIZES;
@@ -70,7 +73,44 @@ export default function Icon3D({
         )}
         style={{ width: s.box, height: s.box, transformStyle: "preserve-3d" }}
       >
-        {/* Face with a thick darker edge underneath (the extrusion) */}
+        {image ? (
+          <>
+            {/* Frosted glass tile tinted with the tool colour */}
+            <span
+              className="absolute inset-0 overflow-hidden backdrop-blur-md"
+              style={{
+                borderRadius: s.radius,
+                background: `linear-gradient(145deg, ${light}66 0%, ${main}40 50%, ${deep}66 100%)`,
+                border: "1px solid rgba(255,255,255,0.28)",
+                boxShadow: [
+                  `0 ${s.depth}px 0 ${deep}aa`,
+                  `0 ${s.depth + 2}px 0 rgba(0,0,0,0.3)`,
+                  "inset 0 2px 1px rgba(255,255,255,0.45)",
+                  `inset 0 -10px 20px ${deep}55`,
+                ].join(", "),
+              }}
+            >
+              <span
+                className="pointer-events-none absolute inset-x-0 top-0 h-1/2"
+                style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0))" }}
+              />
+            </span>
+            {/* The 3D object pops out of the tile */}
+            <img
+              src={image}
+              alt=""
+              draggable={false}
+              className="absolute left-1/2 max-w-none -translate-x-1/2 transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:rotate-[-6deg] group-hover:scale-110"
+              style={{
+                width: s.box * 0.98,
+                height: s.box * 0.98,
+                top: -s.box * 0.1,
+                filter: `drop-shadow(0 ${Math.round(s.box * 0.1)}px ${Math.round(s.box * 0.1)}px rgba(0,0,0,0.5)) drop-shadow(0 0 ${Math.round(s.box * 0.12)}px ${main}aa)`,
+              }}
+            />
+          </>
+        ) : (
+        /* Face with a thick darker edge underneath (the extrusion) */
         <span
           className="absolute inset-0 flex items-center justify-center overflow-hidden"
           style={{
@@ -95,6 +135,7 @@ export default function Icon3D({
             strokeWidth={2.3}
           />
         </span>
+        )}
       </span>
     </span>
   );

@@ -32,6 +32,7 @@ import {
 } from "./commands/chatgpt-bridge";
 import { saveFileAs, saveFilesToFolder, saveTempImage } from "./utils/tool-files";
 import path from "path";
+import fs from "fs";
 import { getSystemStats } from "./utils/system-stats";
 
 // INITIALIZATION
@@ -50,13 +51,10 @@ app.on("ready", async () => {
     });
     protocol.registerFileProtocol("public", (request, callback) => {
       const filePath = decodeURI(request.url.replace("public:///", ""));
-      const asarPath = path.join(
-        app.getAppPath(),
-        "renderer",
-        process.env.NODE_ENV === "development" ? "public" : "out",
-        filePath,
-      );
-      callback(asarPath);
+      // Dev runs read renderer/public; packaged builds only have renderer/out
+      const fromPublic = path.join(app.getAppPath(), "renderer", "public", filePath);
+      const fromOut = path.join(app.getAppPath(), "renderer", "out", filePath);
+      callback(fs.existsSync(fromPublic) ? fromPublic : fromOut);
     });
     logit("🚃 App Path: ", app.getAppPath());
   });

@@ -4,7 +4,7 @@ import { Cpu, House, MemoryStick, MessageCircle, Monitor, Moon, Plus, Search, Su
 import { ELECTRON_COMMANDS } from "@common/electron-commands";
 import { cn } from "@/lib/utils";
 import { getTool, TOOLS } from "@/lib/tools";
-import { TOOL_ACCENT } from "@/lib/tool-style";
+import { TOOL_ACCENT, toolImage } from "@/lib/tool-style";
 import { activeTabAtom, closeToolAtom, openToolAtom, openToolsAtom } from "@/atoms/workspace-atom";
 import { chatGptActivatedAtom, chatGptConnectionAtom, chatGptQueueAtom } from "@/atoms/chatgpt-atom";
 import UpscaylSVGLogo from "@/components/icons/upscayl-logo-svg";
@@ -242,7 +242,7 @@ function ToolSearch() {
               onClick={() => choose(t.id)}
               className="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-base-content/10"
             >
-              <Icon3D icon={t.icon} colors={TOOL_ACCENT[t.id]} size="sm" tilt={false} />
+              <Icon3D icon={t.icon} image={toolImage(t.id)} colors={TOOL_ACCENT[t.id]} size="sm" tilt={false} />
               <span className="min-w-0">
                 <span className="block truncate text-sm font-bold">{t.title}</span>
                 <span className="block truncate text-[11px] font-light text-base-content/60">{t.description}</span>
