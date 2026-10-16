@@ -1,170 +1,245 @@
 import React from "react";
-import { useSetAtom } from "jotai";
-import { ArrowRight, Cloud, Cpu, Image as ImageIcon, MousePointer2, Sparkles, Zap } from "lucide-react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { ArrowRight, Cpu, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TOOLS } from "@/lib/tools";
-import { STAT_IMAGES, TOOL_ACCENT, toolImage } from "@/lib/tool-style";
+import { ToolInfo, TOOLS } from "@/lib/tools";
+import { TOOL_ACCENT, toolImage } from "@/lib/tool-style";
 import { openToolAtom } from "@/atoms/workspace-atom";
+import { chatGptConnectionAtom } from "@/atoms/chatgpt-atom";
 import { useToast } from "@/components/ui/use-toast";
-import Icon3D from "@/components/ui/icon-3d";
 
-/** Floating glass cards around a glowing "AI" cube, drawn with CSS only. */
-function HeroArt() {
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** Deep blue stage: gradient, glowing horizon, perspective floor grid, light streaks and a giant faded mark. */
+function Backdrop() {
   return (
-    <div className="pointer-events-none relative hidden h-56 w-[420px] shrink-0 lg:block" aria-hidden>
-      <div className="absolute inset-0 rounded-full bg-primary/25 blur-3xl" />
-      {/* Back cards */}
-      <div className="animate-float-slow absolute left-4 top-10 h-28 w-40 rounded-2xl border border-white/20 bg-gradient-to-br from-sky-400/30 to-indigo-500/20 shadow-2xl backdrop-blur-md [transform:perspective(600px)_rotateY(28deg)_rotateX(8deg)]">
-        <div className="m-3 h-3 w-16 rounded-full bg-white/40" />
-        <div className="mx-3 h-2 w-24 rounded-full bg-white/25" />
-        <div className="mx-3 mt-2 h-10 rounded-lg bg-white/15" />
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_115%,#2a4dff_0%,#1530b8_22%,#0a1450_48%,#050a24_75%)]" />
+      {/* Giant faded mark */}
+      <span className="font-display absolute -left-10 top-1/4 select-none text-[34rem] font-bold leading-none text-white/[0.035]">AI</span>
+      {/* Light streaks */}
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1600 900" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#7dd3fc" stopOpacity="0" />
+            <stop offset="0.5" stopColor="#bae6fd" stopOpacity="0.55" />
+            <stop offset="1" stopColor="#7dd3fc" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <polyline points="0,620 180,520 260,560 420,380 470,430 640,120 700,60" fill="none" stroke="url(#streak)" strokeWidth="2" />
+        <polyline points="60,760 240,640 300,690 520,470" fill="none" stroke="url(#streak)" strokeWidth="1.5" />
+        <polyline points="1000,0 1180,140 1240,110 1600,330" fill="none" stroke="url(#streak)" strokeWidth="1.2" />
+      </svg>
+      {/* Horizon glow */}
+      <div className="absolute inset-x-0 top-[66%] h-px bg-gradient-to-r from-transparent via-sky-200/80 to-transparent shadow-[0_0_40px_8px_rgba(96,165,250,0.45)]" />
+      {/* Perspective floor grid */}
+      <div className="absolute inset-x-[-20%] bottom-[-10%] top-[66%] [perspective:600px]">
+        <div
+          className="h-full w-full origin-top [transform:rotateX(70deg)]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(147,197,253,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(147,197,253,0.18) 1px, transparent 1px)",
+            backgroundSize: "70px 70px",
+            maskImage: "linear-gradient(to bottom, black, transparent 85%)",
+          }}
+        />
       </div>
-      <div className="animate-float absolute right-2 top-16 flex h-28 w-36 items-center justify-center rounded-2xl border border-white/20 bg-gradient-to-br from-violet-400/30 to-sky-500/20 shadow-2xl backdrop-blur-md [transform:perspective(600px)_rotateY(-26deg)_rotateX(8deg)]">
-        <ImageIcon className="h-12 w-12 text-white/70" />
-      </div>
-      {/* AI cube */}
-      <div className="animate-float absolute left-1/2 top-2 -translate-x-1/2">
-        <div className="relative h-40 w-40 [transform:perspective(700px)_rotateX(12deg)_rotateY(-16deg)]">
-          <div className="absolute inset-0 translate-y-3 rounded-[2.2rem] bg-blue-900/80" />
-          <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-[2.2rem] border border-white/40 bg-gradient-to-br from-sky-300/90 via-blue-500/80 to-violet-600/90 shadow-[0_20px_60px_-10px_rgba(59,130,246,0.9),inset_0_2px_0_rgba(255,255,255,0.6)]">
-            <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/50 to-transparent" />
-            <span className="relative bg-gradient-to-b from-white to-sky-100 bg-clip-text text-6xl font-black tracking-tighter text-transparent drop-shadow-[0_4px_8px_rgba(30,64,175,0.8)]">
-              AI
-            </span>
-          </div>
-        </div>
-      </div>
-      <MousePointer2 className="animate-float-slow absolute bottom-6 right-24 h-9 w-9 fill-white/90 text-sky-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.9)]" />
-      <Sparkles className="absolute left-36 top-0 h-6 w-6 text-sky-200/80" />
+      {/* Curved floor lines */}
+      <svg className="absolute inset-x-0 bottom-0 h-1/3 w-full" viewBox="0 0 1600 300" preserveAspectRatio="none">
+        <path d="M0,120 Q800,20 1600,120" fill="none" stroke="rgba(191,219,254,0.35)" strokeWidth="1.5" />
+        <path d="M0,240 Q800,150 1600,240" fill="none" stroke="rgba(191,219,254,0.25)" strokeWidth="1.2" />
+      </svg>
     </div>
   );
 }
 
-function StatRow({ icon, image, colors, value, title, text }: { icon: React.ElementType; image: string; colors: [string, string, string]; value: number; title: string; text: string }) {
+function EngineTag({ tool }: { tool: ToolInfo }) {
+  const chatgpt = tool.engine === "chatgpt";
   return (
-    <div className="flex items-center gap-4 py-2.5">
-      <Icon3D icon={icon} image={image} colors={colors} size="md" tilt={false} />
-      <span className="w-10 text-3xl font-black tabular-nums">{value}</span>
-      <div className="min-w-0">
-        <p className="text-sm font-bold">{title}</p>
-        <p className="text-[11px] font-light text-base-content/60">{text}</p>
+    <span
+      className={cn(
+        "font-display inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider",
+        chatgpt ? "bg-emerald-500/20 text-emerald-300" : "bg-blue-600 text-white",
+      )}
+    >
+      {chatgpt ? <Sparkles className="h-3 w-3" /> : <Cpu className="h-3 w-3" />}
+      {chatgpt ? "ChatGPT" : "Trên máy"}
+    </span>
+  );
+}
+
+/** One tool as a broadcast "match" row: number box, logo, big name, tag and an open button. */
+function ToolRow({ tool, index, onOpen }: { tool: ToolInfo; index: number; onOpen: () => void }) {
+  const [light, main] = TOOL_ACCENT[tool.id];
+  return (
+    <button
+      onClick={onOpen}
+      className="panel-cut group relative flex w-full items-stretch overflow-hidden bg-gradient-to-r from-[#1b2346]/95 via-[#151c3a]/95 to-[#11173a]/95 text-left shadow-[0_18px_40px_-20px_rgba(0,0,0,0.8)] transition-all duration-200 hover:from-[#222c58] hover:via-[#1a2247] hover:to-[#141b44]"
+    >
+      {/* Accent bar */}
+      <span className="absolute inset-y-4 left-0 w-1" style={{ background: main, boxShadow: `0 0 14px ${main}` }} />
+      {/* Number box */}
+      <div className="flex w-24 shrink-0 flex-col items-center justify-center border-r border-white/10 py-4">
+        <span className="font-display text-[44px] font-bold leading-none text-white">{pad(index + 1)}</span>
+        <span className="mt-2 font-display text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">Công cụ</span>
       </div>
-    </div>
+      {/* Logo + name */}
+      <div className="flex min-w-0 flex-1 items-center gap-4 px-5 py-4">
+        <img
+          src={toolImage(tool.id)}
+          alt=""
+          draggable={false}
+          className="h-20 w-20 shrink-0 object-contain transition-transform duration-300 group-hover:scale-110"
+          style={{ filter: `drop-shadow(0 8px 14px ${main}66)` }}
+        />
+        <div className="min-w-0">
+          {/* Room above the caps so Vietnamese marks (Ấ, Ổ...) are not clipped by truncate */}
+          <h3 className="font-display truncate pt-1 text-[30px] font-bold uppercase leading-[1.3] tracking-wide text-white">{tool.title}</h3>
+          <p className="mt-1 line-clamp-2 text-[13px] font-light leading-5 text-white/70">{tool.description}</p>
+          <div className="mt-2.5">
+            <EngineTag tool={tool} />
+          </div>
+        </div>
+      </div>
+      {/* Open */}
+      <div className="flex shrink-0 items-center pr-6">
+        <span
+          className="font-display flex items-center gap-2 px-4 py-2 text-sm font-semibold uppercase tracking-wider text-white transition-all group-hover:gap-3"
+          style={{ background: `linear-gradient(135deg, ${light}, ${main})`, boxShadow: `0 8px 20px -8px ${main}` }}
+        >
+          Mở <ArrowRight className="h-4 w-4" />
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function SidePanel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="panel-cut bg-gradient-to-b from-[#1b2346]/95 to-[#11173a]/95 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.8)]">
+      <h3 className="font-display flex items-center gap-2 border-b border-white/10 px-5 py-3 text-xl font-bold uppercase tracking-wide text-white">
+        <span className="h-5 w-1 bg-sky-400 shadow-[0_0_10px_#38bdf8]" />
+        {title}
+      </h3>
+      <div className="divide-y divide-white/10 px-3 pb-2">{children}</div>
+    </section>
   );
 }
 
 export default function HomeDashboard() {
   const openTool = useSetAtom(openToolAtom);
+  const connection = useAtomValue(chatGptConnectionAtom);
   const { toast } = useToast();
-  const local = TOOLS.filter((t) => t.status === "ready" && t.engine === "local").length;
-  const viaChatGpt = TOOLS.filter((t) => t.status === "ready" && t.engine === "chatgpt").length;
+  const local = TOOLS.filter((t) => t.status === "ready" && t.engine === "local");
+  const viaChatGpt = TOOLS.filter((t) => t.status === "ready" && t.engine === "chatgpt");
+  const now = new Date();
+  const today = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}`;
+  const open = (tool: ToolInfo) =>
+    tool.status === "soon"
+      ? toast({ title: `${tool.title} · sắp ra mắt`, description: "Công cụ này sẽ có trong bản cập nhật tiếp theo." })
+      : openTool(tool.id);
+
+  const section = (label: string, tools: ToolInfo[], offset: number) => (
+    <div>
+      <div className="mb-3 flex items-center gap-3">
+        <span className="h-6 w-1 bg-sky-400 shadow-[0_0_10px_#38bdf8]" />
+        <h2 className="font-display text-2xl font-bold uppercase tracking-wide text-white">{label}</h2>
+        <span className="font-display text-sm font-semibold uppercase tracking-widest text-sky-300">{tools.length} công cụ</span>
+      </div>
+      <div className="grid grid-cols-1 gap-3 2xl:grid-cols-2">
+        {tools.map((tool, i) => (
+          <ToolRow key={tool.id} tool={tool} index={offset + i} onOpen={() => open(tool)} />
+        ))}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-[2300px] px-8 py-6">
-        {/* Hero */}
-        <section className="mb-6 flex flex-col gap-5 xl:flex-row">
-          <div className="glass relative flex min-w-0 flex-1 items-center overflow-hidden rounded-3xl px-8 py-7">
-            <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-secondary/20 blur-3xl" />
-            <div className="relative min-w-0 flex-1">
-              <h1 className="bg-gradient-to-r from-slate-900 via-sky-800 to-violet-700 bg-clip-text text-4xl font-black leading-tight tracking-tight text-transparent dark:from-white dark:via-sky-100 dark:to-violet-300">
-                Bộ công cụ AI xử lý ảnh
-              </h1>
-              <p className="mt-3 max-w-xl text-sm font-light leading-6 text-base-content/75">
-                <b className="font-bold text-base-content">{local} công cụ</b> chạy trực tiếp trên máy ·{" "}
-                <b className="font-bold text-base-content">{viaChatGpt} công cụ AI</b> chạy qua tài khoản ChatGPT của bạn. Có thể
-                mở nhiều công cụ cùng lúc dưới dạng tab.
-              </p>
+    <div className="relative h-full overflow-hidden bg-[#050a24]">
+      <Backdrop />
+      <div className="relative h-full overflow-y-auto pb-14">
+        <div className="mx-auto max-w-[1760px] px-10 pt-8">
+          {/* Masthead */}
+          <div className="flex items-start justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <span className="font-display text-4xl font-bold uppercase tracking-tight text-white">Luan_MKT_Studio</span>
+              <span className="h-10 w-px bg-white/30" />
+              <div className="font-display text-xs font-semibold uppercase leading-5 tracking-[0.25em] text-white/80">
+                <p>Bộ công cụ AI xử lý ảnh</p>
+                <p className="text-white/55">Sáng tạo không giới hạn</p>
+              </div>
             </div>
-            <HeroArt />
+            <span className="font-display bg-blue-600 px-4 py-1 text-sm font-bold uppercase tracking-widest text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]">
+              Hôm nay · {today}
+            </span>
           </div>
 
-          <div className="glass flex flex-col justify-center divide-y divide-base-content/10 rounded-3xl px-6 py-3 xl:w-[400px]">
-            <StatRow icon={Sparkles} image={STAT_IMAGES.tools} colors={["#c4b5fd", "#8b5cf6", "#5b21b6"]} value={TOOLS.length} title="Công cụ AI xử lý ảnh" text="Đa dạng tác vụ · Hiệu quả vượt trội" />
-            <StatRow icon={Zap} image={STAT_IMAGES.local} colors={["#fde68a", "#f59e0b", "#b45309"]} value={local} title="Chạy trực tiếp trên máy" text="Nhanh chóng · Bảo mật · Ổn định" />
-            <StatRow icon={Cloud} image={STAT_IMAGES.cloud} colors={["#7dd3fc", "#0ea5e9", "#0369a1"]} value={viaChatGpt} title="Chạy qua ChatGPT" text="Sức mạnh AI · Linh hoạt · Chất lượng cao" />
-          </div>
-        </section>
+          <h1 className="font-display mt-4 text-[92px] font-bold uppercase leading-[0.95] tracking-tight text-white">
+            Bộ công cụ <span className="text-cyan-300 drop-shadow-[0_0_30px_rgba(103,232,249,0.45)]">AI</span>
+          </h1>
+          <p className="font-display mt-3 text-base font-semibold uppercase tracking-[0.18em] text-white/85">
+            {TOOLS.length} công cụ <span className="mx-2 text-sky-400">/</span> {local.length} chạy trên máy{" "}
+            <span className="mx-2 text-sky-400">/</span> {viaChatGpt.length} qua ChatGPT <span className="mx-2 text-sky-400">/</span> mở nhiều
+            tab cùng lúc
+          </p>
 
-        {/* Tools */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
-          {TOOLS.map((tool) => {
-            const soon = tool.status === "soon";
-            const chatgpt = tool.engine === "chatgpt";
-            const [light, main, deep] = TOOL_ACCENT[tool.id];
-            return (
-              <button
-                key={tool.id}
-                onClick={() =>
-                  soon
-                    ? toast({ title: `${tool.title} · sắp ra mắt`, description: "Công cụ này sẽ có trong bản cập nhật tiếp theo." })
-                    : openTool(tool.id)
-                }
-                className={cn(
-                  "glass group relative flex min-h-[190px] w-full flex-col overflow-hidden rounded-3xl p-5 text-left transition-all duration-300",
-                  soon ? "opacity-60" : "hover:-translate-y-1.5",
-                )}
-                style={{ ["--accent" as string]: main }}
-              >
-                {/* Accent glow and border that light up on hover */}
-                <span
-                  className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-25 blur-3xl transition-opacity duration-300 group-hover:opacity-60"
-                  style={{ background: main }}
-                />
-                <span
-                  className="pointer-events-none absolute inset-0 rounded-3xl opacity-40 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ boxShadow: `inset 0 0 0 1px ${main}66, 0 18px 40px -18px ${main}` }}
-                />
+          <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="flex flex-col gap-8">
+              {section("AI qua ChatGPT", viaChatGpt, 0)}
+              {section("Chạy trên máy", local, viaChatGpt.length)}
+            </div>
 
-                {/* Engine badge, top right */}
-                {soon ? (
-                  <span className="absolute right-4 top-4 rounded-full bg-base-content/10 px-2.5 py-1 text-[11px] font-semibold text-base-content/60">
-                    Sắp có
-                  </span>
-                ) : (
-                  <span
-                    className={cn(
-                      "absolute right-4 top-4 flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold",
-                      chatgpt
-                        ? "border-emerald-400/30 bg-emerald-500/15 text-emerald-500 dark:text-emerald-300"
-                        : "border-sky-400/30 bg-sky-500/15 text-sky-600 dark:text-sky-300",
-                    )}
-                  >
-                    {chatgpt ? <Sparkles className="h-3 w-3" /> : <Cpu className="h-3 w-3" />}
-                    {chatgpt ? "ChatGPT" : "Trên máy"}
-                  </span>
-                )}
-
-                {/* Big 3D icon on the left, name and text on the right */}
-                <div className="relative mt-6 flex flex-1 items-center gap-4">
-                  <Icon3D icon={tool.icon} image={toolImage(tool.id)} colors={TOOL_ACCENT[tool.id]} size="xxl" className="-ml-2" />
-                  <div className="flex min-w-0 flex-1 flex-col self-stretch">
-                    <h2
-                      className="text-[20px] font-black leading-tight tracking-tight text-base-content dark:text-white"
-                      style={{ textShadow: `0 0 22px ${main}55` }}
-                    >
-                      {tool.title}
-                    </h2>
-                    <p className="mt-1.5 line-clamp-3 text-[12.5px] font-light leading-5 text-base-content/70">{tool.description}</p>
-                    {!soon && (
-                      <span
-                        className="mt-auto flex items-center gap-1.5 self-start rounded-full border px-4 py-1.5 text-xs font-bold text-white transition-all duration-300 group-hover:gap-2.5 group-hover:shadow-lg"
-                        style={{
-                          marginTop: 14,
-                          borderColor: `${light}66`,
-                          background: `linear-gradient(135deg, ${main}cc, ${deep}cc)`,
-                          boxShadow: `0 6px 18px -8px ${main}`,
-                        }}
-                      >
-                        Mở công cụ
-                        <ArrowRight className="h-4 w-4" />
-                      </span>
-                    )}
+            <aside className="flex flex-col gap-5">
+              <SidePanel title="Trạng thái">
+                {[
+                  ["Kết nối ChatGPT", connection === "connected" ? "Đã kết nối" : "Chưa kết nối", connection === "connected"],
+                  ["Công cụ sẵn sàng", `${TOOLS.filter((t) => t.status === "ready").length} / ${TOOLS.length}`, true],
+                  ["Chạy trên máy", `${local.length} công cụ`, true],
+                  ["Qua ChatGPT", `${viaChatGpt.length} công cụ`, connection === "connected"],
+                ].map(([label, value, ok]) => (
+                  <div key={label as string} className="flex items-center justify-between px-2 py-3">
+                    <span className="font-display text-sm font-semibold uppercase tracking-wide text-white/80">{label}</span>
+                    <span className={cn("font-display text-base font-bold", ok ? "text-cyan-300" : "text-amber-300")}>{value}</span>
                   </div>
-                </div>
-              </button>
-            );
-          })}
+                ))}
+              </SidePanel>
+
+              <SidePanel title="Danh sách công cụ">
+                {[...viaChatGpt, ...local].map((tool) => (
+                  <button
+                    key={tool.id}
+                    onClick={() => open(tool)}
+                    className="flex w-full items-center gap-3 px-2 py-2 text-left transition-colors hover:bg-white/5"
+                  >
+                    <img src={toolImage(tool.id)} alt="" className="h-8 w-8 object-contain" draggable={false} />
+                    <span className="font-display min-w-0 flex-1 truncate text-[15px] font-semibold uppercase text-white">{tool.title}</span>
+                    <span
+                      className={cn(
+                        "font-display text-[11px] font-semibold uppercase tracking-wider",
+                        tool.engine === "chatgpt" ? "text-emerald-300" : "text-sky-300",
+                      )}
+                    >
+                      {tool.engine === "chatgpt" ? "GPT" : "Máy"}
+                    </span>
+                  </button>
+                ))}
+              </SidePanel>
+            </aside>
+          </div>
+        </div>
+      </div>
+
+      {/* Ticker */}
+      <div className="absolute inset-x-0 bottom-0 overflow-hidden border-t border-blue-400/40 bg-blue-700/90 py-2">
+        <div className="animate-ticker flex w-max gap-16 whitespace-nowrap">
+          {Array.from({ length: 16 }).map((_, i) => (
+            <span
+              key={i}
+              className={cn("font-display text-sm font-bold uppercase tracking-[0.2em]", i % 2 ? "text-cyan-200" : "text-white")}
+            >
+              Luan_MKT_Studio · Sáng tạo không giới hạn
+            </span>
+          ))}
         </div>
       </div>
     </div>

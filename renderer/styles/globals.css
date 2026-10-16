@@ -1,3 +1,11 @@
+/* Oswald (OFL, fonts/oswald/OFL.txt): condensed display face for broadcast-style headings */
+@font-face {
+  font-family: "Oswald";
+  src: url("../fonts/oswald/Oswald-Variable.ttf") format("truetype");
+  font-weight: 200 700;
+  font-style: normal;
+  font-display: swap;
+}
 /* Be Vietnam Pro (OFL, fonts/be-vietnam-pro/OFL.txt): designed for Vietnamese diacritics */
 @font-face {
   font-family: "Be Vietnam Pro";
@@ -393,3 +401,21 @@
 }
 .animate-float { animation: float-y 5s ease-in-out infinite; }
 .animate-float-slow { animation: float-y 7s ease-in-out infinite; }
+
+/* Broadcast-style home screen (esports schedule look) */
+.font-display {
+  font-family: "Oswald", "Be Vietnam Pro", sans-serif;
+  letter-spacing: 0.01em;
+}
+/* Panel with two cut corners */
+.panel-cut {
+  clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 22px 100%, 0 calc(100% - 22px));
+}
+.panel-cut-sm {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-ticker { animation: ticker 40s linear infinite; }
