@@ -299,6 +299,18 @@ export default function LayerSeparationTool() {
                   ? `Đã chọn ${regions.length} vùng. AI sẽ tạo ${regions.length + 1} file (${regions.length} ảnh PNG không nền + 1 ảnh gốc đã mất chỗ tách).`
                   : "Bấm \"Chọn vùng cần tách\" để khoanh các đối tượng. AI sẽ bóc tách các đối tượng đã chọn và 1 ảnh gốc đã mất chỗ tách."}
             </p>
+            <button
+              className="btn btn-ghost btn-sm mt-2"
+              onClick={() => {
+                runSettings.current = { mode, regions, source: imagePath };
+                setTotal(mode === "custom" && regions.length ? regions.length + 1 : AUTO_LAYER_COUNT);
+                fetchResults();
+              }}
+              data-tooltip-id="tooltip"
+              data-tooltip-content="Mở cuộc chat có kết quả trong tab ChatGPT trước, rồi bấm nút này"
+            >
+              <Download className="h-4 w-4" /> Đã tách trong ChatGPT? Lấy kết quả về app
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
