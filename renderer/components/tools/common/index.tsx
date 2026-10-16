@@ -244,12 +244,15 @@ export function ImageInput({
   onChange,
   label = "Kéo thả ảnh hoặc bấm chọn",
   compact,
+  acceptPaste = true,
 }: {
   toolId: ToolId;
   imagePath: string;
   onChange: (path: string) => void;
   label?: string;
   compact?: boolean;
+  /** Only one input per tool should take Ctrl+V */
+  acceptPaste?: boolean;
 }) {
   const { toast } = useToast();
   const activeTab = useAtomValue(activeTabAtom);
@@ -268,7 +271,7 @@ export function ImageInput({
   );
 
   useEffect(() => {
-    if (activeTab !== toolId) return;
+    if (activeTab !== toolId || !acceptPaste) return;
     const onPaste = (event: ClipboardEvent) => {
       const item = Array.from(event.clipboardData?.items ?? []).find((i) =>
         i.type.startsWith("image/"),
@@ -281,7 +284,7 @@ export function ImageInput({
     };
     document.addEventListener("paste", onPaste);
     return () => document.removeEventListener("paste", onPaste);
-  }, [activeTab, toolId, acceptFile, toast]);
+  }, [activeTab, toolId, acceptPaste, acceptFile, toast]);
 
   const choose = async () => {
     const path = await window.electron.invoke(ELECTRON_COMMANDS.SELECT_FILE);

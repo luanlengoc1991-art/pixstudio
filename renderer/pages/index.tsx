@@ -2,7 +2,14 @@
 import { useEffect } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ELECTRON_COMMANDS } from "@common/electron-commands";
-import { activeTabAtom, openToolsAtom, toolProgressAtom } from "@/atoms/workspace-atom";
+import { ChatGptResult, ChatGptStatus } from "@common/types/types";
+import {
+  activeTabAtom,
+  chatGptResultsAtom,
+  chatGptStatusAtom,
+  openToolsAtom,
+  toolProgressAtom,
+} from "@/atoms/workspace-atom";
 import TopBar from "@/components/shell/top-bar";
 import HomeDashboard from "@/components/shell/home-dashboard";
 import UpscaleTool from "@/components/tools/upscale-tool";
@@ -10,25 +17,41 @@ import RemoveBgTool from "@/components/tools/remove-bg-tool";
 import VectorTool from "@/components/tools/vector-tool";
 import DieCutTool from "@/components/tools/die-cut-tool";
 import IdPhotoTool from "@/components/tools/id-photo";
+import ChatGptTool from "@/components/tools/chatgpt-tool";
 import useUpscaylVersion from "@/components/hooks/use-upscayl-version";
-import { ToolId } from "@/lib/tools";
+import { ToolId, TOOLS } from "@/lib/tools";
 
 const TOOL_VIEWS: Partial<Record<ToolId, () => JSX.Element>> = {
   "remove-bg": RemoveBgTool,
   vector: VectorTool,
   "die-cut": DieCutTool,
   "id-photo": IdPhotoTool,
+  // Phase 2 tools share one screen driven by lib/ai-tools.ts
+  ...Object.fromEntries(
+    TOOLS.filter((tool) => tool.engine === "chatgpt").map((tool) => [
+      tool.id,
+      () => <ChatGptTool toolId={tool.id} />,
+    ]),
+  ),
 };
 
 const App = () => {
   const activeTab = useAtomValue(activeTabAtom);
   const openTools = useAtomValue(openToolsAtom);
   const setToolProgress = useSetAtom(toolProgressAtom);
+  const setChatGptResults = useSetAtom(chatGptResultsAtom);
+  const setChatGptStatus = useSetAtom(chatGptStatusAtom);
   const version = useUpscaylVersion();
 
   useEffect(() => {
     window.electron.on(ELECTRON_COMMANDS.REMOVE_BACKGROUND_PROGRESS, (_, data: string) => {
       if (data) setToolProgress(data);
+    });
+    window.electron.on(ELECTRON_COMMANDS.CHATGPT_STATUS, (_, status: ChatGptStatus) => {
+      setChatGptStatus((prev) => ({ ...prev, [status.toolId]: status }));
+    });
+    window.electron.on(ELECTRON_COMMANDS.CHATGPT_RESULT, (_, { toolId, path }: ChatGptResult) => {
+      setChatGptResults((prev) => ({ ...prev, [toolId]: [path, ...(prev[toolId] ?? [])] }));
     });
   }, []);
 

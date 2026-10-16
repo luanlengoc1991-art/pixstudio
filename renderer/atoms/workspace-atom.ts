@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import { ChatGptStatus } from "@common/types/types";
 import { ToolId } from "@/lib/tools";
 
 export type WorkspaceTab = "home" | ToolId;
@@ -37,3 +38,9 @@ export const closeToolAtom = atom(null, (get, set, tool: ToolId) => {
     set(activeTabAtom, next[Math.max(0, index - 1)] ?? "home");
   }
 });
+
+/** Images downloaded from the ChatGPT window, per tool, newest first */
+export const chatGptResultsAtom = atom<Partial<Record<ToolId, string[]>>>({});
+
+/** Last ChatGPT window status, per tool */
+export const chatGptStatusAtom = atom<Partial<Record<ToolId, ChatGptStatus>>>({});

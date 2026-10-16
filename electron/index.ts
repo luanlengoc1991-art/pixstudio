@@ -23,6 +23,7 @@ import pasteImage from "./commands/paste-image";
 import removeBackground from "./commands/remove-background";
 import { exportSvgToPdf, vectorizeImage } from "./commands/vectorize";
 import dieCut from "./commands/die-cut";
+import openChatGpt, { resetChatGptLogin } from "./commands/chatgpt-bridge";
 import { saveFileAs, saveTempImage } from "./utils/tool-files";
 import path from "path";
 
@@ -119,6 +120,10 @@ ipcMain.handle(ELECTRON_COMMANDS.VECTORIZE_IMAGE, vectorizeImage);
 ipcMain.handle(ELECTRON_COMMANDS.EXPORT_VECTOR_PDF, exportSvgToPdf);
 
 ipcMain.handle(ELECTRON_COMMANDS.DIE_CUT, dieCut);
+
+ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_OPEN, openChatGpt);
+
+ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_LOGOUT, resetChatGptLogin);
 
 ipcMain.handle("get-gpu-info", async () => {
   try {

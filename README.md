@@ -12,7 +12,8 @@ Dựa trên [Upscayl](https://github.com/upscayl/upscayl) (giấy phép AGPL-3.0
 | Chuyển Vector (8 kiểu, SVG / PDF) | ✅ | Trên máy (`vtracer`, `potrace`) |
 | Bế file in ấn (theo viền, bao cụm, bo tròn, chữ nhật) | ✅ | Trên máy, xuất PNG + SVG có lớp `CutContour` |
 | Chỉnh sửa ảnh thẻ: Cắt ảnh + Xếp in | ✅ | Trên máy (2x3, 3x4, 4x6, Visa; khổ 10x15, A5, A4) |
-| Bóc Tách Layer, Phục hồi ấn phẩm, Retoucher, Render 3D, Thiết kế quảng cáo, Fake Model, Phối cảnh biển hiệu, Phục hồi ảnh cũ, Ảnh thẻ AI | 🕓 Đợt 2 | Qua cửa sổ ChatGPT |
+| Bóc Tách Layer, Phục hồi ấn phẩm, Retoucher sản phẩm, Render 2D sang 3D, Thiết kế quảng cáo, Fake Model, Phối cảnh biển hiệu, Phục hồi ảnh cũ | ✅ | Qua cửa sổ ChatGPT trong app (tài khoản ChatGPT của bạn): app tự dán ảnh + yêu cầu, bạn bấm Gửi, ảnh tải về tự hiện trong công cụ |
+| Ảnh thẻ AI (đổi trang phục, phông nền) | 🕓 | Chưa làm |
 
 ## Tải bản cài đặt
 
@@ -66,7 +67,8 @@ Trước khi bắt đầu sửa, luôn chạy `git pull` để lấy thay đổi
 | `renderer/` | Giao diện (Next.js + React + Tailwind) |
 | `renderer/lib/tools.ts` | Danh sách 13 công cụ trên Trang chủ (tên, mô tả, trạng thái) |
 | `renderer/components/shell/` | Thanh tab trên cùng và Trang chủ |
-| `renderer/components/tools/` | Giao diện từng công cụ (`common/` là phần dùng chung) |
+| `renderer/components/tools/` | Giao diện từng công cụ (`common/` là phần dùng chung, `chatgpt-tool.tsx` cho 8 công cụ qua ChatGPT) |
+| `renderer/lib/ai-tools.ts` | Ô ảnh, tùy chọn và prompt của từng công cụ qua ChatGPT |
 | `renderer/components/sidebar/` | Giao diện Kích nét ảnh (gốc Upscayl) |
 | `renderer/locales/vi.json` | Chữ tiếng Việt của phần Kích nét ảnh |
 | `electron/` | Phần xử lý chính (main process) |
@@ -74,6 +76,7 @@ Trước khi bắt đầu sửa, luôn chạy `git pull` để lấy thay đổi
 | `electron/commands/vectorize.ts` | Chuyển Vector và xuất PDF |
 | `electron/commands/die-cut.ts` | Tạo đường bế |
 | `electron/commands/image-upscayl.ts` | Phóng to ảnh (gọi `upscayl-bin`) |
+| `electron/commands/chatgpt-bridge.ts` | Cửa sổ ChatGPT: nhớ đăng nhập, tự dán ảnh + prompt, bắt ảnh tải về |
 | `resources/models/` | 7 model phóng to |
 | `resources/win/bin/` | `upscayl-bin.exe`, `vtracer.exe` (MIT), `potrace.exe` (GPL, xem `licenses/`) |
 | `.github/workflows/build-windows.yml` | Cấu hình tự build trên GitHub |

@@ -9,7 +9,8 @@ import { useToast } from "@/components/ui/use-toast";
 export default function HomeDashboard() {
   const openTool = useSetAtom(openToolAtom);
   const { toast } = useToast();
-  const ready = TOOLS.filter((t) => t.status === "ready").length;
+  const local = TOOLS.filter((t) => t.status === "ready" && t.engine === "local").length;
+  const viaChatGpt = TOOLS.filter((t) => t.status === "ready" && t.engine === "chatgpt").length;
 
   return (
     <div className="h-full overflow-y-auto bg-base-300">
@@ -17,8 +18,8 @@ export default function HomeDashboard() {
         <div className="mb-6">
           <h1 className="text-2xl font-black">Bộ công cụ AI xử lý ảnh</h1>
           <p className="mt-1 text-sm text-base-content/60">
-            {ready} công cụ chạy trực tiếp trên máy · {TOOLS.length - ready} công cụ AI sắp ra mắt. Chọn một công cụ để
-            bắt đầu, có thể mở nhiều công cụ cùng lúc dưới dạng tab.
+            {local} công cụ chạy trực tiếp trên máy · {viaChatGpt} công cụ AI chạy qua tài khoản ChatGPT của bạn. Chọn
+            một công cụ để bắt đầu, có thể mở nhiều công cụ cùng lúc dưới dạng tab.
           </p>
         </div>
 
@@ -50,6 +51,10 @@ export default function HomeDashboard() {
                   </span>
                   {soon ? (
                     <span className="badge badge-ghost badge-sm">Sắp có</span>
+                  ) : tool.engine === "chatgpt" ? (
+                    <span className="badge badge-outline badge-sm gap-1 border-base-content/20 text-base-content/60">
+                      ChatGPT
+                    </span>
                   ) : (
                     <ArrowRight className="h-5 w-5 text-base-content/30 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
                   )}

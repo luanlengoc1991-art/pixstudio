@@ -39,6 +39,8 @@ export type ToolInfo = {
   tint: string;
   /** "soon" tools are listed on the home screen but not usable yet */
   status: "ready" | "soon";
+  /** "local" runs on this computer, "chatgpt" goes through the ChatGPT window */
+  engine: "local" | "chatgpt";
 };
 
 // Order and wording follow the pixAI 1.2.6 home screen
@@ -51,6 +53,7 @@ export const TOOLS: ToolInfo[] = [
     icon: ImageUpscale,
     tint: "bg-sky-500/15 text-sky-600 dark:text-sky-300",
     status: "ready",
+    engine: "local",
   },
   {
     id: "remove-bg",
@@ -60,6 +63,7 @@ export const TOOLS: ToolInfo[] = [
     icon: Eraser,
     tint: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
     status: "ready",
+    engine: "local",
   },
   {
     id: "layer-separation",
@@ -68,7 +72,8 @@ export const TOOLS: ToolInfo[] = [
       "Khoanh vùng đối tượng, tách thành các file PNG không nền và 1 ảnh nền sạch.",
     icon: Layers,
     tint: "bg-violet-500/15 text-violet-600 dark:text-violet-300",
-    status: "soon",
+    status: "ready",
+    engine: "chatgpt",
   },
   {
     id: "print-restoration",
@@ -77,7 +82,8 @@ export const TOOLS: ToolInfo[] = [
       "Tái tạo biển bảng, banner cũ từ ảnh chụp thành bản thiết kế phẳng sắc nét chuẩn in 4K.",
     icon: FileImage,
     tint: "bg-orange-500/15 text-orange-600 dark:text-orange-300",
-    status: "soon",
+    status: "ready",
+    engine: "chatgpt",
   },
   {
     id: "product-retoucher",
@@ -86,7 +92,8 @@ export const TOOLS: ToolInfo[] = [
       "Xóa tạp chất, tối ưu ánh sáng & thay phông studio chuẩn E-commerce.",
     icon: PackageCheck,
     tint: "bg-teal-500/15 text-teal-600 dark:text-teal-300",
-    status: "soon",
+    status: "ready",
+    engine: "chatgpt",
   },
   {
     id: "render-2d-to-3d",
@@ -95,7 +102,8 @@ export const TOOLS: ToolInfo[] = [
       "Dựng bản vẽ, nhãn mác bao bì 2D thành ảnh sản phẩm 3D thương mại chân thực.",
     icon: Box,
     tint: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-300",
-    status: "soon",
+    status: "ready",
+    engine: "chatgpt",
   },
   {
     id: "vector",
@@ -105,6 +113,7 @@ export const TOOLS: ToolInfo[] = [
     icon: PenTool,
     tint: "bg-pink-500/15 text-pink-600 dark:text-pink-300",
     status: "ready",
+    engine: "local",
   },
   {
     id: "ad-designer",
@@ -113,7 +122,8 @@ export const TOOLS: ToolInfo[] = [
       "Lên bố cục banner, poster và ấn phẩm quảng cáo trong một studio trực quan.",
     icon: Megaphone,
     tint: "bg-amber-500/15 text-amber-600 dark:text-amber-300",
-    status: "soon",
+    status: "ready",
+    engine: "chatgpt",
   },
   {
     id: "fake-model",
@@ -122,7 +132,8 @@ export const TOOLS: ToolInfo[] = [
       "Ghép dáng mẫu từ Ảnh 1, giữ nguyên khuôn mặt, vóc dáng & trang phục Ảnh 2.",
     icon: Shirt,
     tint: "bg-rose-500/15 text-rose-600 dark:text-rose-300",
-    status: "soon",
+    status: "ready",
+    engine: "chatgpt",
   },
   {
     id: "signboard-mockup",
@@ -131,7 +142,8 @@ export const TOOLS: ToolInfo[] = [
       "Gắn bản thiết kế biển hiệu 2D vào ảnh mặt tiền thực tế, chuẩn phối cảnh & bóng đổ 3D.",
     icon: Store,
     tint: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-300",
-    status: "soon",
+    status: "ready",
+    engine: "chatgpt",
   },
   {
     id: "old-photo-restoration",
@@ -140,7 +152,8 @@ export const TOOLS: ToolInfo[] = [
       "Khử xước, vá rách, tẩy ố mốc, tăng nét chi tiết & tô màu chân dung tự nhiên.",
     icon: History,
     tint: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
-    status: "soon",
+    status: "ready",
+    engine: "chatgpt",
   },
   {
     id: "die-cut",
@@ -150,6 +163,7 @@ export const TOOLS: ToolInfo[] = [
     icon: Scissors,
     tint: "bg-red-500/15 text-red-600 dark:text-red-300",
     status: "ready",
+    engine: "local",
   },
   {
     id: "id-photo",
@@ -159,6 +173,7 @@ export const TOOLS: ToolInfo[] = [
     icon: IdCard,
     tint: "bg-blue-500/15 text-blue-600 dark:text-blue-300",
     status: "ready",
+    engine: "local",
   },
 ];
 

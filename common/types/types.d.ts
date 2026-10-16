@@ -107,6 +107,21 @@ export type DieCutResult = {
   usedAi: boolean;
 };
 
+export type ChatGptOpenPayload = {
+  /** Tool that receives the images downloaded from this request */
+  toolId: string;
+  imagePaths: string[];
+  prompt: string;
+};
+
+export type ChatGptStatus = {
+  toolId: string;
+  state: "loading" | "pasting" | "ready" | "login" | "error";
+  message: string;
+};
+
+export type ChatGptResult = { toolId: string; path: string };
+
 export type BatchUpscaylPayload = {
   batchFolderPath: string;
   outputPath: string;

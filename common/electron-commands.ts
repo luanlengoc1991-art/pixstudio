@@ -38,6 +38,10 @@ const ELECTRON_COMMANDS = {
   VECTORIZE_IMAGE: "Vectorize Image",
   EXPORT_VECTOR_PDF: "Export Vector PDF",
   DIE_CUT: "Create die-cut line",
+  CHATGPT_OPEN: "Open the ChatGPT window and paste a request",
+  CHATGPT_STATUS: "Send ChatGPT window status from Main to Renderer",
+  CHATGPT_RESULT: "Send an image downloaded from ChatGPT to Renderer",
+  CHATGPT_LOGOUT: "Clear the saved ChatGPT login",
 } as const;
 
 export { ELECTRON_COMMANDS };
