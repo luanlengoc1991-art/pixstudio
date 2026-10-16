@@ -101,7 +101,7 @@ export default function HomeDashboard() {
                     : openTool(tool.id)
                 }
                 className={cn(
-                  "glass group relative flex min-h-[210px] w-full flex-col overflow-hidden rounded-3xl p-5 text-left transition-all duration-300",
+                  "glass group relative flex min-h-[190px] w-full flex-col overflow-hidden rounded-3xl p-5 text-left transition-all duration-300",
                   soon ? "opacity-60" : "hover:-translate-y-1.5",
                 )}
                 style={{ ["--accent" as string]: main }}
@@ -116,42 +116,52 @@ export default function HomeDashboard() {
                   style={{ boxShadow: `inset 0 0 0 1px ${main}66, 0 18px 40px -18px ${main}` }}
                 />
 
-                <div className="relative flex w-full items-start justify-between gap-2">
-                  <Icon3D icon={tool.icon} image={toolImage(tool.id)} colors={TOOL_ACCENT[tool.id]} size="xl" />
-                  {soon ? (
-                    <span className="rounded-full bg-base-content/10 px-2.5 py-1 text-[11px] font-semibold text-base-content/60">Sắp có</span>
-                  ) : (
-                    <span
-                      className={cn(
-                        "flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold",
-                        chatgpt
-                          ? "border-emerald-400/30 bg-emerald-500/15 text-emerald-500 dark:text-emerald-300"
-                          : "border-sky-400/30 bg-sky-500/15 text-sky-600 dark:text-sky-300",
-                      )}
-                    >
-                      {chatgpt ? <Sparkles className="h-3 w-3" /> : <Cpu className="h-3 w-3" />}
-                      {chatgpt ? "ChatGPT" : "Trên máy"}
-                    </span>
-                  )}
-                </div>
-
-                <h2 className="relative mt-4 text-[17px] font-extrabold leading-snug tracking-tight">{tool.title}</h2>
-                <p className="relative mt-1.5 line-clamp-3 text-[12.5px] font-light leading-5 text-base-content/70">{tool.description}</p>
-
-                {!soon && (
+                {/* Engine badge, top right */}
+                {soon ? (
+                  <span className="absolute right-4 top-4 rounded-full bg-base-content/10 px-2.5 py-1 text-[11px] font-semibold text-base-content/60">
+                    Sắp có
+                  </span>
+                ) : (
                   <span
-                    className="relative mt-auto flex items-center gap-1.5 self-start rounded-full border px-4 py-1.5 text-xs font-bold text-white transition-all duration-300 group-hover:gap-2.5 group-hover:shadow-lg"
-                    style={{
-                      marginTop: 16,
-                      borderColor: `${light}66`,
-                      background: `linear-gradient(135deg, ${main}cc, ${deep}cc)`,
-                      boxShadow: `0 6px 18px -8px ${main}`,
-                    }}
+                    className={cn(
+                      "absolute right-4 top-4 flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold",
+                      chatgpt
+                        ? "border-emerald-400/30 bg-emerald-500/15 text-emerald-500 dark:text-emerald-300"
+                        : "border-sky-400/30 bg-sky-500/15 text-sky-600 dark:text-sky-300",
+                    )}
                   >
-                    Mở công cụ
-                    <ArrowRight className="h-4 w-4" />
+                    {chatgpt ? <Sparkles className="h-3 w-3" /> : <Cpu className="h-3 w-3" />}
+                    {chatgpt ? "ChatGPT" : "Trên máy"}
                   </span>
                 )}
+
+                {/* Big 3D icon on the left, name and text on the right */}
+                <div className="relative mt-6 flex flex-1 items-center gap-4">
+                  <Icon3D icon={tool.icon} image={toolImage(tool.id)} colors={TOOL_ACCENT[tool.id]} size="xxl" className="-ml-2" />
+                  <div className="flex min-w-0 flex-1 flex-col self-stretch">
+                    <h2
+                      className="text-[20px] font-black leading-tight tracking-tight text-base-content dark:text-white"
+                      style={{ textShadow: `0 0 22px ${main}55` }}
+                    >
+                      {tool.title}
+                    </h2>
+                    <p className="mt-1.5 line-clamp-3 text-[12.5px] font-light leading-5 text-base-content/70">{tool.description}</p>
+                    {!soon && (
+                      <span
+                        className="mt-auto flex items-center gap-1.5 self-start rounded-full border px-4 py-1.5 text-xs font-bold text-white transition-all duration-300 group-hover:gap-2.5 group-hover:shadow-lg"
+                        style={{
+                          marginTop: 14,
+                          borderColor: `${light}66`,
+                          background: `linear-gradient(135deg, ${main}cc, ${deep}cc)`,
+                          boxShadow: `0 6px 18px -8px ${main}`,
+                        }}
+                      >
+                        Mở công cụ
+                        <ArrowRight className="h-4 w-4" />
+                      </span>
+                    )}
+                  </div>
+                </div>
               </button>
             );
           })}

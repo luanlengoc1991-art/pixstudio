@@ -2,6 +2,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 const SIZES = {
+  xxl: { box: 124, icon: 58, depth: 13, radius: 34 },
   xl: { box: 96, icon: 46, depth: 11, radius: 28 },
   lg: { box: 76, icon: 36, depth: 9, radius: 22 },
   md: { box: 46, icon: 22, depth: 4, radius: 14 },

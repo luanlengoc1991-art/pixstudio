@@ -19,114 +19,128 @@ import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.j
 
 const params = new URLSearchParams(location.search);
 const id = params.get("id");
-const [light, main, deep] = params.get("colors").split(",").map((c) => "#" + c);
-const style = params.get("style") || "glass";
+const [light, main, deep] = params.get("colors").split(",").map((c) => new THREE.Color("#" + c));
 const SIZE = 512;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(1);
 renderer.setSize(SIZE, SIZE);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
+renderer.toneMappingExposure = 1.1;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.setClearColor(0x000000, 0);
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
-const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
-camera.position.set(1.9, 2.0, 7.4);
-camera.lookAt(0, -0.05, 0);
+// View from the front-left, slightly above, like the mockup's icon shelf
+scene.environmentIntensity = 0.55;
+const camera = new THREE.PerspectiveCamera(24, 1, 0.1, 100);
+camera.position.set(-2.4, 2.2, 8.2);
+camera.lookAt(0, -0.25, 0);
 
-// Lights: soft key, coloured rim from behind, cool fill
-const key = new THREE.DirectionalLight(0xffffff, 2.2);
-key.position.set(3, 5, 6);
+const key = new THREE.DirectionalLight(0xffffff, 1.4);
+key.position.set(-4, 5, 6);
 scene.add(key);
-const rim = new THREE.DirectionalLight(new THREE.Color(light), 6);
-rim.position.set(-4, 3, -4);
+const rim = new THREE.DirectionalLight(light, 5);
+rim.position.set(5, 3, -4);
 scene.add(rim);
-const fill = new THREE.DirectionalLight(0x9fb8ff, 0.8);
-fill.position.set(-5, -1, 4);
-scene.add(fill);
+const glowLight = new THREE.PointLight(main, 18, 5);
+glowLight.position.set(0, -1.2, 1.6);
+scene.add(glowLight);
 
 const group = new THREE.Group();
 scene.add(group);
 
-// Tile: tinted glass slab (or glossy coloured ceramic)
-const tileGeo = new RoundedBoxGeometry(2.3, 2.3, 0.42, 10, 0.42);
-const tileMat =
-  style === "glass"
-    ? new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color(main),
-        metalness: 0.05,
-        roughness: 0.12,
-        transmission: 0.55,
-        thickness: 0.8,
-        ior: 1.5,
-        clearcoat: 1,
-        clearcoatRoughness: 0.04,
-        iridescence: 0.35,
-        iridescenceIOR: 1.3,
-        attenuationColor: new THREE.Color(deep),
-        attenuationDistance: 0.9,
-        emissive: new THREE.Color(deep),
-        emissiveIntensity: 0.25,
-        transparent: true,
-      })
-    : new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color(main),
-        metalness: 0.2,
-        roughness: 0.22,
-        clearcoat: 1,
-        clearcoatRoughness: 0.05,
-        sheen: 0.4,
-        sheenColor: new THREE.Color(light),
-      });
-const tile = new THREE.Mesh(tileGeo, tileMat);
-group.add(tile);
+const gradientTexture = (() => {
+  const c = document.createElement("canvas");
+  c.width = c.height = 256;
+  const g = c.getContext("2d");
+  const grad = g.createLinearGradient(0, 0, 200, 256);
+  grad.addColorStop(0, "#" + light.getHexString());
+  grad.addColorStop(0.4, "#" + main.getHexString());
+  grad.addColorStop(1, "#" + deep.getHexString());
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 256, 256);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+})();
 
+// Dark base plate lying flat, with a thin glowing rim
+const base = new THREE.Mesh(
+  new RoundedBoxGeometry(3.0, 0.28, 2.1, 8, 0.12),
+  new THREE.MeshPhysicalMaterial({ color: 0x0a0f26, metalness: 0.5, roughness: 0.3, clearcoat: 1 }),
+);
+base.position.set(0, -1.32, 0.15);
+group.add(base);
+const rimGlow = new THREE.Mesh(
+  new RoundedBoxGeometry(3.06, 0.04, 2.16, 8, 0.02),
+  new THREE.MeshBasicMaterial({ color: main, transparent: true, opacity: 0.95 }),
+);
+rimGlow.position.set(0, -1.47, 0.15); // just under the plate: only its edge glows
+group.add(rimGlow);
 
-// Icon: extruded chrome with a bevel
+// Thick upright coloured tile, tilted back a little
+const tile = new THREE.Group();
+const block = new THREE.Mesh(
+  new RoundedBoxGeometry(2.1, 2.1, 0.7, 10, 0.3),
+  new THREE.MeshPhysicalMaterial({
+    map: gradientTexture,
+    metalness: 0.1,
+    roughness: 0.22,
+    clearcoat: 1,
+    clearcoatRoughness: 0.04,
+    emissive: deep,
+    emissiveIntensity: 0.18,
+  }),
+);
+tile.add(block);
+
 const svgText = await (await fetch(`./filled/${id}.svg`)).text();
 const data = new SVGLoader().parse(svgText);
 const shapes = data.paths.flatMap((p) => SVGLoader.createShapes(p));
 const iconGeo = new THREE.ExtrudeGeometry(shapes, {
-  depth: 150,
+  depth: 110,
   bevelEnabled: true,
-  bevelThickness: 26,
-  bevelSize: 11,
-  bevelSegments: 5,
+  bevelThickness: 20,
+  bevelSize: 8,
+  bevelSegments: 4,
   curveSegments: 24,
 });
 iconGeo.computeBoundingBox();
-const box = iconGeo.boundingBox;
-const w = box.max.x - box.min.x;
-const h = box.max.y - box.min.y;
-iconGeo.translate(-(box.min.x + w / 2), -(box.min.y + h / 2), 0);
-const iconMat = new THREE.MeshPhysicalMaterial({
-  color: new THREE.Color("#ffffff").lerp(new THREE.Color(light), 0.18),
-  metalness: 1,
-  roughness: 0.14,
-  clearcoat: 1,
-  clearcoatRoughness: 0.03,
-  side: THREE.DoubleSide,
-});
-const icon = new THREE.Mesh(iconGeo, iconMat);
-const s = 1.3 / Math.max(w, h);
-// SVG y points down, three.js y points up: mirror vertically
-icon.scale.set(s, -s, s);
-icon.position.z = 0.22;
-group.add(icon);
+const bb = iconGeo.boundingBox;
+const w = bb.max.x - bb.min.x;
+const h = bb.max.y - bb.min.y;
+iconGeo.translate(-(bb.min.x + w / 2), -(bb.min.y + h / 2), 0);
+const icon = new THREE.Mesh(
+  iconGeo,
+  new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    emissive: new THREE.Color("#ffffff").lerp(light, 0.35),
+    emissiveIntensity: 0.35,
+    metalness: 0.05,
+    roughness: 0.3,
+    clearcoat: 1,
+    side: THREE.DoubleSide,
+  }),
+);
+const s = 1.25 / Math.max(w, h);
+icon.scale.set(s, -s, s); // SVG y points down
+icon.position.z = 0.34;
+tile.add(icon);
 
-group.rotation.set(-0.08, -0.32, 0.0);
+tile.position.y = 0.0;
+tile.rotation.x = -0.14;
+group.add(tile);
+group.rotation.y = 0.18;
 
 renderer.render(scene, camera);
 const dataUrl = renderer.domElement.toDataURL("image/png");
 const fs = window.require("fs");
-const outDir = params.get("out");
-fs.writeFileSync(`${outDir}/${id}.png`, Buffer.from(dataUrl.split(",")[1], "base64"));
+fs.writeFileSync(`${params.get("out")}/${id}.png`, Buffer.from(dataUrl.split(",")[1], "base64"));
 document.title = "done";
 </script>
 </body>
