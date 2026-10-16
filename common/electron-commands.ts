@@ -39,6 +39,7 @@ const ELECTRON_COMMANDS = {
   EXPORT_VECTOR_PDF: "Export Vector PDF",
   DIE_CUT: "Create die-cut line",
   CHATGPT_NATIVE_PASTE: "Paste an image into the ChatGPT webview",
+  CHATGPT_ATTACH_FILES: "Put files into the ChatGPT upload input",
   CHATGPT_DOWNLOADED: "Send an image downloaded in the ChatGPT tab to Renderer",
   CHATGPT_LOGOUT: "Clear the saved ChatGPT login",
   SAVE_FILES_TO_FOLDER: "Save several result files into a chosen folder",

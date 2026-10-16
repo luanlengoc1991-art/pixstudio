@@ -69,7 +69,7 @@ export const TOOLS: ToolInfo[] = [
     id: "layer-separation",
     title: "Bóc Tách Layer",
     description:
-      "Khoanh vùng đối tượng, tách thành các file PNG không nền và 1 ảnh nền sạch.",
+      "Tự động phân tách ảnh thành 10 lớp PNG không nền, hoặc khoanh vùng đối tượng cần tách.",
     icon: Layers,
     tint: "bg-violet-500/15 text-violet-600 dark:text-violet-300",
     status: "ready",

@@ -3,6 +3,8 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   ImagePlus,
   Loader2,
   Maximize2,
@@ -445,7 +447,20 @@ export function CompareView({
 }
 
 /** Full-screen viewer with wheel zoom and drag to pan. */
-export function ZoomModal({ src, title, onClose }: { src: string | null; title: string; onClose: () => void }) {
+export function ZoomModal({
+  src,
+  title,
+  onClose,
+  onPrev,
+  onNext,
+}: {
+  src: string | null;
+  title: string;
+  onClose: () => void;
+  /** Optional gallery navigation (also on the arrow keys) */
+  onPrev?: () => void;
+  onNext?: () => void;
+}) {
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const drag = useRef<{ x: number; y: number } | null>(null);
@@ -454,10 +469,14 @@ export function ZoomModal({ src, title, onClose }: { src: string | null; title: 
     setScale(1);
     setOffset({ x: 0, y: 0 });
     if (!src) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") onPrev?.();
+      if (e.key === "ArrowRight") onNext?.();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [src, onClose]);
+  }, [src, onClose, onPrev, onNext]);
 
   if (!src) return null;
   const zoom = (delta: number) =>
@@ -488,7 +507,7 @@ export function ZoomModal({ src, title, onClose }: { src: string | null; title: 
         </div>
       </div>
       <div
-        className={cn("checkerboard flex flex-1 items-center justify-center overflow-hidden", scale > 1 ? "cursor-grab" : "")}
+        className={cn("checkerboard relative flex flex-1 items-center justify-center overflow-hidden", scale > 1 ? "cursor-grab" : "")}
         onWheel={(e) => zoom(e.deltaY < 0 ? 0.25 : -0.25)}
         onMouseDown={(e) => {
           if (scale > 1) drag.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
@@ -506,6 +525,26 @@ export function ZoomModal({ src, title, onClose }: { src: string | null; title: 
           className="max-h-full max-w-full object-contain"
           style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})` }}
         />
+        {onPrev && (
+          <button
+            className="btn btn-circle absolute left-4 top-1/2 -translate-y-1/2 shadow-lg"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={onPrev}
+            aria-label="Ảnh trước"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        {onNext && (
+          <button
+            className="btn btn-circle absolute right-4 top-1/2 -translate-y-1/2 shadow-lg"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={onNext}
+            aria-label="Ảnh tiếp theo"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </div>
   );

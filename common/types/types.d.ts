@@ -115,6 +115,8 @@ export type SaveFilesToFolderPayload = {
 
 export type ChatGptNativePastePayload = { webContentsId: number; imagePath: string };
 
+export type ChatGptAttachFilesPayload = { webContentsId: number; paths: string[] };
+
 export type BatchUpscaylPayload = {
   batchFolderPath: string;
   outputPath: string;

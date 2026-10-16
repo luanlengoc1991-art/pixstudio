@@ -11,7 +11,7 @@ import {
 import fs from "fs";
 import { extname, join } from "path";
 import { ELECTRON_COMMANDS } from "../../common/electron-commands";
-import { ChatGptNativePastePayload } from "../../common/types/types";
+import { ChatGptAttachFilesPayload, ChatGptNativePastePayload } from "../../common/types/types";
 import { getMainWindow } from "../main-window";
 import logit from "../utils/logit";
 import { getToolTempDir, uniqueName } from "../utils/tool-files";
@@ -108,6 +108,62 @@ export const setupChatGpt = () => {
   });
 
   pruneOldResults();
+};
+
+/**
+ * Attaches real files to ChatGPT the way browser automation does: through the
+ * DevTools protocol (DOM.setFileInputFiles) on the page's file input. This
+ * produces the same trusted change event as picking files in a dialog.
+ */
+export const attachFiles = async (
+  _event: IpcMainInvokeEvent,
+  { webContentsId, paths }: ChatGptAttachFilesPayload,
+) => {
+  const contents = webContents.fromId(webContentsId);
+  if (!contents || !isChatGptContents(contents) || !paths.length) return false;
+  const dbg = contents.debugger;
+  const attachedHere = !dbg.isAttached();
+  try {
+    if (attachedHere) dbg.attach("1.3");
+    const { root } = await dbg.sendCommand("DOM.getDocument", { depth: 0 });
+    const { nodeIds } = await dbg.sendCommand("DOM.querySelectorAll", {
+      nodeId: root.nodeId,
+      selector: 'input[type="file"]',
+    });
+    if (!nodeIds?.length) return false;
+
+    // Prefer the input that takes images and several files
+    let target = nodeIds[0];
+    let multiple = false;
+    let best = -1;
+    for (const nodeId of nodeIds) {
+      const { attributes } = await dbg.sendCommand("DOM.getAttributes", { nodeId });
+      const attrs: Record<string, string> = {};
+      for (let i = 0; i < attributes.length; i += 2) attrs[attributes[i]] = attributes[i + 1];
+      const accept = attrs.accept || "";
+      const score = (accept === "" || accept.includes("image") ? 2 : 0) + ("multiple" in attrs ? 1 : 0);
+      if (score > best) {
+        best = score;
+        target = nodeId;
+        multiple = "multiple" in attrs;
+      }
+    }
+
+    if (multiple) {
+      await dbg.sendCommand("DOM.setFileInputFiles", { nodeId: target, files: paths });
+    } else {
+      for (const path of paths) {
+        await dbg.sendCommand("DOM.setFileInputFiles", { nodeId: target, files: [path] });
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+      }
+    }
+    return true;
+  } catch (error) {
+    logit("❌ ChatGPT attach error: ", error);
+    return false;
+  } finally {
+    if (attachedHere && dbg.isAttached()) dbg.detach();
+  }
 };
 
 /**

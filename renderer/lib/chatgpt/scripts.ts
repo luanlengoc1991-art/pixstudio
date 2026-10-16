@@ -178,6 +178,35 @@ export const RESET_CAPTURE_SCRIPT = (newChat: boolean, inputNames: string[]) => 
 })()
 `;
 
+/** Number of image thumbnails attached in the composer (compare before / after attaching). */
+export const ATTACHMENT_COUNT_SCRIPT = String.raw`
+(() => {
+  const input = document.querySelector("#prompt-textarea");
+  const composer = (input && (input.closest("form") || input.closest('[data-testid*="composer"]'))) || null;
+  if (!composer) return -1;
+  return Array.from(composer.querySelectorAll("img")).filter((img) => {
+    const r = img.getBoundingClientRect();
+    return r.width > 8 && r.height > 8;
+  }).length;
+})()
+`;
+
+/** Blacklists everything currently attached or posted by the user. */
+export const REGISTER_UPLOADS_SCRIPT = String.raw`
+(() => {
+  const cap = window.__PIX_CAPTURE__;
+  if (!cap) return false;
+  document.querySelectorAll('form img, [data-testid*="attachment"] img, [data-message-author-role="user"] img, a[href*="backend-api/files"]').forEach((el) => {
+    const src = el.currentSrc || el.src || el.getAttribute("href") || "";
+    const id = cap.fileId(src);
+    if (id) cap.inputIds.add(id);
+    if (src) cap.seenUrls.add(cap.normUrl(src));
+  });
+  cap.candidates = cap.candidates.filter((c) => !cap.inputIds.has(c.fileId));
+  return true;
+})()
+`;
+
 export type ReferenceFile = { name: string; dataUrl: string };
 
 /**
@@ -249,11 +278,13 @@ export const FILL_AND_SEND_SCRIPT = (prompt: string, files: ReferenceFile[], nat
       return new File([bytes], ref.name, { type: mime });
     });
     const transfer = () => { const dt = new DataTransfer(); buildFiles().forEach((f) => dt.items.add(f)); return dt; };
-    const attachmentCount = () => document.querySelectorAll(
-      'form [data-testid*="attachment"], form [class*="attachment"], form img[src^="blob:"], #prompt-textarea img'
-    ).length;
+    const attachmentCount = () => {
+      const form = input.closest("form") || input.parentElement;
+      return form ? form.querySelectorAll("img").length : 0;
+    };
+    const startCount = attachmentCount();
     const waitAttached = async (tries) => {
-      for (let i = 0; i < tries; i++) { if (attachmentCount() > 0) return true; await sleep(200); }
+      for (let i = 0; i < tries; i++) { if (attachmentCount() >= startCount + refs.length) return true; await sleep(250); }
       return false;
     };
     const viaFileInput = async () => {

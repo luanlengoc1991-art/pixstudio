@@ -15,6 +15,7 @@ import {
   updateChatGptToolStateAtom,
 } from "@/atoms/chatgpt-atom";
 import {
+  ATTACHMENT_COUNT_SCRIPT,
   CAPTURE_SCRIPT,
   CHATGPT_URL,
   FETCH_IMAGE_SCRIPT,
@@ -23,6 +24,7 @@ import {
   LOGIN_CHECK_SCRIPT,
   POLL_SCRIPT,
   ReferenceFile,
+  REGISTER_UPLOADS_SCRIPT,
   RESET_CAPTURE_SCRIPT,
 } from "@/lib/chatgpt/scripts";
 import { dataUrlToBytes, imageSize, looksAlike, mimeExtension, pathToDataUrl } from "@/lib/chatgpt/image-utils";
@@ -170,19 +172,50 @@ export default function ChatGptPanel() {
       const dataUrl = await pathToDataUrl(job.imagePaths[index]);
       files.push({ name: `pix-input-${index + 1}.${mimeExtension(dataUrl)}`, dataUrl });
     }
-    await exec(RESET_CAPTURE_SCRIPT(job.newChat, files.map((f) => f.name)));
+    const fileNames = job.imagePaths.map((p) => p.split(/[\\/]/).pop()!.toLowerCase());
+    await exec(RESET_CAPTURE_SCRIPT(job.newChat, [...fileNames, ...files.map((f) => f.name)]));
 
-    let result = await exec<{ ok: boolean; reason?: string }>(FILL_AND_SEND_SCRIPT(job.prompt, files, !!job.nativeEdit), true);
-    if (!result?.ok && result?.reason === "upload_failed") {
-      // Last resort: native clipboard paste through the main process
+    // Attach the images before typing, and only send once they show in the composer
+    let attachedSynthetic = false;
+    if (files.length) {
       const id = ref.current!.getWebContentsId();
-      for (const path of job.imagePaths) {
-        await window.electron.invoke(ELECTRON_COMMANDS.CHATGPT_NATIVE_PASTE, { webContentsId: id, imagePath: path });
-        await sleep(1500);
+      const count = async () => (await exec<number>(ATTACHMENT_COUNT_SCRIPT)) ?? -1;
+      const waitFor = async (target: number, ms: number) => {
+        for (const end = Date.now() + ms; Date.now() < end; ) {
+          if ((await count()) >= target) return true;
+          await sleep(300);
+        }
+        return false;
+      };
+      const start = Math.max(0, await count());
+      const target = start + files.length;
+
+      // 1. Real files through the DevTools protocol, as a file dialog would
+      await window.electron.invoke(ELECTRON_COMMANDS.CHATGPT_ATTACH_FILES, { webContentsId: id, paths: job.imagePaths });
+      let attached = await waitFor(target, 15000);
+      // 2. Native clipboard paste, one image at a time
+      if (!attached) {
+        for (const path of job.imagePaths) {
+          await window.electron.invoke(ELECTRON_COMMANDS.CHATGPT_NATIVE_PASTE, { webContentsId: id, imagePath: path });
+          await sleep(1200);
+        }
+        attached = await waitFor(target, 10000);
       }
-      result = await exec(FILL_AND_SEND_SCRIPT(job.prompt, [], false), true);
+      // 3. Synthetic file input / drop / paste events inside the page
+      if (!attached) attachedSynthetic = true;
+      else {
+        await sleep(1500);
+        await exec(REGISTER_UPLOADS_SCRIPT);
+      }
     }
+
+    const result = await exec<{ ok: boolean; reason?: string }>(
+      FILL_AND_SEND_SCRIPT(job.prompt, attachedSynthetic ? files : [], !!job.nativeEdit),
+      true,
+    );
     if (!result?.ok) return fail(FILL_ERRORS[result?.reason ?? ""] ?? "Không gửi được yêu cầu sang ChatGPT. Hãy thử lại.");
+    await sleep(1500);
+    await exec(REGISTER_UPLOADS_SCRIPT);
 
     update({ status: "waiting", message: "ChatGPT đang tạo ảnh..." });
     const inputs = files.map((f) => f.dataUrl);
@@ -204,7 +237,8 @@ export default function ChatGptPanel() {
         if (!size || size.width < 64 || size.height < 64) continue;
         let duplicate = false;
         for (const input of inputs) if (await looksAlike(dataUrl, input)) duplicate = true;
-        if (!multi) for (const done of collected) if (await looksAlike(dataUrl, done)) duplicate = true;
+        // A gallery thumbnail and its full-size view can have different URLs: compare pixels too
+        for (const done of collected) if (await looksAlike(dataUrl, done, multi ? 2 : 3)) duplicate = true;
         if (duplicate) continue;
 
         const path: string = await window.electron.invoke(ELECTRON_COMMANDS.SAVE_TEMP_IMAGE, {

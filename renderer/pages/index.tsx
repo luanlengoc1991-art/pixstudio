@@ -13,6 +13,7 @@ import VectorTool from "@/components/tools/vector-tool";
 import DieCutTool from "@/components/tools/die-cut-tool";
 import IdPhotoTool from "@/components/tools/id-photo";
 import ChatGptTool from "@/components/tools/chatgpt-tool";
+import LayerSeparationTool from "@/components/tools/layer-separation";
 import useUpscaylVersion from "@/components/hooks/use-upscayl-version";
 import { ToolId, TOOLS } from "@/lib/tools";
 
@@ -28,6 +29,8 @@ const TOOL_VIEWS: Partial<Record<ToolId, () => JSX.Element>> = {
       () => <ChatGptTool toolId={tool.id} />,
     ]),
   ),
+  // AI tools with their own screen
+  "layer-separation": LayerSeparationTool,
 };
 
 const App = () => {
