@@ -1,4 +1,4 @@
-import { app, dialog, IpcMainInvokeEvent } from "electron";
+import { app, dialog, IpcMainInvokeEvent, shell } from "electron";
 import { execFile } from "child_process";
 import fs from "fs";
 import { dirname, extname, join } from "path";
@@ -8,6 +8,7 @@ import { getPlatform } from "./get-device-specs";
 import { getMainWindow } from "../main-window";
 import {
   SaveFilePayload,
+  SaveFilesToFolderPayload,
   SaveTempImagePayload,
 } from "../../common/types/types";
 
@@ -70,4 +71,36 @@ export const saveFileAs = async (
   else if (text !== undefined) await fs.promises.writeFile(filePath, text, "utf8");
   else if (bytes) await fs.promises.writeFile(filePath, Buffer.from(bytes));
   return filePath;
+};
+
+const safeName = (name: string) => name.replace(/[\\/?%*:|"<>]/g, "_").trim();
+
+/** Asks for a folder, copies every file into it (optionally a subfolder) and opens it. */
+export const saveFilesToFolder = async (
+  _event: IpcMainInvokeEvent,
+  { files, folderName }: SaveFilesToFolderPayload,
+) => {
+  const mainWindow = getMainWindow();
+  const options: Electron.OpenDialogOptions = {
+    title: "Chọn thư mục để lưu tất cả ảnh",
+    defaultPath: app.getPath("pictures"),
+    properties: ["openDirectory", "createDirectory"],
+    buttonLabel: "Lưu tất cả vào đây",
+  };
+  const { canceled, filePaths } = mainWindow
+    ? await dialog.showOpenDialog(mainWindow, options)
+    : await dialog.showOpenDialog(options);
+  if (canceled || !filePaths[0]) return null;
+
+  const dir = folderName ? join(filePaths[0], safeName(folderName)) : filePaths[0];
+  await fs.promises.mkdir(dir, { recursive: true });
+  let count = 0;
+  for (const file of files) {
+    try {
+      await fs.promises.copyFile(file.sourcePath, join(dir, safeName(file.name)));
+      count += 1;
+    } catch {}
+  }
+  if (count > 0) shell.openPath(dir);
+  return { count, folderPath: dir };
 };

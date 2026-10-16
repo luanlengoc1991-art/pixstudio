@@ -18,6 +18,7 @@ import {
   fileName,
   fileUrl,
   ImageInput,
+  usePendingToolImage,
   OptionCards,
   saveFileAs,
   Section,
@@ -45,6 +46,11 @@ export default function DieCutTool() {
   const [view, setView] = useState<ViewMode>("result");
   const [busy, setBusy] = useState(false);
   const [zoom, setZoom] = useState(false);
+
+  usePendingToolImage("die-cut", (path) => {
+    setImagePath(path);
+    setResult(null);
+  });
 
   const run = async () => {
     if (!imagePath) {

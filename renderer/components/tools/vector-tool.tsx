@@ -12,6 +12,7 @@ import {
   fileName,
   fileUrl,
   ImageInput,
+  usePendingToolImage,
   OptionCards,
   PreviewCard,
   saveFileAs,
@@ -44,6 +45,11 @@ export default function VectorTool() {
   const [result, setResult] = useState<VectorizeResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [zoom, setZoom] = useState<"source" | "svg" | null>(null);
+
+  usePendingToolImage("vector", (path) => {
+    setImagePath(path);
+    setResult(null);
+  });
 
   const svgUrl = useMemo(
     () => (result ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(result.svg)}` : ""),

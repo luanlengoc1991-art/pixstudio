@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
 import {
   ArrowLeft,
   ImagePlus,
@@ -11,11 +12,11 @@ import {
   X,
 } from "lucide-react";
 import { ELECTRON_COMMANDS } from "@common/electron-commands";
-import { SaveFilePayload } from "@common/types/types";
+import { SaveFilePayload, SaveFilesToFolderPayload } from "@common/types/types";
 import { sanitizePath } from "@common/sanitize-path";
 import { cn } from "@/lib/utils";
 import { getTool, ToolId } from "@/lib/tools";
-import { activeTabAtom } from "@/atoms/workspace-atom";
+import { activeTabAtom, pendingToolImageAtom } from "@/atoms/workspace-atom";
 import { useToast } from "@/components/ui/use-toast";
 
 // The app's file:// handler treats a query string as part of the file name,
@@ -28,6 +29,25 @@ export const fileName = (path: string) =>
 /** Opens a save dialog; returns the saved path or null when cancelled. */
 export const saveFileAs = (payload: SaveFilePayload): Promise<string | null> =>
   window.electron.invoke(ELECTRON_COMMANDS.SAVE_FILE_AS, payload);
+
+/** Asks for a folder and copies all files into it; returns the count saved (0 when cancelled). */
+export const saveFilesToFolder = async (payload: SaveFilesToFolderPayload): Promise<number> => {
+  const result = await window.electron.invoke(ELECTRON_COMMANDS.SAVE_FILES_TO_FOLDER, payload);
+  return result?.count ?? 0;
+};
+
+export const fileExtension = (path: string) => path.split(".").pop()?.toLowerCase() || "png";
+
+/** Delivers an image another tool sent here ("Chuyển sang ..."), once. */
+export const usePendingToolImage = (toolId: ToolId, onImage: (path: string) => void) => {
+  const [pending, setPending] = useAtom(pendingToolImageAtom);
+  const path = pending[toolId];
+  useEffect(() => {
+    if (!path) return;
+    setPending((prev) => ({ ...prev, [toolId]: undefined }));
+    onImage(path);
+  }, [path]);
+};
 
 const IMAGE_FILTERS = [{ name: "Ảnh", extensions: ["png", "jpg", "jpeg", "webp"] }];
 
@@ -391,6 +411,35 @@ export function PreviewCard({
           children
         )}
       </div>
+    </div>
+  );
+}
+
+/** Before / after slider over two images. */
+export function CompareView({
+  before,
+  after,
+  beforeLabel = "Trước",
+  afterLabel = "Sau",
+}: {
+  before: string;
+  after: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+}) {
+  return (
+    <div className="checkerboard relative h-full w-full overflow-hidden rounded-2xl">
+      <ReactCompareSlider
+        className="h-full w-full"
+        itemOne={<ReactCompareSliderImage src={before} alt={beforeLabel} style={{ objectFit: "contain" }} />}
+        itemTwo={<ReactCompareSliderImage src={after} alt={afterLabel} style={{ objectFit: "contain" }} />}
+      />
+      <span className="pointer-events-none absolute left-3 top-3 rounded-md bg-slate-950/75 px-2.5 py-1 text-xs font-bold text-white">
+        {beforeLabel}
+      </span>
+      <span className="pointer-events-none absolute right-3 top-3 rounded-md bg-emerald-600/90 px-2.5 py-1 text-xs font-bold text-white">
+        {afterLabel}
+      </span>
     </div>
   );
 }

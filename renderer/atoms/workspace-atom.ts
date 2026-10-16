@@ -1,8 +1,7 @@
 import { atom } from "jotai";
-import { ChatGptStatus } from "@common/types/types";
 import { ToolId } from "@/lib/tools";
 
-export type WorkspaceTab = "home" | ToolId;
+export type WorkspaceTab = "home" | "chatgpt" | ToolId;
 
 /** The tab shown in the workspace */
 export const activeTabAtom = atom<WorkspaceTab>("home");
@@ -39,8 +38,12 @@ export const closeToolAtom = atom(null, (get, set, tool: ToolId) => {
   }
 });
 
-/** Images downloaded from the ChatGPT window, per tool, newest first */
-export const chatGptResultsAtom = atom<Partial<Record<ToolId, string[]>>>({});
+/** Image handed to another tool ("Chuyển sang Vector"...), consumed by that tool */
+export const pendingToolImageAtom = atom<Partial<Record<ToolId, string>>>({});
 
-/** Last ChatGPT window status, per tool */
-export const chatGptStatusAtom = atom<Partial<Record<ToolId, ChatGptStatus>>>({});
+/** Sends an image to a tool and opens it; the upscaler keeps its own atom */
+export const sendImageToToolAtom = atom(null, (_get, set, { toolId, path }: { toolId: ToolId; path: string }) => {
+  if (toolId === "upscayl") set(pendingUpscaleImageAtom, path);
+  else set(pendingToolImageAtom, (prev) => ({ ...prev, [toolId]: path }));
+  set(openToolAtom, toolId);
+});

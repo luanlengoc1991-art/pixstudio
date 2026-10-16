@@ -28,6 +28,8 @@ const createMainWindow = () => {
       nodeIntegration: true,
       nodeIntegrationInWorker: true,
       webSecurity: false,
+      // The ChatGPT tab runs as an isolated <webview> guest without Node
+      webviewTag: true,
       preload: join(__dirname, "preload.js"),
     },
     titleBarStyle: getPlatform() === "mac" ? "hiddenInset" : "default",

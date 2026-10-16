@@ -35,6 +35,12 @@ export type AiToolConfig = {
   fields: AiField[];
   /** Label of the main button */
   action: string;
+  /** Progress lines cycled while ChatGPT works */
+  steps: string[];
+  /** Label of the result in before/after views */
+  resultLabel: string;
+  /** Number of images the request returns (default 1) */
+  expected?: (values: Record<string, string>) => number;
   /** values holds the selected option of every field (text fields trimmed) */
   buildPrompt: (values: Record<string, string>) => string;
 };
@@ -72,6 +78,8 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
         ],
       },
     ],
+    steps: ["Đang gửi hình ảnh sang AI xử lý...","AI đang phân tích & tách lớp chủ thể...","Đang xóa phông nền & tinh chỉnh viền...","Đang xuất ảnh PNG nền trong suốt..."],
+    resultLabel: "Lớp đã tách",
     action: "Tách layer bằng ChatGPT",
     buildPrompt: ({ subject, output }) =>
       output === "plate"
@@ -103,6 +111,8 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
         ],
       },
     ],
+    steps: ["AI đang đọc kỹ tất cả văn bản, số điện thoại & chữ tiếng Việt...","Đang khử góc nghiêng, bóng mờ & nắn phẳng bố cục thiết kế...","Đang vẽ lại logo, đồ họa & phục hồi độ sắc nét chuẩn in...","Đang hoàn thiện bản in phẳng chất lượng cao..."],
+    resultLabel: "Bản in phục hồi",
     action: "Phục hồi bằng ChatGPT",
     buildPrompt: ({ mode, ratio }) =>
       [
@@ -145,6 +155,8 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
         ],
       },
     ],
+    steps: ["Đang tải ảnh sản phẩm lên AI...","Đang phân tích chất liệu, bề mặt & góc chụp...","Khử bụi bẩn, vết xước & làm mới bề mặt sản phẩm...","Tách nền & thay thế phông nền studio đồng nhất...","Tối ưu hóa ánh sáng studio, độ tương phản & độ nét tự nhiên...","Đang hoàn thiện ảnh sản phẩm thương mại điện tử..."],
+    resultLabel: "Ảnh đã retouch",
     action: "Retouch bằng ChatGPT",
     buildPrompt: ({ backdrop, light }) =>
       [
@@ -195,6 +207,8 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
         ],
       },
     ],
+    steps: ["Đang tải bản vẽ 2D lên AI...","Đang phân tích bố cục nhãn mác & chất liệu...","Đang dựng khối 3D & dán nhãn theo phối cảnh...","Đang tính toán ánh sáng, phản chiếu & bóng đổ...","Đang render ảnh sản phẩm 3D hoàn chỉnh..."],
+    resultLabel: "Ảnh 3D",
     action: "Render 3D bằng ChatGPT",
     buildPrompt: ({ packaging, scene }) =>
       [
@@ -258,6 +272,8 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
         ],
       },
     ],
+    steps: ["Đang kết nối & gửi thông tin xử lý...","AI đang phân tích bố cục, typographic & màu sắc...","AI đang tổng hợp & vẽ hình ảnh hoàn chỉnh...","Đang tối ưu độ sắc nét & chuẩn bị xuất kết quả..."],
+    resultLabel: "Thiết kế",
     action: "Thiết kế bằng ChatGPT",
     buildPrompt: ({ headline, details, format, style, __hasImages }) =>
       [
@@ -310,6 +326,8 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
         ],
       },
     ],
+    steps: ["Đang nạp Ảnh 1 (Dáng mẫu) & Ảnh 2 (Khuôn mặt & Trang phục) lên AI...","Đang phân tích cấu trúc xương, hướng cơ thể & góc máy từ Ảnh 1...","Đang khóa nhận diện ngũ quan, kiểu tóc & màu da từ Ảnh 2...","Đang đồng bộ trang phục & thể hình từ Ảnh 2 khớp tự nhiên với dáng Ảnh 1...","Đang xử lý hòa quyện ánh sáng môi trường, bóng đổ & chất liệu vải...","Đang hoàn thiện ảnh chân dung Photorealistic chuẩn Studio..."],
+    resultLabel: "Kết quả ghép",
     action: "Ghép dáng bằng ChatGPT",
     buildPrompt: ({ background }) =>
       [
@@ -357,6 +375,8 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
         ],
       },
     ],
+    steps: ["Đang nạp Bản vẽ biển hiệu & Ảnh mặt tiền lên AI...","Đang nhận diện bề mặt tường, góc nghiêng & điểm tụ mặt tiền...","Đang nắn góc phối cảnh 3D và ướm biển hiệu vào vị trí...","Đang dựng độ dày hộp biển, viền chữ nổi & kết cấu gắn tường...","Đang tính toán bóng đổ lên tường & ánh sáng môi trường thực tế...","Đang hoàn thiện ảnh phối cảnh thi công biển hiệu hoàn chỉnh..."],
+    resultLabel: "Phối cảnh",
     action: "Dựng phối cảnh bằng ChatGPT",
     buildPrompt: ({ kind, time }) =>
       [
@@ -402,6 +422,8 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
         ],
       },
     ],
+    steps: ["Đang tải ảnh cũ lên AI & phân tích các khuyết tật vật lý...","Đang nhận diện danh tính, nét mặt & cấu trúc chân dung...","Đang tẩy sạch vết ố vàng, nấm mốc, nếp gấp gãy & vết rách...","Đang phục hồi chi tiết sợi tóc, ánh mắt & thần thái tự nhiên...","Đang xử lý màu sắc chân thực & hoàn thiện ảnh phục hồi..."],
+    resultLabel: "Ảnh đã phục hồi",
     action: "Phục hồi bằng ChatGPT",
     buildPrompt: ({ color, strength }) =>
       [

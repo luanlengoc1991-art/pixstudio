@@ -2,14 +2,9 @@
 import { useEffect } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ELECTRON_COMMANDS } from "@common/electron-commands";
-import { ChatGptResult, ChatGptStatus } from "@common/types/types";
-import {
-  activeTabAtom,
-  chatGptResultsAtom,
-  chatGptStatusAtom,
-  openToolsAtom,
-  toolProgressAtom,
-} from "@/atoms/workspace-atom";
+import { activeTabAtom, openToolsAtom, toolProgressAtom } from "@/atoms/workspace-atom";
+import { chatGptActivatedAtom } from "@/atoms/chatgpt-atom";
+import ChatGptPanel from "@/components/chatgpt/chatgpt-panel";
 import TopBar from "@/components/shell/top-bar";
 import HomeDashboard from "@/components/shell/home-dashboard";
 import UpscaleTool from "@/components/tools/upscale-tool";
@@ -39,19 +34,12 @@ const App = () => {
   const activeTab = useAtomValue(activeTabAtom);
   const openTools = useAtomValue(openToolsAtom);
   const setToolProgress = useSetAtom(toolProgressAtom);
-  const setChatGptResults = useSetAtom(chatGptResultsAtom);
-  const setChatGptStatus = useSetAtom(chatGptStatusAtom);
+  const chatGptActivated = useAtomValue(chatGptActivatedAtom);
   const version = useUpscaylVersion();
 
   useEffect(() => {
     window.electron.on(ELECTRON_COMMANDS.REMOVE_BACKGROUND_PROGRESS, (_, data: string) => {
       if (data) setToolProgress(data);
-    });
-    window.electron.on(ELECTRON_COMMANDS.CHATGPT_STATUS, (_, status: ChatGptStatus) => {
-      setChatGptStatus((prev) => ({ ...prev, [status.toolId]: status }));
-    });
-    window.electron.on(ELECTRON_COMMANDS.CHATGPT_RESULT, (_, { toolId, path }: ChatGptResult) => {
-      setChatGptResults((prev) => ({ ...prev, [toolId]: [path, ...(prev[toolId] ?? [])] }));
     });
   }, []);
 
@@ -75,6 +63,8 @@ const App = () => {
             </section>
           );
         })}
+        {/* Created on first use, then kept alive so jobs and the login survive tab switches */}
+        {(chatGptActivated || activeTab === "chatgpt") && <ChatGptPanel />}
       </div>
     </div>
   );

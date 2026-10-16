@@ -1,56 +1,47 @@
-import React, { useMemo, useState } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import React, { useEffect, useMemo, useState } from "react";
+import { useSetAtom } from "jotai";
 import {
-  AlertTriangle,
-  CheckCircle2,
   Copy,
   Download,
+  FolderDown,
   ImageUpscale,
-  Loader2,
-  LogOut,
   Maximize2,
-  MessageSquareShare,
-  Trash2,
+  PenTool,
+  Sparkles,
+  Wand2,
 } from "lucide-react";
-import { ELECTRON_COMMANDS } from "@common/electron-commands";
-import { ChatGptOpenPayload } from "@common/types/types";
 import { cn } from "@/lib/utils";
 import { getTool, ToolId } from "@/lib/tools";
 import { AI_TOOLS, withNote } from "@/lib/ai-tools";
-import {
-  chatGptResultsAtom,
-  chatGptStatusAtom,
-  openToolAtom,
-  pendingUpscaleImageAtom,
-} from "@/atoms/workspace-atom";
+import { sendImageToToolAtom } from "@/atoms/workspace-atom";
 import { useToast } from "@/components/ui/use-toast";
 import {
+  CompareView,
   EmptyState,
-  errorMessage,
+  fileExtension,
   fileUrl,
   IMAGE_SAVE_FILTERS,
   ImageInput,
   OptionCards,
   saveFileAs,
+  saveFilesToFolder,
   Section,
+  Segmented,
   ToolLayout,
+  usePendingToolImage,
   ZoomModal,
 } from "./common";
+import { ChatGptJobBanner, useChatGptJob } from "./common/chatgpt-job";
 
-const STEP_LABELS = ["01", "02", "03", "04", "05", "06", "07", "08"];
+const STEP_LABELS = ["01", "02", "03", "04", "05", "06", "07", "08", "09"];
 
-const extension = (path: string) => path.split(".").pop()?.toLowerCase() || "png";
-
-/** Shared screen for the tools that run through the user's ChatGPT window. */
+/** Shared screen for the tools that run through the embedded ChatGPT tab. */
 export default function ChatGptTool({ toolId }: { toolId: ToolId }) {
   const config = AI_TOOLS[toolId]!;
   const tool = getTool(toolId);
   const { toast } = useToast();
-  const openTool = useSetAtom(openToolAtom);
-  const setPendingUpscale = useSetAtom(pendingUpscaleImageAtom);
-  const [allResults, setAllResults] = useAtom(chatGptResultsAtom);
-  const status = useAtomValue(chatGptStatusAtom)[toolId];
-  const results = allResults[toolId] ?? [];
+  const sendImageToTool = useSetAtom(sendImageToToolAtom);
+  const job = useChatGptJob(toolId);
 
   const [images, setImages] = useState<Record<string, string>>({});
   const [values, setValues] = useState<Record<string, string>>(() =>
@@ -59,19 +50,28 @@ export default function ChatGptTool({ toolId }: { toolId: ToolId }) {
     ),
   );
   const [note, setNote] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [editText, setEditText] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
+  const [view, setView] = useState<"compare" | "single">("compare");
   const [zoomed, setZoomed] = useState<string | null>(null);
+
+  // An image sent from another tool fills the first slot
+  usePendingToolImage(toolId, (path) => setImages((prev) => ({ ...prev, [config.slots[0].key]: path })));
 
   const imagePaths = config.slots.map((slot) => images[slot.key]).filter(Boolean);
   const prompt = useMemo(() => {
     const trimmed = Object.fromEntries(Object.entries(values).map(([k, v]) => [k, v.trim()]));
-    return withNote(
-      config.buildPrompt({ ...trimmed, __hasImages: imagePaths.length ? "1" : "0" }),
-      note,
-    );
+    return withNote(config.buildPrompt({ ...trimmed, __hasImages: imagePaths.length ? "1" : "0" }), note);
   }, [config, values, note, imagePaths.length]);
 
-  // Ctrl+V fills the first empty slot (or the first slot once all are filled)
+  // Show the newest result as soon as it arrives
+  const newest = job.history[0];
+  useEffect(() => {
+    if (newest) setSelected(newest);
+  }, [newest]);
+  const current = selected && job.history.includes(selected) ? selected : newest;
+  const before = images[config.slots[0].key];
+
   const firstEmpty = config.slots.findIndex((slot) => !images[slot.key]);
   const pasteSlot = firstEmpty === -1 ? 0 : firstEmpty;
 
@@ -83,45 +83,52 @@ export default function ChatGptTool({ toolId }: { toolId: ToolId }) {
     return "";
   };
 
-  const send = async () => {
+  const run = () => {
     const problem = missing();
     if (problem) {
       toast({ title: "Còn thiếu thông tin", description: problem });
       return;
     }
-    setBusy(true);
-    try {
-      const payload: ChatGptOpenPayload = { toolId, imagePaths, prompt };
-      await window.electron.invoke(ELECTRON_COMMANDS.CHATGPT_OPEN, payload);
-    } catch (error) {
-      toast({ title: "Không mở được ChatGPT", description: errorMessage(error) });
-    } finally {
-      setBusy(false);
-    }
+    job.submit({
+      prompt,
+      imagePaths,
+      expected: config.expected?.(values) ?? 1,
+      steps: config.steps,
+    });
   };
 
-  const copyPrompt = async () => {
-    await navigator.clipboard.writeText(prompt);
-    toast({ title: "Đã sao chép yêu cầu" });
+  const refine = () => {
+    if (!editText.trim()) return;
+    job.submit({
+      prompt: `Hãy chỉnh sửa lại ảnh vừa tạo theo yêu cầu sau, giữ nguyên mọi thứ khác: ${editText.trim()}`,
+      imagePaths: [],
+      newChat: false,
+      nativeEdit: true,
+      steps: config.steps,
+    });
+    setEditText("");
   };
 
-  const logout = async () => {
-    await window.electron.invoke(ELECTRON_COMMANDS.CHATGPT_LOGOUT, undefined);
-    toast({ title: "Đã đăng xuất ChatGPT", description: "Lần sau mở ChatGPT sẽ cần đăng nhập lại." });
-  };
-
-  const save = async (path: string, index: number) => {
-    const ext = extension(path);
+  const save = async (path: string) => {
+    const ext = fileExtension(path);
     const saved = await saveFileAs({
-      defaultName: `${toolId}_${results.length - index}.${ext}`,
+      defaultName: `${toolId}_${Date.now()}.${ext}`,
       filters: [{ name: ext.toUpperCase(), extensions: [ext] }, ...IMAGE_SAVE_FILTERS],
       sourcePath: path,
     });
     if (saved) toast({ title: "Đã lưu ảnh", description: saved });
   };
 
-  const removeResult = (path: string) =>
-    setAllResults((prev) => ({ ...prev, [toolId]: (prev[toolId] ?? []).filter((p) => p !== path) }));
+  const saveAll = async () => {
+    const count = await saveFilesToFolder({
+      folderName: `${tool.title} ${new Date().toLocaleDateString("vi-VN").replace(/\//g, "-")}`,
+      files: [...job.history].reverse().map((path, index) => ({
+        sourcePath: path,
+        name: `${toolId}_${index + 1}.${fileExtension(path)}`,
+      })),
+    });
+    if (count) toast({ title: `Đã lưu ${count} ảnh` });
+  };
 
   let step = 0;
   const aside = (
@@ -169,96 +176,118 @@ export default function ChatGptTool({ toolId }: { toolId: ToolId }) {
 
       <details className="rounded-xl border border-base-content/10 bg-base-100 p-3 text-xs">
         <summary className="cursor-pointer font-bold">Xem yêu cầu gửi cho ChatGPT</summary>
-        <p className="mt-2 whitespace-pre-wrap leading-5 text-base-content/70">{prompt}</p>
-        <button className="btn btn-ghost btn-xs mt-2" onClick={copyPrompt}>
+        <p className="mt-2 whitespace-pre-wrap font-light leading-5 text-base-content/70">{prompt}</p>
+        <button
+          className="btn btn-ghost btn-xs mt-2"
+          onClick={async () => {
+            await navigator.clipboard.writeText(prompt);
+            toast({ title: "Đã sao chép yêu cầu" });
+          }}
+        >
           <Copy className="h-3.5 w-3.5" /> Sao chép
         </button>
       </details>
-
-      <div className="flex items-center justify-between text-[11px] text-base-content/60">
-        <span>Dùng tài khoản ChatGPT của bạn (cần gói có tạo ảnh).</span>
-        <button className="btn btn-ghost btn-xs" onClick={logout} data-tooltip-id="tooltip" data-tooltip-content="Xóa phiên đăng nhập ChatGPT đã lưu">
-          <LogOut className="h-3.5 w-3.5" />
-        </button>
-      </div>
     </>
   );
 
   const footer = (
-    <button className="btn btn-primary w-full" disabled={busy} onClick={send}>
-      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquareShare className="h-4 w-4" />}
-      {busy ? "Đang chuyển sang ChatGPT..." : status ? "Dán lại vào ChatGPT" : config.action}
+    <button className="btn btn-primary w-full" disabled={job.running} onClick={run}>
+      <Sparkles className="h-4 w-4" />
+      {job.running ? "Đang xử lý..." : config.action}
     </button>
   );
 
   return (
     <ToolLayout toolId={toolId} aside={aside} footer={footer}>
-      {status && (
-        <div
-          className={cn(
-            "m-4 mb-0 flex items-start gap-2 rounded-xl border px-3 py-2 text-xs",
-            status.state === "error" || status.state === "login"
-              ? "border-warning/40 bg-warning/10"
-              : status.state === "ready"
-                ? "border-success/40 bg-success/10"
-                : "border-primary/30 bg-primary/10",
-          )}
-        >
-          {status.state === "error" || status.state === "login" ? (
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-          ) : status.state === "ready" ? (
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-          ) : (
-            <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
-          )}
-          <span>{status.message}</span>
-        </div>
-      )}
+      <div className="flex h-full min-h-0 flex-col gap-3 p-4">
+        <ChatGptJobBanner toolId={toolId} steps={config.steps} />
 
-      {results.length === 0 ? (
-        <EmptyState
-          icon={tool.icon}
-          title="Chạy bằng ChatGPT của bạn"
-          text={`1. Chọn ảnh và tùy chọn bên trái, bấm "${config.action}". 2. PixStudio mở ChatGPT, tự dán ảnh và yêu cầu; bạn kiểm tra rồi bấm Gửi. 3. Khi ChatGPT tạo xong, bấm nút tải xuống trên ảnh (hoặc chuột phải → "Đưa ảnh này về PixStudio"), ảnh sẽ hiện ở đây.`}
-        />
-      ) : (
-        <div className="grid min-h-0 flex-1 auto-rows-[minmax(260px,1fr)] grid-cols-1 gap-4 overflow-y-auto p-4 lg:grid-cols-2">
-          {results.map((path, index) => (
-            <div key={path} className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-base-content/10 bg-base-100 shadow-sm">
-              <div className="flex items-center justify-between border-b border-base-content/10 px-3 py-2">
-                <span className="text-[11px] font-black uppercase tracking-wide text-base-content/70">
-                  Kết quả {results.length - index}
-                </span>
-                <div className="flex gap-1">
-                  <button className="btn btn-ghost btn-xs" onClick={() => setZoomed(path)} data-tooltip-id="tooltip" data-tooltip-content="Phóng to">
-                    <Maximize2 className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    className="btn btn-ghost btn-xs"
-                    onClick={() => {
-                      setPendingUpscale(path);
-                      openTool("upscayl");
-                    }}
-                    data-tooltip-id="tooltip"
-                    data-tooltip-content="Kích nét 4K"
-                  >
-                    <ImageUpscale className="h-3.5 w-3.5" />
-                  </button>
-                  <button className="btn btn-ghost btn-xs" onClick={() => removeResult(path)} data-tooltip-id="tooltip" data-tooltip-content="Bỏ khỏi danh sách">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                  <button className="btn btn-primary btn-xs" onClick={() => save(path, index)}>
-                    <Download className="h-3.5 w-3.5" /> Lưu
-                  </button>
-                </div>
-              </div>
-              <div className="checkerboard flex min-h-0 flex-1 items-center justify-center p-3">
-                <img src={fileUrl(path)} alt="" className="max-h-full max-w-full object-contain" draggable={false} />
+        {!current ? (
+          <div className="min-h-0 flex-1">
+            <EmptyState
+              icon={tool.icon}
+              title="Kết quả sẽ hiển thị tại đây"
+              text={`Chọn ảnh và tùy chọn bên trái rồi bấm "${config.action}". PixStudio tự gửi sang ChatGPT (tài khoản của bạn), chờ tạo xong và lấy ảnh về đây.`}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-2">
+              {before && (
+                <Segmented
+                  value={view}
+                  onChange={setView}
+                  options={[
+                    { value: "compare", label: "So sánh Trước / Sau" },
+                    { value: "single", label: "Kết quả đơn" },
+                  ]}
+                />
+              )}
+              <div className="ml-auto flex flex-wrap gap-1.5">
+                <button className="btn btn-sm" onClick={() => setZoomed(current)}>
+                  <Maximize2 className="h-4 w-4" /> Phóng to
+                </button>
+                <button className="btn btn-sm" onClick={() => sendImageToTool({ toolId: "upscayl", path: current })}>
+                  <ImageUpscale className="h-4 w-4" /> Kích nét 4K
+                </button>
+                <button className="btn btn-sm" onClick={() => sendImageToTool({ toolId: "vector", path: current })}>
+                  <PenTool className="h-4 w-4" /> Chuyển Vector
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={() => save(current)}>
+                  <Download className="h-4 w-4" /> Tải về
+                </button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+
+            <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-base-content/10 bg-base-100">
+              {before && view === "compare" ? (
+                <CompareView before={fileUrl(before)} after={fileUrl(current)} beforeLabel="Ảnh gốc" afterLabel={config.resultLabel} />
+              ) : (
+                <div className="checkerboard flex h-full items-center justify-center p-3">
+                  <img src={fileUrl(current)} alt="" className="max-h-full max-w-full cursor-zoom-in object-contain" onClick={() => setZoomed(current)} />
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                className="input input-bordered input-sm flex-1"
+                placeholder="Chỉnh bằng AI: mô tả thay đổi (VD: đổi nền sang màu hồng pastel, làm chữ to hơn...)"
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && refine()}
+                disabled={job.running}
+              />
+              <button className="btn btn-secondary btn-sm" onClick={refine} disabled={job.running || !editText.trim()}>
+                <Wand2 className="h-4 w-4" /> Gửi sửa đổi
+              </button>
+            </div>
+
+            {job.history.length > 1 && (
+              <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1">
+                  {job.history.map((path, index) => (
+                    <button
+                      key={path}
+                      onClick={() => setSelected(path)}
+                      className={cn(
+                        "checkerboard h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all",
+                        path === current ? "border-primary shadow-md" : "border-transparent opacity-70 hover:opacity-100",
+                      )}
+                      title={`Kết quả ${job.history.length - index}`}
+                    >
+                      <img src={fileUrl(path)} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+                <button className="btn btn-sm shrink-0" onClick={saveAll}>
+                  <FolderDown className="h-4 w-4" /> Lưu tất cả ({job.history.length})
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       <ZoomModal src={zoomed ? fileUrl(zoomed) : null} title={tool.title} onClose={() => setZoomed(null)} />
     </ToolLayout>

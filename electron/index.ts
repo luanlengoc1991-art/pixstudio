@@ -23,8 +23,8 @@ import pasteImage from "./commands/paste-image";
 import removeBackground from "./commands/remove-background";
 import { exportSvgToPdf, vectorizeImage } from "./commands/vectorize";
 import dieCut from "./commands/die-cut";
-import openChatGpt, { resetChatGptLogin } from "./commands/chatgpt-bridge";
-import { saveFileAs, saveTempImage } from "./utils/tool-files";
+import { nativePasteImage, resetChatGptLogin, setupChatGpt } from "./commands/chatgpt-bridge";
+import { saveFileAs, saveFilesToFolder, saveTempImage } from "./utils/tool-files";
 import path from "path";
 
 // INITIALIZATION
@@ -51,6 +51,7 @@ app.on("ready", async () => {
     logit("🚃 App Path: ", app.getAppPath());
   });
 
+  setupChatGpt();
   createMainWindow();
 
   log.info(
@@ -115,13 +116,15 @@ ipcMain.handle(ELECTRON_COMMANDS.SAVE_TEMP_IMAGE, saveTempImage);
 
 ipcMain.handle(ELECTRON_COMMANDS.SAVE_FILE_AS, saveFileAs);
 
+ipcMain.handle(ELECTRON_COMMANDS.SAVE_FILES_TO_FOLDER, saveFilesToFolder);
+
 ipcMain.handle(ELECTRON_COMMANDS.VECTORIZE_IMAGE, vectorizeImage);
 
 ipcMain.handle(ELECTRON_COMMANDS.EXPORT_VECTOR_PDF, exportSvgToPdf);
 
 ipcMain.handle(ELECTRON_COMMANDS.DIE_CUT, dieCut);
 
-ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_OPEN, openChatGpt);
+ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_NATIVE_PASTE, nativePasteImage);
 
 ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_LOGOUT, resetChatGptLogin);
 

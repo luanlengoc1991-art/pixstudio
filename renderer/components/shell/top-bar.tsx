@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { House, Moon, Sun, X } from "lucide-react";
+import { House, MessageCircle, Moon, Sun, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getTool } from "@/lib/tools";
 import { activeTabAtom, closeToolAtom, openToolsAtom } from "@/atoms/workspace-atom";
+import { chatGptActivatedAtom, chatGptConnectionAtom, chatGptQueueAtom } from "@/atoms/chatgpt-atom";
 import UpscaylSVGLogo from "@/components/icons/upscayl-logo-svg";
 
 const THEME_KEY = "theme";
@@ -41,6 +42,40 @@ function ThemeToggle() {
       data-tooltip-content={theme === DARK ? "Giao diện sáng" : "Giao diện tối"}
     >
       {theme === DARK ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
+  );
+}
+
+/** Opens the embedded ChatGPT tab; the dot shows whether the user is logged in. */
+function ChatGptButton() {
+  const [activeTab, setActiveTab] = useAtom(activeTabAtom);
+  const setActivated = useSetAtom(chatGptActivatedAtom);
+  const connection = useAtomValue(chatGptConnectionAtom);
+  const busy = useAtomValue(chatGptQueueAtom).length > 0;
+  const active = activeTab === "chatgpt";
+  const dot =
+    connection === "connected" ? "bg-emerald-500" : connection === "idle" ? "bg-base-content/30" : "bg-amber-500";
+
+  return (
+    <button
+      onClick={() => {
+        setActivated(true);
+        setActiveTab("chatgpt");
+      }}
+      className={cn(
+        "flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-colors",
+        active ? "bg-emerald-500/15 text-emerald-600 ring-1 ring-emerald-500/40 dark:text-emerald-300" : "hover:bg-base-200",
+      )}
+      data-tooltip-id="tooltip"
+      data-tooltip-content={
+        connection === "connected" ? "ChatGPT đã đăng nhập" : "Mở ChatGPT để đăng nhập (dùng cho các công cụ AI)"
+      }
+    >
+      <span className="relative">
+        <MessageCircle className="h-4 w-4" />
+        <span className={cn("absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full ring-2 ring-base-100", dot, busy && "animate-pulse")} />
+      </span>
+      ChatGPT
     </button>
   );
 }
@@ -95,6 +130,7 @@ export default function TopBar({ version }: { version: string }) {
         })}
       </nav>
 
+      <ChatGptButton />
       <ThemeToggle />
     </header>
   );

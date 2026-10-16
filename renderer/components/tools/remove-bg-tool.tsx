@@ -1,14 +1,10 @@
 import React, { useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
-import { Download, Eraser, ImageUpscale, Maximize2 } from "lucide-react";
+import { Download, Eraser, ImageUpscale, Maximize2, PenTool } from "lucide-react";
 import { ELECTRON_COMMANDS } from "@common/electron-commands";
 import { BackgroundRemovalModel, RemoveBackgroundPayload } from "@common/types/types";
-import {
-  openToolAtom,
-  pendingUpscaleImageAtom,
-  toolProgressAtom,
-} from "@/atoms/workspace-atom";
+import { sendImageToToolAtom, toolProgressAtom } from "@/atoms/workspace-atom";
 import { useToast } from "@/components/ui/use-toast";
 import {
   BusyOverlay,
@@ -19,6 +15,7 @@ import {
   fileUrl,
   IMAGE_SAVE_FILTERS,
   ImageInput,
+  usePendingToolImage,
   OptionCards,
   saveFileAs,
   Section,
@@ -32,8 +29,7 @@ type BackgroundMode = "transparent" | "white" | "color";
 export default function RemoveBgTool() {
   const { toast } = useToast();
   const [progress, setProgress] = useAtom(toolProgressAtom);
-  const openTool = useSetAtom(openToolAtom);
-  const setPendingUpscale = useSetAtom(pendingUpscaleImageAtom);
+  const sendImageToTool = useSetAtom(sendImageToToolAtom);
 
   const [imagePath, setImagePath] = useState("");
   const [model, setModel] = useState<BackgroundRemovalModel>("general");
@@ -42,6 +38,11 @@ export default function RemoveBgTool() {
   const [resultPath, setResultPath] = useState("");
   const [busy, setBusy] = useState(false);
   const [zoom, setZoom] = useState(false);
+
+  usePendingToolImage("remove-bg", (path) => {
+    setImagePath(path);
+    setResultPath("");
+  });
 
   const run = async () => {
     if (!imagePath) {
@@ -171,12 +172,19 @@ export default function RemoveBgTool() {
               </button>
               <button
                 className="btn btn-sm"
-                onClick={() => {
-                  setPendingUpscale(resultPath);
-                  openTool("upscayl");
-                }}
+                onClick={() => sendImageToTool({ toolId: "upscayl", path: resultPath })}
+                data-tooltip-id="tooltip"
+                data-tooltip-content="Gửi ảnh đã tách nền sang Kích nét để phóng to"
               >
                 <ImageUpscale className="h-4 w-4" /> Kích nét 4K
+              </button>
+              <button
+                className="btn btn-sm"
+                onClick={() => sendImageToTool({ toolId: "vector", path: resultPath })}
+                data-tooltip-id="tooltip"
+                data-tooltip-content="Chuyển ảnh không nền sang Vector để bóc tách SVG"
+              >
+                <PenTool className="h-4 w-4" /> Chuyển sang Vector
               </button>
               <button className="btn btn-primary btn-sm" onClick={save}>
                 <Download className="h-4 w-4" /> Tải ảnh PNG
