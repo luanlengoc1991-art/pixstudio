@@ -18,7 +18,10 @@ export const TOOL_ACCENT: Record<ToolId, [string, string, string]> = {
 };
 
 /** Rendered 3D object for each tool (Microsoft Fluent 3D, MIT, in public/icons3d) */
-export const toolImage = (id: ToolId) => `public:///icons3d/${id}.png`;
+/** Bump when an icon file is replaced so the app does not show a cached copy */
+const ICON_VERSION = 2;
+
+export const toolImage = (id: ToolId) => `public:///icons3d/${id}.png?v=${ICON_VERSION}`;
 
 export const STAT_IMAGES = {
   tools: "public:///icons3d/stat-tools.png",

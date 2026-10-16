@@ -50,7 +50,8 @@ app.on("ready", async () => {
       callback(pathname);
     });
     protocol.registerFileProtocol("public", (request, callback) => {
-      const filePath = decodeURI(request.url.replace("public:///", ""));
+      // "?v=" only busts the cache; it is not part of the file name
+      const filePath = decodeURI(request.url.replace("public:///", "")).split("?")[0];
       // Dev runs read renderer/public; packaged builds only have renderer/out
       const fromPublic = path.join(app.getAppPath(), "renderer", "public", filePath);
       const fromOut = path.join(app.getAppPath(), "renderer", "out", filePath);
