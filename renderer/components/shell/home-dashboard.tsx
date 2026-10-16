@@ -10,10 +10,14 @@ import { useToast } from "@/components/ui/use-toast";
 const pad = (n: number) => String(n).padStart(2, "0");
 const WEEKDAYS = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
 
-/** Current time, refreshed every second. */
+/**
+ * Current time, refreshed every second. Starts as null so the prerendered HTML
+ * (built at another time) matches the first client render.
+ */
 const useNow = () => {
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
+    setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
@@ -68,15 +72,16 @@ function Backdrop() {
 /** Live clock: big HH:MM with light seconds, weekday and date underneath. */
 function LiveClock() {
   const now = useNow();
+  if (!now) return <div className="h-12" />;
   return (
     <div className="text-right">
       <div className="font-display leading-none text-white">
-        <span className="text-5xl font-bold tabular-nums">
+        <span className="text-[32px] font-bold tabular-nums">
           {pad(now.getHours())}:{pad(now.getMinutes())}
         </span>
-        <span className="ml-1 text-2xl font-extralight tabular-nums text-cyan-300">:{pad(now.getSeconds())}</span>
+        <span className="ml-0.5 text-lg font-extralight tabular-nums text-cyan-300">:{pad(now.getSeconds())}</span>
       </div>
-      <div className="mt-2 flex items-center justify-end gap-2">
+      <div className="mt-1 flex items-center justify-end gap-2">
         <span className="font-display text-xs font-light uppercase tracking-[0.25em] text-white/70">{WEEKDAYS[now.getDay()]}</span>
         <span className="font-display bg-blue-600 px-2.5 py-0.5 text-xs font-bold uppercase tracking-widest text-white shadow-[0_0_16px_rgba(37,99,235,0.6)]">
           Hôm nay · {pad(now.getDate())}.{pad(now.getMonth() + 1)}.{now.getFullYear()}
@@ -185,35 +190,34 @@ export default function HomeDashboard() {
     <div className="relative h-full overflow-hidden bg-[#050a24]">
       <Backdrop />
       <div className="relative h-full overflow-y-auto pb-12">
-        <div className="mx-auto max-w-[2100px] px-8 pt-6">
-          {/* Masthead with overlay text behind the title */}
-          <div className="relative">
-            <span
-              className="font-display pointer-events-none absolute -top-6 left-0 select-none text-[150px] font-bold uppercase leading-none text-white/[0.07] mix-blend-overlay"
-              style={{ WebkitTextStroke: "1.5px rgba(255,255,255,0.3)" }}
-              aria-hidden
-            >
-              Studio
-            </span>
-            <div className="relative flex items-start justify-between gap-6">
-              <div>
-                {/* Row 1: title with the brand block beside it */}
-                <div className="flex items-center gap-5">
-                  <h1 className="font-display text-[68px] uppercase leading-[1.1] tracking-tight text-white">
-                    <span className="font-light">Bộ công cụ </span>
-                    <span className="font-bold text-cyan-300 drop-shadow-[0_0_24px_rgba(103,232,249,0.45)]">AI</span>
-                  </h1>
-                  <span className="h-14 w-px bg-white/30" />
-                  <div className="font-display uppercase">
-                    <p className="text-2xl tracking-tight text-white">
-                      <span className="font-bold">Luan_MKT</span>
-                      <span className="font-light">_Studio</span>
-                    </p>
-                    <p className="mt-0.5 text-[11px] font-medium tracking-[0.22em] text-white/75">Bộ công cụ AI · Sáng tạo không giới hạn</p>
-                  </div>
+        {/* Compact masthead in the top-left corner, clock in the top-right corner */}
+        <div className="relative px-6 pt-4">
+          <span
+            className="font-display pointer-events-none absolute -top-3 left-4 select-none text-[90px] font-bold uppercase leading-none text-white/[0.07] mix-blend-overlay"
+            style={{ WebkitTextStroke: "1px rgba(255,255,255,0.3)" }}
+            aria-hidden
+          >
+            Studio
+          </span>
+          <div className="relative flex items-start justify-between gap-6">
+            <div>
+              {/* Row 1: title with the brand block beside it */}
+              <div className="flex items-center gap-3">
+                <h1 className="font-display text-[34px] uppercase leading-[1.15] tracking-tight text-white">
+                  <span className="font-light">Bộ công cụ </span>
+                  <span className="font-bold text-cyan-300 drop-shadow-[0_0_18px_rgba(103,232,249,0.45)]">AI</span>
+                </h1>
+                <span className="h-8 w-px bg-white/30" />
+                <div className="font-display uppercase">
+                  <p className="text-base leading-tight tracking-tight text-white">
+                    <span className="font-bold">Luan_MKT</span>
+                    <span className="font-light">_Studio</span>
+                  </p>
+                  <p className="text-[9px] font-medium tracking-[0.22em] text-white/70">Bộ công cụ AI · Sáng tạo không giới hạn</p>
                 </div>
-                {/* Row 2: figures */}
-                <p className="font-display mt-1 text-[15px] uppercase tracking-[0.16em] text-white/90">
+              </div>
+              {/* Row 2: figures */}
+              <p className="font-display mt-0.5 text-[11px] uppercase tracking-[0.16em] text-white/85">
                   <b className="font-bold">{TOOLS.length}</b> <span className="font-light">công cụ</span>
                   <span className="mx-2 text-sky-400">/</span>
                   <b className="font-bold">{local.length}</b> <span className="font-light">chạy trên máy</span>
@@ -227,7 +231,8 @@ export default function HomeDashboard() {
             </div>
           </div>
 
-          <div className="mt-6 flex flex-col gap-6">
+        <div className="mx-auto max-w-[2100px] px-8">
+          <div className="mt-5 flex flex-col gap-6">
             {section("AI", "qua ChatGPT", viaChatGpt, 0)}
             {section("Chạy", "trên máy", local, viaChatGpt.length)}
           </div>
