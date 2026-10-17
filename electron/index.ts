@@ -30,6 +30,7 @@ import {
   resetChatGptLogin,
   setupChatGpt,
 } from "./commands/chatgpt-bridge";
+import { loginWithBrowser } from "./commands/browser-login";
 import { saveFileAs, saveFilesToFolder, saveTempImage } from "./utils/tool-files";
 import path from "path";
 import fs from "fs";
@@ -140,6 +141,8 @@ ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_ATTACH_FILES, attachFiles);
 ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_LOGOUT, resetChatGptLogin);
 
 ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_SESSION_STATUS, hasChatGptSession);
+
+ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_BROWSER_LOGIN, loginWithBrowser);
 
 ipcMain.handle(ELECTRON_COMMANDS.GET_SYSTEM_STATS, getSystemStats);
 

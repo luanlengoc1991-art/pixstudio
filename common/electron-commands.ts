@@ -43,6 +43,7 @@ const ELECTRON_COMMANDS = {
   CHATGPT_DOWNLOADED: "Send an image downloaded in the ChatGPT tab to Renderer",
   CHATGPT_LOGOUT: "Clear the saved ChatGPT login",
   CHATGPT_SESSION_STATUS: "Whether a ChatGPT login is saved",
+  CHATGPT_BROWSER_LOGIN: "Sign in to ChatGPT in Edge/Chrome and copy the session",
   GET_SYSTEM_STATS: "Read RAM, VRAM and GPU usage",
   SAVE_FILES_TO_FOLDER: "Save several result files into a chosen folder",
 } as const;
