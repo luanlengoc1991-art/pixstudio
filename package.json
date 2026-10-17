@@ -1,7 +1,7 @@
 {
   "name": "pixstudio",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "productName": "LMS",
   "author": {
     "name": "Nayam Amarshe",
@@ -180,7 +180,6 @@
       "icon": "resources/icons/"
     },
     "win": {
-      "publisherName": "LUAN MKT STUDIO",
       "target": [
         "nsis"
       ],
@@ -197,7 +196,14 @@
       "export",
       "renderer/out"
     ],
-    "publish": null
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "luanlengoc1991-art",
+        "repo": "pixstudio",
+        "releaseType": "release"
+      }
+    ]
   },
   "devDependencies": {
     "@electron/notarize": "^2.5.0",

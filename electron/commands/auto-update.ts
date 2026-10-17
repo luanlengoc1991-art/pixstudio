@@ -2,29 +2,28 @@ import { MessageBoxOptions, dialog, shell } from "electron";
 import { UpdateDownloadedEvent, autoUpdater } from "electron-updater";
 import logit from "../utils/logit";
 
+const RELEASES_URL = "https://github.com/luanlengoc1991-art/pixstudio/releases";
+
+/** Asks to restart once a new version has been downloaded in the background. */
 const autoUpdate = (event: UpdateDownloadedEvent) => {
-  autoUpdater.autoInstallOnAppQuit = false;
+  // Without a restart now, the update is installed when the app is closed
+  autoUpdater.autoInstallOnAppQuit = true;
   const dialogOpts: MessageBoxOptions = {
     type: "info",
-    buttons: ["Install update", "No Thanks", "Check Release Notes"],
-    title: "New Upscayl Update",
-    message: event.releaseName as string,
-    detail:
-      "A new version has been downloaded. Restart the application to apply the updates.",
+    buttons: ["Khởi động lại & cập nhật", "Để sau", "Xem thay đổi"],
+    defaultId: 0,
+    cancelId: 1,
+    title: "LMS có bản cập nhật mới",
+    message: `Đã tải xong LMS phiên bản ${event.version}.`,
+    detail: 'Khởi động lại để dùng bản mới. Nếu chọn "Để sau", bản mới sẽ tự cài khi bạn đóng app.',
   };
 
-  const dialogResponse = dialog.showMessageBoxSync(dialogOpts);
-
-  logit("✅ Update Downloaded");
-  if (dialogResponse === 0) {
+  logit("✅ Update Downloaded", event.version);
+  const response = dialog.showMessageBoxSync(dialogOpts);
+  if (response === 0) {
     autoUpdater.quitAndInstall();
-  } else if (dialogResponse === 2) {
-    shell.openExternal(
-      "https://github.com/upscayl/upscayl/releases/tag/v" + event.version
-    );
-    dialog.showMessageBoxSync(dialogOpts);
-  } else {
-    logit("🚫 Update Installation Cancelled");
+  } else if (response === 2) {
+    shell.openExternal(`${RELEASES_URL}/tag/v${event.version}`);
   }
 };
 

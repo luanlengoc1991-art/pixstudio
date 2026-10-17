@@ -57,11 +57,13 @@ const createMainWindow = () => {
 
   fetchLocalStorage();
 
-  // Auto update stays off until PixStudio has its own release feed;
-  // otherwise electron-updater would pull Upscayl releases.
-  if (!electronIsDev && process.env.PIXSTUDIO_AUTO_UPDATE === "1") {
-    console.log("🚀 Checking for updates");
-    autoUpdater.checkForUpdates();
+  // Every push to main publishes a release (see build-windows.yml); check at
+  // start and every 30 minutes, download in the background, ask to restart
+  if (!electronIsDev) {
+    const check = () =>
+      autoUpdater.checkForUpdates().catch((error) => console.log("🚫 Update check failed:", error?.message || error));
+    check();
+    setInterval(check, 30 * 60 * 1000);
   }
 
   mainWindow.webContents.send(ELECTRON_COMMANDS.OS, getPlatform());
