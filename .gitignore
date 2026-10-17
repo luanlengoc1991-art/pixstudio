@@ -57,4 +57,4 @@ flags.ts
 dockerfile
 # TypeScript incremental build cache
 *.tsbuildinfo
-/dist-demo/
+/dist-demo*/

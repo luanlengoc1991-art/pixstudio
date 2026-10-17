@@ -22,12 +22,13 @@ const findBrowser = (): Browser | null => {
   const pf = process.env["ProgramFiles"] || "C:\\Program Files";
   const pf86 = process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
   const local = process.env["LOCALAPPDATA"] || "";
+  // Chrome first (what most users sign in with); Edge ships with Windows as the fallback
   const candidates: Browser[] = [
-    { name: "Edge", path: join(pf86, "Microsoft", "Edge", "Application", "msedge.exe") },
-    { name: "Edge", path: join(pf, "Microsoft", "Edge", "Application", "msedge.exe") },
     { name: "Chrome", path: join(pf, "Google", "Chrome", "Application", "chrome.exe") },
     { name: "Chrome", path: join(pf86, "Google", "Chrome", "Application", "chrome.exe") },
     { name: "Chrome", path: join(local, "Google", "Chrome", "Application", "chrome.exe") },
+    { name: "Edge", path: join(pf86, "Microsoft", "Edge", "Application", "msedge.exe") },
+    { name: "Edge", path: join(pf, "Microsoft", "Edge", "Application", "msedge.exe") },
   ];
   return candidates.find((c) => fs.existsSync(c.path)) ?? null;
 };
@@ -85,8 +86,20 @@ const connect = (url: string) =>
       resolve({
         send: (method, params = {}) =>
           new Promise((res, rej) => {
+            // send() on a closed socket is silently dropped, which would wait forever
+            if (socket.readyState !== WebSocket.OPEN) {
+              rej(new Error("Trình duyệt đã đóng."));
+              return;
+            }
             const id = ++nextId;
-            pending.set(id, { resolve: res, reject: rej });
+            const timer = setTimeout(() => {
+              pending.delete(id);
+              rej(new Error("Trình duyệt không phản hồi."));
+            }, 10000);
+            pending.set(id, {
+              resolve: (v) => (clearTimeout(timer), res(v)),
+              reject: (e) => (clearTimeout(timer), rej(e)),
+            });
             socket.send(JSON.stringify({ id, method, params }));
           }),
         close: () => socket.close(),

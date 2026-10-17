@@ -327,7 +327,7 @@ export default function ChatGptPanel() {
       });
   }, [queue]);
 
-  // Google blocks sign-in inside the app; sign in in Edge/Chrome and bring the session back
+  // Google blocks sign-in inside the app; sign in in Chrome (or Edge) and bring the session back
   const [browserLogin, setBrowserLogin] = useState(false);
   const loginInBrowser = async () => {
     setBrowserLogin(true);
@@ -386,10 +386,10 @@ export default function ChatGptPanel() {
               disabled={browserLogin}
               onClick={loginInBrowser}
               data-tooltip-id="tooltip"
-              data-tooltip-content="Dùng khi Google báo 'Couldn't sign you in': đăng nhập trong Edge/Chrome rồi app tự lấy phiên đăng nhập"
+              data-tooltip-content="Dùng khi Google báo 'Couldn't sign you in': đăng nhập trong Chrome (hoặc Edge nếu máy không có Chrome) rồi app tự lấy phiên đăng nhập"
             >
               {browserLogin ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-              {browserLogin ? "Đang chờ đăng nhập..." : "Đăng nhập bằng Edge/Chrome"}
+              {browserLogin ? "Đang chờ đăng nhập..." : "Đăng nhập bằng Chrome"}
             </button>
           )}
           <button className="btn btn-ghost btn-sm btn-square" onClick={() => window.open(CHATGPT_URL, "_blank")} aria-label="Mở trong trình duyệt">
