@@ -1,6 +1,7 @@
 import {
   app,
   clipboard,
+  ClipboardItem,
   IpcMainInvokeEvent,
   Menu,
   nativeImage,
@@ -178,9 +179,10 @@ export const nativePasteImage = async (
   if (!contents || !isChatGptContents(contents)) return false;
   const image = nativeImage.createFromPath(imagePath);
   if (image.isEmpty()) return false;
-  const previousText = clipboard.readText();
+  const previousText = await clipboard.readText().catch(() => "");
   try {
-    clipboard.writeImage(image);
+    // Electron 44 clipboard: async, W3C-style ClipboardItem entries
+    await clipboard.write([new ClipboardItem({ "image/png": new Blob([image.toPNG()], { type: "image/png" }) })]);
     contents.focus();
     await contents.executeJavaScript(
       `(() => { const el = document.querySelector("#prompt-textarea"); if (el) el.focus(); return !!el; })()`,
@@ -192,7 +194,7 @@ export const nativePasteImage = async (
     logit("❌ ChatGPT native paste error: ", error);
     return false;
   } finally {
-    clipboard.writeText(previousText);
+    await clipboard.writeText(previousText).catch(() => undefined);
   }
 };
 

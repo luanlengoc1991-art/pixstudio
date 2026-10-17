@@ -246,7 +246,7 @@ export const exportSvgToPdf = async (
     const pdf = await pdfWindow.webContents.printToPDF({
       printBackground: true,
       preferCSSPageSize: true,
-      margins: { marginType: "none" },
+      margins: { top: 0, bottom: 0, left: 0, right: 0 },
     });
     return new Uint8Array(pdf);
   } finally {
