@@ -112,29 +112,29 @@ function ToolRow({ tool, index, onOpen }: { tool: ToolInfo; index: number; onOpe
         {pad(index + 1)}
       </span>
       <span className="absolute inset-y-3 left-0 w-1" style={{ background: main, boxShadow: `0 0 12px ${main}` }} />
-      <div className="flex w-[76px] shrink-0 flex-col items-center justify-center border-r border-white/15 py-4">
+      <div className="flex w-[84px] shrink-0 flex-col items-center justify-center border-r border-white/15 py-6">
         <span className="font-display text-[30px] font-bold leading-none text-white">{pad(index + 1)}</span>
         <span className="mt-1.5 font-display text-[11px] font-extralight text-white/75">Công cụ</span>
       </div>
-      <div className="relative flex min-w-0 flex-1 items-center gap-4 px-5 py-4">
+      <div className="relative flex min-h-[150px] min-w-0 flex-1 items-center gap-5 px-6 py-6">
         <img
           src={toolImage(tool.id)}
           alt=""
           draggable={false}
-          className="h-16 w-16 shrink-0 object-contain transition-transform duration-300 group-hover:scale-110"
+          className="h-20 w-20 shrink-0 object-contain transition-transform duration-300 group-hover:scale-110"
           style={{ filter: `drop-shadow(0 6px 10px ${main}66)` }}
         />
         <div className="min-w-0">
           <h3 className="font-display truncate text-[21px] font-bold leading-snug text-white" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}>
             {tool.title}
           </h3>
-          <p className="font-display line-clamp-1 text-[13.5px] font-extralight leading-6 text-white/90">{tool.description}</p>
-          <div className="mt-1.5">
+          <p className="font-display mt-1 line-clamp-2 text-[13.5px] font-extralight leading-6 text-white/90">{tool.description}</p>
+          <div className="mt-2.5">
             <EngineTag tool={tool} />
           </div>
         </div>
       </div>
-      <div className="relative flex shrink-0 items-center pr-5">
+      <div className="relative flex shrink-0 items-center pr-6">
         <span
           className="font-display flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white transition-all group-hover:gap-2.5"
           style={{ background: `linear-gradient(135deg, ${light}, ${main})`, boxShadow: `0 6px 16px -8px ${main}`, textShadow: "0 1px 2px rgba(0,0,0,0.35)" }}
@@ -166,7 +166,7 @@ export default function HomeDashboard() {
         </div>
         {aside}
       </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2 min-[2200px]:grid-cols-3">
         {tools.map((tool, i) => (
           <ToolRow key={tool.id} tool={tool} index={offset + i} onOpen={() => open(tool)} />
         ))}
@@ -179,7 +179,7 @@ export default function HomeDashboard() {
       <Backdrop />
       <div className="relative h-full overflow-y-auto pb-14">
         {/* Rows fill the width; the clock sits on the first section line, aligned with the rows' right edge */}
-        <div className="flex flex-col gap-7 px-6 pt-5">
+        <div className="mx-auto flex w-full max-w-[1760px] min-[2200px]:max-w-[2400px] flex-col gap-9 px-10 pt-7 xl:px-16">
           {section("AI qua ChatGPT", viaChatGpt, 0, <LiveClock />)}
           {section("Chạy trên máy", local, viaChatGpt.length)}
         </div>
