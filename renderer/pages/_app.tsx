@@ -10,7 +10,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   return (
     <>
       <Head>
-        <title>Luan_MKT_Studio</title>
+        <title>LMS (LUAN MKT STUDIO)</title>
       </Head>
       <base href="./" />
 

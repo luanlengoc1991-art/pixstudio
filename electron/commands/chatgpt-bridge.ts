@@ -50,7 +50,7 @@ const isChatGptContents = (contents: Electron.WebContents) =>
 export const setupChatGpt = () => {
   const ses = session.fromPartition(CHATGPT_PARTITION);
   // Sites like Google refuse to sign in from a browser that says "Electron"
-  ses.setUserAgent(ses.getUserAgent().replace(/ (Electron|pixstudio|PixStudio|Luan_MKT_Studio)\/\S+/g, ""));
+  ses.setUserAgent(ses.getUserAgent().replace(/ (Electron|pixstudio|PixStudio|Luan_MKT_Studio|LMS)\/\S+/g, ""));
 
   // Images saved by hand in the ChatGPT tab come back to the app
   ses.on("will-download", (_event, item) => {
@@ -89,7 +89,7 @@ export const setupChatGpt = () => {
       const items: Electron.MenuItemConstructorOptions[] = [];
       if (params.mediaType === "image" && params.srcURL) {
         items.push(
-          { label: "Đưa ảnh này về Luan_MKT_Studio", click: () => contents.downloadURL(params.srcURL) },
+          { label: "Đưa ảnh này về LMS", click: () => contents.downloadURL(params.srcURL) },
           { type: "separator" },
         );
       }

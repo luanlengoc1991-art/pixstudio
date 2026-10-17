@@ -190,7 +190,7 @@ export default function HomeDashboard() {
         <div className="animate-ticker flex w-max gap-14 whitespace-nowrap">
           {Array.from({ length: 16 }).map((_, i) => (
             <span key={i} className={cn("font-display text-xs", i % 2 ? "font-extralight text-cyan-200" : "font-bold text-white")}>
-              Luan_MKT_Studio · Sáng tạo không giới hạn
+              LMS · LUAN MKT STUDIO · Sáng tạo không giới hạn
             </span>
           ))}
         </div>

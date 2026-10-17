@@ -270,7 +270,10 @@ export default function TopBar({ version }: { version: string }) {
             <UpscaylSVGLogo className="relative h-11 w-11 drop-shadow-lg" />
           </span>
           <div className="leading-none">
-            <p className="text-lg font-black tracking-tight">Luan_MKT_Studio</p>
+            <p className="flex items-baseline gap-2">
+              <span className="text-2xl font-black tracking-tight">LMS</span>
+              <span className="text-[11px] font-bold tracking-[0.2em] text-base-content/70">LUAN MKT STUDIO</span>
+            </p>
             <p className="mt-1 text-[11px] font-light text-base-content/60">Bộ công cụ AI xử lý ảnh · Sáng tạo không giới hạn</p>
           </div>
         </div>
