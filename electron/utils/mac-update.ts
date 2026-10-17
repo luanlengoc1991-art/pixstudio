@@ -39,8 +39,12 @@ export const checkMacUpdate = async () => {
     if (!isNewer(latest, app.getVersion()) || offered === latest) return;
 
     // The Mac builds are attached a few minutes after the release is created
-    const arch = process.arch === "arm64" ? "arm64" : "x64";
-    const dmg = release.assets.find((a) => a.name === `LMS-${latest}-mac-${arch}.dmg`);
+    // Release files are named by chip ("AppleChip" / "Intel"); 1.2.8–1.2.9 used arm64 / x64
+    const names =
+      process.arch === "arm64"
+        ? [`LMS-${latest}-mac-AppleChip.dmg`, `LMS-${latest}-mac-arm64.dmg`]
+        : [`LMS-${latest}-mac-Intel.dmg`, `LMS-${latest}-mac-x64.dmg`];
+    const dmg = release.assets.find((a) => names.includes(a.name));
     if (!dmg) return;
 
     offered = latest;

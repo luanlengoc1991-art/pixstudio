@@ -123,4 +123,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version=$(node -p "require('./package.json').version")
-          gh release upload "v$version" "dist/LMS-$version-mac-${{ matrix.arch }}.dmg" --clobber
+          # Named by chip so nobody has to know what arm64 / x64 means
+          chip=$([ "${{ matrix.arch }}" = arm64 ] && echo AppleChip || echo Intel)
+          mv "dist/LMS-$version-mac-${{ matrix.arch }}.dmg" "dist/LMS-$version-mac-$chip.dmg"
+          gh release upload "v$version" "dist/LMS-$version-mac-$chip.dmg" --clobber

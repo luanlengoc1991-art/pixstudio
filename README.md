@@ -22,8 +22,8 @@ Vào mục **Releases** ở cột bên phải trang GitHub (bản mới nhất �
 | Máy | File | Cập nhật |
 |---|---|---|
 | Windows | `LMS-x.y.z-win.exe` | Tự tải ngầm, hỏi khởi động lại để cài |
-| Mac chip Apple (M1, M2, M3, M4…) | `LMS-x.y.z-mac-arm64.dmg` | App báo có bản mới, bấm "Tải bản mới" rồi kéo vào Applications |
-| Mac chip Intel | `LMS-x.y.z-mac-x64.dmg` | Như trên |
+| Mac chip Apple (M1, M2, M3, M4…) | `LMS-x.y.z-mac-AppleChip.dmg` | App báo có bản mới, bấm "Tải bản mới" rồi kéo vào Applications |
+| Mac chip Intel (Mac đời 2020 trở về trước) | `LMS-x.y.z-mac-Intel.dmg` | Như trên |
 
 **Mở lần đầu trên Mac:** app chưa ký bằng tài khoản Apple Developer nên macOS sẽ chặn.
 Mở **Cài đặt hệ thống → Quyền riêng tư & Bảo mật**, kéo xuống, bấm **"Vẫn mở"** cạnh dòng
