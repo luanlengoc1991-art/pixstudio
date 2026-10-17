@@ -1,5 +1,6 @@
-import { app, dialog, shell } from "electron";
+import { app, shell } from "electron";
 import logit from "./logit";
+import { showUpdateDialog } from "./update-dialog";
 
 // macOS only installs updates in place for apps signed with an Apple Developer
 // ID. LMS is ad-hoc signed, so on a Mac it checks GitHub itself and, once the
@@ -44,7 +45,7 @@ export const checkMacUpdate = async () => {
 
     offered = latest;
     logit("🆕 Mac update available", latest);
-    const { response: choice } = await dialog.showMessageBox({
+    const choice = await showUpdateDialog({
       type: "info",
       buttons: ["Tải bản mới", "Để sau"],
       defaultId: 0,

@@ -1,11 +1,12 @@
-import { MessageBoxOptions, dialog, shell } from "electron";
+import { MessageBoxOptions, shell } from "electron";
 import { UpdateDownloadedEvent, autoUpdater } from "electron-updater";
 import logit from "../utils/logit";
+import { showUpdateDialog } from "../utils/update-dialog";
 
 const RELEASES_URL = "https://github.com/luanlengoc1991-art/pixstudio/releases";
 
 /** Asks to restart once a new version has been downloaded in the background. */
-const autoUpdate = (event: UpdateDownloadedEvent) => {
+const autoUpdate = async (event: UpdateDownloadedEvent) => {
   // Without a restart now, the update is installed when the app is closed
   autoUpdater.autoInstallOnAppQuit = true;
   const dialogOpts: MessageBoxOptions = {
@@ -19,7 +20,7 @@ const autoUpdate = (event: UpdateDownloadedEvent) => {
   };
 
   logit("✅ Update Downloaded", event.version);
-  const response = dialog.showMessageBoxSync(dialogOpts);
+  const response = await showUpdateDialog(dialogOpts);
   if (response === 0) {
     autoUpdater.quitAndInstall();
   } else if (response === 2) {
