@@ -6,6 +6,7 @@ import { fetchLocalStorage } from "./utils/config-variables";
 import electronIsDev from "electron-is-dev";
 import { format } from "url";
 import { autoUpdater } from "electron-updater";
+import { checkMacUpdate } from "./utils/mac-update";
 
 let mainWindow: BrowserWindow | undefined;
 
@@ -60,8 +61,11 @@ const createMainWindow = () => {
   // Every push to main publishes a release (see build-windows.yml); check at
   // start and every 30 minutes, download in the background, ask to restart
   if (!electronIsDev) {
-    const check = () =>
-      autoUpdater.checkForUpdates().catch((error) => console.log("🚫 Update check failed:", error?.message || error));
+    // Windows installs in place; an unsigned Mac app can only offer the download
+    const check =
+      process.platform === "darwin"
+        ? checkMacUpdate
+        : () => autoUpdater.checkForUpdates().catch((error) => console.log("🚫 Update check failed:", error?.message || error));
     check();
     setInterval(check, 30 * 60 * 1000);
   }

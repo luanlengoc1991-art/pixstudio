@@ -39,8 +39,15 @@ App LMS đã cài **phải luôn tự cập nhật lên bản mới**. Cơ chế
   - Muốn tăng phiên bản lớn thì sửa `major.minor` trong `package.json`; số cuối do workflow đặt.
   - Bản demo build tay phải đánh số cao hơn bản đã phát hành (ví dụ `1.3.0-demo.N`), nếu
     không nó sẽ tự "cập nhật" ngược về bản cũ.
-- Sau mỗi lần push, kiểm tra lần chạy "Build Windows" thành công và Release mới có đủ
-  `LMS-x.y.z-win.exe`, `.blockmap`, `latest.yml`.
+- Phát hành bằng `gh release create` (một lần), **không** để electron-builder tự publish:
+  electron-builder 26 tạo hai lượt upload chạy đua và để lại bản phát hành thiếu `latest.yml`.
+- **Mac:** job `mac` chạy sau Windows, build `LMS-x.y.z-mac-arm64.dmg` và `-mac-x64.dmg`
+  (ký ad-hoc `identity: "-"`, không cần Apple Developer) rồi đính vào cùng Release. App Mac
+  chưa ký Apple nên không tự cài được; `electron/utils/mac-update.ts` hỏi GitHub, khi bản mới
+  đã có .dmg đúng chip thì báo và mở link tải. vtracer lấy bản Mac chính thức, potrace biên
+  dịch từ mã nguồn trong CI.
+- Sau mỗi lần push, kiểm tra lần chạy "Build & Release" thành công và Release mới có đủ
+  `LMS-x.y.z-win.exe`, `.blockmap`, `latest.yml`, `LMS-x.y.z-mac-arm64.dmg`, `LMS-x.y.z-mac-x64.dmg`.
 
 ## App hiện có gì
 

@@ -17,8 +17,19 @@ Dựa trên [Upscayl](https://github.com/upscayl/upscayl) (giấy phép AGPL-3.0
 
 ## Tải bản cài đặt
 
-- **Bản chính thức:** vào mục **Releases** ở cột bên phải trang GitHub, tải file `LMS-x.y.z-win.exe`.
-- **Bản build mới nhất:** vào tab **Actions**, mở lần chạy "Build Windows" gần nhất, tải file trong mục **Artifacts**.
+Vào mục **Releases** ở cột bên phải trang GitHub (bản mới nhất ở trên cùng):
+
+| Máy | File | Cập nhật |
+|---|---|---|
+| Windows | `LMS-x.y.z-win.exe` | Tự tải ngầm, hỏi khởi động lại để cài |
+| Mac chip Apple (M1, M2, M3, M4…) | `LMS-x.y.z-mac-arm64.dmg` | App báo có bản mới, bấm "Tải bản mới" rồi kéo vào Applications |
+| Mac chip Intel | `LMS-x.y.z-mac-x64.dmg` | Như trên |
+
+**Mở lần đầu trên Mac:** app chưa ký bằng tài khoản Apple Developer nên macOS sẽ chặn.
+Mở **Cài đặt hệ thống → Quyền riêng tư & Bảo mật**, kéo xuống, bấm **"Vẫn mở"** cạnh dòng
+báo LMS bị chặn (macOS 14 trở về trước: chuột phải vào LMS → **Mở**). Chỉ cần làm một lần.
+
+**Windows** có thể hiện "Windows protected your PC": bấm **More info → Run anyway**.
 
 ## Sửa code trên một máy mới
 

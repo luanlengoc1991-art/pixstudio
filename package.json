@@ -126,29 +126,15 @@
       ]
     },
     "mac": {
-      "hardenedRuntime": true,
+      "identity": "-",
+      "hardenedRuntime": false,
       "gatekeeperAssess": false,
-      "mergeASARs": false,
-      "x64ArchFiles": "*",
       "minimumSystemVersion": "12.0.0",
       "category": "public.app-category.photography",
-      "entitlements": "resources/entitlements.mac.plist",
-      "entitlementsInherit": "resources/entitlements.mac.plist",
-      "provisioningProfile": "embedded.provisionprofile",
-      "type": null,
+      "icon": "build/icon.png",
+      "artifactName": "${productName}-${version}-mac-${arch}.${ext}",
       "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "universal"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "universal"
-          ]
-        }
+        "dmg"
       ]
     },
     "dmg": {

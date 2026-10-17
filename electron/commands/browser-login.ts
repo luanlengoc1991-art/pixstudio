@@ -18,20 +18,34 @@ const LOGIN_TIMEOUT_MS = 15 * 60 * 1000;
 
 type Browser = { name: "Edge" | "Chrome"; path: string };
 
-const findBrowser = (): Browser | null => {
+const macBrowsers = (): Browser[] => {
+  const home = app.getPath("home");
+  const inApps = (bundle: string, binary: string) => [
+    join("/Applications", bundle, "Contents", "MacOS", binary),
+    join(home, "Applications", bundle, "Contents", "MacOS", binary),
+  ];
+  return [
+    ...inApps("Google Chrome.app", "Google Chrome").map((path) => ({ name: "Chrome" as const, path })),
+    ...inApps("Microsoft Edge.app", "Microsoft Edge").map((path) => ({ name: "Edge" as const, path })),
+  ];
+};
+
+const windowsBrowsers = (): Browser[] => {
   const pf = process.env["ProgramFiles"] || "C:\\Program Files";
   const pf86 = process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
   const local = process.env["LOCALAPPDATA"] || "";
-  // Chrome first (what most users sign in with); Edge ships with Windows as the fallback
-  const candidates: Browser[] = [
+  return [
     { name: "Chrome", path: join(pf, "Google", "Chrome", "Application", "chrome.exe") },
     { name: "Chrome", path: join(pf86, "Google", "Chrome", "Application", "chrome.exe") },
     { name: "Chrome", path: join(local, "Google", "Chrome", "Application", "chrome.exe") },
     { name: "Edge", path: join(pf86, "Microsoft", "Edge", "Application", "msedge.exe") },
     { name: "Edge", path: join(pf, "Microsoft", "Edge", "Application", "msedge.exe") },
   ];
-  return candidates.find((c) => fs.existsSync(c.path)) ?? null;
 };
+
+// Chrome first (what most users sign in with); Edge is the fallback
+const findBrowser = (): Browser | null =>
+  (process.platform === "darwin" ? macBrowsers() : windowsBrowsers()).find((c) => fs.existsSync(c.path)) ?? null;
 
 const freePort = () =>
   new Promise<number>((resolve, reject) => {

@@ -1,8 +1,8 @@
-name: Build Windows
+name: Build & Release
 
-# Every push to main builds the installer and publishes it as a GitHub Release
-# (version <major>.<minor>.<run number>). Installed apps check the latest
-# release, download it in the background and ask to restart.
+# Every push to main publishes a GitHub Release (version <major>.<minor>.<run number>):
+# - Windows installer + latest.yml first; installed Windows apps update in place.
+# - Then one .dmg per Mac chip is attached; Mac apps offer the download.
 on:
   push:
     branches: [main]
@@ -64,3 +64,63 @@ jobs:
           name: LMS-Windows
           path: dist/LMS-*-win.exe
           retention-days: 14
+
+  mac:
+    # After Windows so a Mac build problem never holds back the Windows update
+    needs: build
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The runner is Apple Silicon; the Intel build also needs sharp's x64 binaries
+      - name: Add Intel builds of sharp
+        if: matrix.arch == 'x64'
+        run: npm install --no-save --force @img/sharp-darwin-x64@0.33.5 @img/sharp-libvips-darwin-x64@1.0.4
+
+      - name: Set version from the run number
+        run: |
+          base=$(node -p "require('./package.json').version.split('.').slice(0,2).join('.')")
+          npm version "$base.${{ github.run_number }}" --no-git-tag-version --allow-same-version
+
+      - name: Build app
+        run: npm run build
+
+      - name: Fetch vtracer and build potrace for this chip
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          bin="$GITHUB_WORKSPACE/resources/mac/bin"
+          if [ "$ARCH" = arm64 ]; then triple=aarch64-apple-darwin; cflags="-arch arm64"; host=""; \
+          else triple=x86_64-apple-darwin; cflags="-arch x86_64"; host="--host=x86_64-apple-darwin"; fi
+          mkdir -p "$RUNNER_TEMP/vtracer"
+          curl -fsSL "https://github.com/visioncortex/vtracer/releases/download/1.0.0-alpha.4/vtracer-$triple.tar.gz" | tar xz -C "$RUNNER_TEMP/vtracer"
+          cp "$(find "$RUNNER_TEMP/vtracer" -type f -name vtracer | head -1)" "$bin/vtracer"
+          curl -fsSL https://potrace.sourceforge.net/download/1.16/potrace-1.16.tar.gz | tar xz -C "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/potrace-1.16"
+          ./configure $host CC="clang $cflags" --disable-shared > /dev/null
+          make -j4 > /dev/null
+          cp src/potrace "$bin/potrace"
+          chmod +x "$bin"/*
+          file "$bin"/*
+
+      - name: Build DMG
+        run: npx electron-builder --mac --${{ matrix.arch }} --publish never
+
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          gh release upload "v$version" "dist/LMS-$version-mac-${{ matrix.arch }}.dmg" --clobber
