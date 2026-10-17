@@ -39,11 +39,25 @@ jobs:
       - name: Build app
         run: npm run build
 
-      - name: Build installer and publish release
-        run: npx electron-builder --win --publish always
+      # electron-builder only builds (it still writes latest.yml for the updater);
+      # publishing it itself raced two uploads and left a release without latest.yml
+      - name: Build installer
+        run: npx electron-builder --win --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Publish release
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          # Passed through the environment so quotes in commit messages cannot break the command
+          NOTES: ${{ github.event.head_commit.message || 'Manual build' }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          ls dist/LMS-$version-win.exe dist/LMS-$version-win.exe.blockmap dist/latest.yml
+          gh release create "v$version" \
+            "dist/LMS-$version-win.exe" "dist/LMS-$version-win.exe.blockmap" dist/latest.yml \
+            --title "$version" --notes "$NOTES" --target "$GITHUB_SHA"
 
       - uses: actions/upload-artifact@v4
         with:
