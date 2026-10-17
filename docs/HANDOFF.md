@@ -12,12 +12,35 @@ npm install
 npm start          # chạy app ở chế độ dev (Next dev server + Electron)
 ```
 
-- Cần Git và Node.js 20+ (máy cũ dùng Node 24).
+- Cần Git và Node.js 22.12+ (Electron 44 yêu cầu; các máy đang dùng Node 24).
 - Nếu `npm start` báo `Not running in an Electron environment`, nghĩa là biến
   `ELECTRON_RUN_AS_NODE` đang bật (terminal trong VS Code hay đặt biến này). Tắt rồi chạy lại:
   PowerShell `$env:ELECTRON_RUN_AS_NODE = $null`, bash `env -u ELECTRON_RUN_AS_NODE npm start`.
 - Đăng nhập ChatGPT một lần trong tab ChatGPT của app. Mỗi máy lưu phiên đăng nhập riêng.
+  Google chặn đăng nhập ngay trong app ("Couldn't sign you in"), nên dùng nút
+  **"Đăng nhập bằng Chrome"**: app mở Chrome (không có thì Edge) bằng hồ sơ riêng, bạn đăng
+  nhập Google như trên web, app tự chép phiên ChatGPT về (`electron/commands/browser-login.ts`).
 - Trước khi sửa: `git pull`. Sửa xong: commit rồi `git push`. GitHub Actions tự build bản cài.
+
+## Phát hành & tự cập nhật (quy tắc bắt buộc)
+
+App LMS đã cài **phải luôn tự cập nhật lên bản mới**. Cơ chế:
+
+- Mỗi lần push lên `main`, workflow `.github/workflows/build-windows.yml` đặt phiên bản
+  `<major>.<minor>.<số lần chạy>` (ví dụ 1.2.12), build và **phát hành GitHub Release**
+  kèm `latest.yml`. Không cần gắn tag tay.
+- App kiểm tra bản mới lúc mở và 30 phút một lần (`electron/main-window.ts`), tải ngầm, hỏi
+  "Khởi động lại & cập nhật"; chọn "Để sau" thì bản mới tự cài khi đóng app
+  (`electron/commands/auto-update.ts`).
+- Không được làm hỏng chuỗi này:
+  - Giữ `build.publish` trỏ về `luanlengoc1991-art/pixstudio` với `releaseType: release`.
+  - **Không** đặt `win.publisherName` khi bản build chưa ký số (trình cập nhật sẽ từ chối).
+  - Giữ `appId` `com.pixstudio.app` và thư mục dữ liệu `%APPDATA%\PixStudio`.
+  - Muốn tăng phiên bản lớn thì sửa `major.minor` trong `package.json`; số cuối do workflow đặt.
+  - Bản demo build tay phải đánh số cao hơn bản đã phát hành (ví dụ `1.3.0-demo.N`), nếu
+    không nó sẽ tự "cập nhật" ngược về bản cũ.
+- Sau mỗi lần push, kiểm tra lần chạy "Build Windows" thành công và Release mới có đủ
+  `LMS-x.y.z-win.exe`, `.blockmap`, `latest.yml`.
 
 ## App hiện có gì
 
