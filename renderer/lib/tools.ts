@@ -169,7 +169,7 @@ export const TOOLS: ToolInfo[] = [
     id: "id-photo",
     title: "Chỉnh sửa ảnh thẻ",
     description:
-      "Cắt ảnh thẻ chuẩn 3x4, 4x6, Visa và xếp in lên khổ 10x15, A4. Đổi trang phục & phông nền bằng AI (sắp có).",
+      "Tạo ảnh thẻ chuẩn AI, đổi trang phục, phông nền xanh/trắng, làm đẹp da & xếp in.",
     icon: IdCard,
     tint: "bg-blue-500/15 text-blue-600 dark:text-blue-300",
     status: "ready",

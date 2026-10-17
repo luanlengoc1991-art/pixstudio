@@ -21,7 +21,7 @@ npm start          # chạy app ở chế độ dev (Next dev server + Electron)
 
 ## App hiện có gì
 
-Tên hiển thị **Luan_MKT_Studio** (repo vẫn tên `pixstudio`, `appId` và thư mục dữ liệu
+Tên hiển thị **LMS (LUAN MKT STUDIO)** (đổi từ Luan_MKT_Studio ngày 17/10) (repo vẫn tên `pixstudio`, `appId` và thư mục dữ liệu
 `%APPDATA%\PixStudio` giữ nguyên để bản cài mới ghi đè bản cũ và không mất đăng nhập).
 
 - **13 công cụ.** 5 chạy trên máy: Kích nét, Xóa nền, Vector, Bế file, Ảnh thẻ.
@@ -65,7 +65,7 @@ Tiến độ và việc còn lại ghi trong [PIXAI-PARITY.md](PIXAI-PARITY.md).
    và setup sự kiện cưới / sinh nhật / thôi nôi / khai trương… Prompt chi tiết nằm trong
    bundle của pixAI, ở đoạn khoảng ký tự 158000–205000 của file
    `renderer/out/_next/static/chunks/pages/index-*.js` sau khi giải nén app.asar.
-3. **Ảnh thẻ AI.** Đổi trang phục, phông nền, làm đẹp; mỗi lượt tối đa 10 ảnh.
+3. ~~**Ảnh thẻ AI.**~~ Đã làm ngày 17/10 (`components/tools/id-photo/ai-panel.tsx`), còn chờ thử với ChatGPT thật. Đổi trang phục, phông nền, làm đẹp; mỗi lượt tối đa 10 ảnh.
 4. **Phần lẻ từng công cụ:** tỉ lệ ảnh, mẫu bối cảnh mặt tiền, các chế độ so sánh.
 
 ## Cách người dùng muốn làm việc

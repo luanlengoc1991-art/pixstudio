@@ -32,6 +32,7 @@ export function ChatGptResults({
   expected = 1,
   refinePrompt = (text) => `Hãy chỉnh sửa lại ảnh vừa tạo theo yêu cầu sau, giữ nguyên mọi thứ khác: ${text}`,
   sendToLayers,
+  extraActions,
 }: {
   toolId: ToolId;
   steps: string[];
@@ -45,6 +46,8 @@ export function ChatGptResults({
   refinePrompt?: (text: string) => string;
   /** Offer "Bóc tách layer" for the result (event setups are made for it) */
   sendToLayers?: boolean;
+  /** Tool-specific buttons for the shown result */
+  extraActions?: (current: string) => React.ReactNode;
 }) {
   const tool = getTool(toolId);
   const { toast } = useToast();
@@ -126,6 +129,7 @@ export function ChatGptResults({
               />
             )}
             <div className="ml-auto flex flex-wrap gap-1.5">
+              {extraActions?.(current)}
               <button className="btn btn-sm" onClick={() => setZoomed(current)}>
                 <Maximize2 className="h-4 w-4" /> Phóng to
               </button>

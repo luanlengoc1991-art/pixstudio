@@ -37,13 +37,13 @@ Ký hiệu: ✅ đã có · 🟡 có một phần · ❌ còn thiếu
 | Phục hồi ảnh cũ | ✅ | |
 | Bế file in ấn | ✅ | |
 | Chuyển Vector | ✅ | Xem trước mặt nạ logo 1 màu |
-| Ảnh thẻ: cắt + xếp in | 🟡 | Khổ 13x18, Visa 5x5; tự động lấp đầy / xếp thủ công; combo 3x4 + 4x6; khổ dọc/ngang |
-| Ảnh thẻ AI (trang phục, phông nền, làm đẹp; 1 ảnh hoặc 10 ảnh/lượt) | ❌ | |
+| Ảnh thẻ: cắt + xếp in | ✅ | Khổ 10x15, 13x18, A5, A4; dọc/ngang; dàn kín 3x4 / 4x6 / 2x3 / Visa / Visa Mỹ 5x5; combo 3x4 + 4x6; xếp thủ công; khối ảnh căn giữa trang |
+| Ảnh thẻ AI (trang phục, phông nền, làm đẹp; 1 ảnh hoặc 10 ảnh/lượt) | ✅ | Nhóm tuổi, 6 trang phục + ảnh mẫu đồ + mô tả, 8 kiểu tóc, 5 phông + màu tự chọn, mịn da, độ sáng; hàng loạt tự chạy nối tiếp từng đợt 10 ảnh; kết quả chuyển sang Cắt ảnh / Xếp in. Chưa thử với ChatGPT thật |
 
 ## Thứ tự làm
 
 1. ~~Nền tảng ChatGPT nhúng + tự gửi + tự thu ảnh~~ (xong)
 2. ~~Bóc tách layer đầy đủ~~ (xong, chờ thử thực tế)
 3. ~~Thiết kế quảng cáo + setup sự kiện~~ (xong, chờ thử thực tế)
-4. Ảnh thẻ AI + bổ sung xếp in ← làm tiếp từ đây
-5. Phần còn lại của từng công cụ (so sánh, tỉ lệ, mẫu gợi ý), GPU, lưu tất cả
+4. ~~Ảnh thẻ AI + bổ sung xếp in~~ (xong, chờ thử thực tế)
+5. Phần còn lại của từng công cụ (so sánh, tỉ lệ, mẫu gợi ý), GPU, lưu tất cả ← làm tiếp từ đây

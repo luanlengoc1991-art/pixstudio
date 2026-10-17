@@ -9,6 +9,7 @@ type Paper = { key: string; label: string; shortMm: number; longMm: number };
 
 const PAPERS: Paper[] = [
   { key: "10x15", label: "Khổ 10x15 cm (4x6 inch)", shortMm: 101.6, longMm: 152.4 },
+  { key: "13x18", label: "Khổ 13x18 cm (5x7 inch)", shortMm: 127, longMm: 177.8 },
   { key: "a5", label: "Khổ A5 (14.8x21 cm)", shortMm: 148, longMm: 210 },
   { key: "a4", label: "Khổ A4 (21x29.7 cm)", shortMm: 210, longMm: 297 },
 ];
@@ -84,7 +85,12 @@ const pack = (items: Item[], state: PrintState): Placed[] | null => {
     x += w + state.gapMm;
     rowHeight = Math.max(rowHeight, h);
   }
-  return placed;
+  // Centre the block inside the printable area so the cut margins match
+  const usedRight = Math.max(...placed.map((p) => p.x + p.w), state.marginMm);
+  const usedBottom = Math.max(...placed.map((p) => p.y + p.h), state.marginMm);
+  const dx = Math.max(0, (right - usedRight) / 2);
+  const dy = Math.max(0, (bottom - usedBottom) / 2);
+  return placed.map((p) => ({ ...p, x: p.x + dx, y: p.y + dy }));
 };
 
 /** Draws the sheet at the given resolution. */
@@ -246,6 +252,7 @@ export function PrintAside({ state }: { state: PrintState }) {
           <button className="btn btn-sm" onClick={() => fill(["4x6"])}>Dàn kín ảnh 4x6</button>
           <button className="btn btn-sm" onClick={() => fill(["2x3"])}>Dàn kín ảnh 2x3</button>
           <button className="btn btn-sm" onClick={() => fill(["visa"])}>Dàn kín Visa</button>
+          <button className="btn btn-sm col-span-2" onClick={() => fill(["visa-us"])}>Dàn kín Visa Mỹ 5x5</button>
         </div>
         <button className="btn btn-sm btn-outline btn-primary" onClick={combo}>
           🌟 Xếp chung 3x4 & 4x6 cm · Combo hồ sơ xin việc
