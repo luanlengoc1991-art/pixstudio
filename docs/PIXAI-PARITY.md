@@ -30,8 +30,8 @@ Ký hiệu: ✅ đã có · 🟡 có một phần · ❌ còn thiếu
 | Phục hồi ấn phẩm | ✅ | |
 | Retoucher sản phẩm | 🟡 | Tỉ lệ (theo gốc, ngang chuẩn, dọc thời trang, ngang rộng); thêm phông (đen studio...) |
 | Render 2D sang 3D | ✅ | |
-| Thiết kế quảng cáo | 🟡 | Loại ấn phẩm (banner, poster, standee, backdrop, biển hiệu, Facebook, sản phẩm, thiệp mời, tự chọn kích thước); bảng màu; chip phong cách; ảnh tham chiếu (tài liệu, phong cách, font); lịch sử; "Chỉnh bằng AI" |
-| Thiết kế setup sự kiện (trong Thiết kế quảng cáo) | ❌ | 9 mẫu sự kiện; quy mô setup; vị trí chữ; bục/bóng/standee; standee chibi hoặc ảnh thật; logo; bối cảnh; sửa bằng AI |
+| Thiết kế quảng cáo | ✅ | Màn hình riêng (`components/tools/ad-designer/`): 9 loại ấn phẩm + tỉ lệ, bảng màu, chip phong cách, ảnh tài liệu (20, có ghi chú) / phong cách (10) / mẫu chữ, "Chỉnh bằng AI", lịch sử. Chưa thử với ChatGPT thật |
+| Thiết kế setup sự kiện (trong Thiết kế quảng cáo) | ✅ | 10 loại sự kiện, 6 kiểu dựng, 4 quy mô, 7 kích thước, vị trí chữ, bục/bóng/standee, ảnh thật hoặc Chibi 3D, phong cách decor, bối cảnh, ảnh nhân vật / mẫu setup / logo; nút gửi sang Bóc tách layer. Chưa thử với ChatGPT thật |
 | Fake Model AI | 🟡 | Chọn giữ bối cảnh Ảnh 1 / Ảnh 2 / tự nhập; chế độ xem so sánh dáng, so sánh mặt & đồ, 3 ảnh cạnh nhau |
 | Phối cảnh biển hiệu | 🟡 | Tự mô tả mặt tiền bằng chữ + 6 mẫu gợi ý; so sánh mặt tiền / thiết kế / 3 ảnh |
 | Phục hồi ảnh cũ | ✅ | |
@@ -44,6 +44,6 @@ Ký hiệu: ✅ đã có · 🟡 có một phần · ❌ còn thiếu
 
 1. ~~Nền tảng ChatGPT nhúng + tự gửi + tự thu ảnh~~ (xong)
 2. ~~Bóc tách layer đầy đủ~~ (xong, chờ thử thực tế)
-3. Thiết kế quảng cáo + setup sự kiện ← làm tiếp từ đây
-4. Ảnh thẻ AI + bổ sung xếp in
+3. ~~Thiết kế quảng cáo + setup sự kiện~~ (xong, chờ thử thực tế)
+4. Ảnh thẻ AI + bổ sung xếp in ← làm tiếp từ đây
 5. Phần còn lại của từng công cụ (so sánh, tỉ lệ, mẫu gợi ý), GPU, lưu tất cả

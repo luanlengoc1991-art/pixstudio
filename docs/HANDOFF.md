@@ -61,7 +61,7 @@ Tiến độ và việc còn lại ghi trong [PIXAI-PARITY.md](PIXAI-PARITY.md).
 
 1. **Kiểm tra thực tế Bóc tách layer** với ChatGPT thật. Lần thử gần nhất ảnh đã lên được
    ChatGPT, nhưng app bỏ cuộc sớm. Đã sửa luật chờ, chưa thử lại.
-2. **Thiết kế quảng cáo + setup sự kiện.** Có 9 loại ấn phẩm, bảng màu, ảnh tham chiếu,
+2. ~~**Thiết kế quảng cáo + setup sự kiện.**~~ Đã làm ngày 17/10 (màn hình `components/tools/ad-designer/`), còn chờ thử với ChatGPT thật. Có 9 loại ấn phẩm, bảng màu, ảnh tham chiếu,
    và setup sự kiện cưới / sinh nhật / thôi nôi / khai trương… Prompt chi tiết nằm trong
    bundle của pixAI, ở đoạn khoảng ký tự 158000–205000 của file
    `renderer/out/_next/static/chunks/pages/index-*.js` sau khi giải nén app.asar.
