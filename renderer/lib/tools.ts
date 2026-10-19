@@ -14,6 +14,7 @@ import {
   Store,
   FileImage,
 } from "lucide-react";
+import { IS_WEB } from "@/lib/platform";
 
 export type ToolId =
   | "upscayl"
@@ -178,3 +179,6 @@ export const TOOLS: ToolInfo[] = [
 ];
 
 export const getTool = (id: ToolId) => TOOLS.find((tool) => tool.id === id)!;
+
+/** The website runs the local tools in the browser; ChatGPT tools need the desktop app's embedded window. */
+export const isAvailable = (tool: ToolInfo) => !IS_WEB || tool.engine === "local";

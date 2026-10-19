@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { ToolId } from "@/lib/tools";
+import { getTool, isAvailable, ToolId } from "@/lib/tools";
 
 export type WorkspaceTab = "home" | "chatgpt" | ToolId;
 
@@ -19,6 +19,7 @@ export const pendingUpscaleImageAtom = atom("");
 
 /** Opens a tool tab (or focuses it if already open) */
 export const openToolAtom = atom(null, (get, set, tool: ToolId) => {
+  if (!isAvailable(getTool(tool))) return;
   const open = get(openToolsAtom);
   if (!open.includes(tool)) {
     // Drop the oldest tab once the limit is reached

@@ -1,5 +1,6 @@
 "use client";
 
+import { IS_WEB, publicSrc, WEB_UPSCALE_MODEL_IDS } from "@/lib/platform";
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,7 +62,9 @@ const SelectModelDialog = () => {
           </DialogHeader>
           <ScrollArea className="max-h-[600px] pr-4">
             <div className="flex flex-col gap-4">
-              {Object.entries(MODELS).map((modelData) => {
+              {Object.entries(MODELS)
+                .filter(([id]) => !IS_WEB || WEB_UPSCALE_MODEL_IDS.includes(id))
+                .map((modelData) => {
                 const modelId = modelData[0] as ModelId;
                 const model = modelData[1];
                 return (
@@ -79,12 +82,12 @@ const SelectModelDialog = () => {
                     <div className="relative h-52 w-full overflow-hidden rounded-sm">
                       <div className="flex h-full w-full">
                         <img
-                          src={`public:///model-comparison/${model.id}/before.webp`}
+                          src={publicSrc(`model-comparison/${model.id}/before.webp`)}
                           alt={`Model Before`}
                           className="h-full w-1/2 object-cover"
                         />
                         <img
-                          src={`public:///model-comparison/${model.id}/after.webp`}
+                          src={publicSrc(`model-comparison/${model.id}/after.webp`)}
                           alt={`Model After`}
                           className="h-full w-1/2 object-cover"
                         />
@@ -146,7 +149,7 @@ const SelectModelDialog = () => {
             <div className="flex h-full w-full">
               <div className="relative h-full w-1/2">
                 <img
-                  src={`public:///model-comparison/${MODELS[zoomedModel]?.id}/before.webp`}
+                  src={publicSrc(`model-comparison/${MODELS[zoomedModel]?.id}/before.webp`)}
                   alt={`Zoomed in Image - Before`}
                   className="h-full w-full object-contain"
                 />
@@ -156,7 +159,7 @@ const SelectModelDialog = () => {
               </div>
               <div className="relative h-full w-1/2">
                 <img
-                  src={`public:///model-comparison/${MODELS[zoomedModel]?.id}/after.webp`}
+                  src={publicSrc(`model-comparison/${MODELS[zoomedModel]?.id}/after.webp`)}
                   alt={`Zoomed in Image - After`}
                   className="h-full w-full object-contain"
                 />

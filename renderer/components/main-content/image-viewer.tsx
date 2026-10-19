@@ -1,3 +1,4 @@
+import { localFileSrc } from "@/lib/platform";
 import { sanitizePath } from "@common/sanitize-path";
 
 const ImageViewer = ({
@@ -9,7 +10,7 @@ const ImageViewer = ({
 }) => {
   return (
     <img
-      src={"file:///" + sanitizePath(imagePath)}
+      src={localFileSrc(sanitizePath(imagePath))}
       onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => {
         setDimensions({
           width: e.currentTarget.naturalWidth,

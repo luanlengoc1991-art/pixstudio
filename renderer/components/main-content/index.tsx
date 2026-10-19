@@ -25,6 +25,10 @@ import LensViewer from "./lens-view";
 import ImageViewer from "./image-viewer";
 import useTranslation from "../hooks/use-translation";
 import SliderView from "./slider-view";
+import { IS_WEB } from "@/lib/platform";
+import { IMAGE_SAVE_FILTERS, saveFileAs } from "@/components/tools/common";
+import getFilenameFromPath from "@common/get-file-name";
+import { Download } from "lucide-react";
 
 type MainContentProps = {
   imagePath: string;
@@ -348,6 +352,22 @@ const MainContent = ({
             zoomAmount={zoomAmount}
           />
         )}
+
+      {/* The website keeps results in memory until they are saved */}
+      {IS_WEB && !batchMode && upscaledImagePath.length > 0 && (
+        <button
+          className="btn btn-primary absolute bottom-6 right-6 z-50 gap-2 shadow-lg"
+          onClick={() =>
+            saveFileAs({
+              defaultName: getFilenameFromPath(upscaledImagePath),
+              filters: IMAGE_SAVE_FILTERS,
+              sourcePath: upscaledImagePath,
+            })
+          }
+        >
+          <Download className="h-4 w-4" /> Tải ảnh về máy
+        </button>
+      )}
     </div>
   );
 };

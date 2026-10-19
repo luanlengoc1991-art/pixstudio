@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Cpu, House, MemoryStick, MessageCircle, Monitor, Moon, Plus, Search, Sun, X } from "lucide-react";
+import { Cpu, Download, House, MemoryStick, MessageCircle, Monitor, Moon, Plus, Search, Sun, X } from "lucide-react";
 import { ELECTRON_COMMANDS } from "@common/electron-commands";
 import { cn } from "@/lib/utils";
-import { getTool, TOOLS } from "@/lib/tools";
+import { getTool, isAvailable, TOOLS } from "@/lib/tools";
+import { DOWNLOAD_APP_URL, IS_WEB } from "@/lib/platform";
 import { TOOL_ACCENT, toolImage } from "@/lib/tool-style";
 import { activeTabAtom, closeToolAtom, openToolAtom, openToolsAtom } from "@/atoms/workspace-atom";
 import { chatGptActivatedAtom, chatGptConnectionAtom, chatGptQueueAtom } from "@/atoms/chatgpt-atom";
@@ -178,6 +179,23 @@ function ChatGptStatus() {
   );
 }
 
+/** On the website: link to the desktop app, which also has the ChatGPT tools. */
+function DownloadAppButton() {
+  return (
+    <a
+      href={DOWNLOAD_APP_URL}
+      target="_blank"
+      rel="noreferrer"
+      className="flex h-12 shrink-0 items-center gap-2.5 rounded-2xl border border-sky-400/40 bg-sky-500/10 px-4 text-sm font-bold text-sky-600 transition-all hover:bg-sky-500/20 dark:text-sky-300"
+      data-tooltip-id="tooltip"
+      data-tooltip-content="App cho Windows và Mac, có thêm 8 công cụ AI qua ChatGPT"
+    >
+      <Download className="h-5 w-5" />
+      Tải app máy tính
+    </a>
+  );
+}
+
 /** "Tìm công cụ nhanh" box with Ctrl+K; Enter opens the first match. */
 function ToolSearch() {
   const openTool = useSetAtom(openToolAtom);
@@ -200,7 +218,7 @@ function ToolSearch() {
   const normalize = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").toLowerCase();
   const matches = useMemo(() => {
     const q = normalize(query.trim());
-    return TOOLS.filter((t) => !q || normalize(`${t.title} ${t.description}`).includes(q));
+    return TOOLS.filter((t) => isAvailable(t) && (!q || normalize(`${t.title} ${t.description}`).includes(q)));
   }, [query]);
 
   const choose = (id: (typeof TOOLS)[number]["id"]) => {
@@ -282,7 +300,7 @@ export default function TopBar({ version }: { version: string }) {
         </div>
         {version && <span className="hidden text-[10px] text-base-content/40 xl:inline">v{version}</span>}
         <ThemeToggle />
-        <ChatGptStatus />
+        {IS_WEB ? <DownloadAppButton /> : <ChatGptStatus />}
       </div>
 
       {/* Workspace tabs */}

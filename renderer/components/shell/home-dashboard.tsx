@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useSetAtom } from "jotai";
-import { ArrowRight, Cpu, Sparkles } from "lucide-react";
+import { ArrowRight, Cpu, Globe, Monitor, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ToolInfo, TOOLS } from "@/lib/tools";
+import { isAvailable, ToolInfo, TOOLS } from "@/lib/tools";
+import { DOWNLOAD_APP_URL, IS_WEB } from "@/lib/platform";
 import { TOOL_ACCENT, toolImage } from "@/lib/tool-style";
 import { openToolAtom } from "@/atoms/workspace-atom";
 import { useToast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const WEEKDAYS = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
@@ -86,6 +88,19 @@ function LiveClock() {
 
 function EngineTag({ tool }: { tool: ToolInfo }) {
   const chatgpt = tool.engine === "chatgpt";
+  if (IS_WEB) {
+    return (
+      <span
+        className={cn(
+          "font-display inline-flex items-center gap-1 px-2 py-px text-[11px] font-semibold",
+          chatgpt ? "bg-white/10 text-white/70" : "bg-blue-600 text-white",
+        )}
+      >
+        {chatgpt ? <Monitor className="h-3 w-3" /> : <Globe className="h-3 w-3" />}
+        {chatgpt ? "Có trong app máy tính" : "Chạy trên trình duyệt"}
+      </span>
+    );
+  }
   return (
     <span
       className={cn(
@@ -154,7 +169,17 @@ export default function HomeDashboard() {
   const open = (tool: ToolInfo) =>
     tool.status === "soon"
       ? toast({ title: `${tool.title} · sắp ra mắt`, description: "Công cụ này sẽ có trong bản cập nhật tiếp theo." })
-      : openTool(tool.id);
+      : !isAvailable(tool)
+        ? toast({
+            title: `${tool.title} · dùng trong app máy tính`,
+            description: "Công cụ này chạy qua cửa sổ ChatGPT nhúng trong app LMS, trình duyệt không làm được. Tải app LMS miễn phí cho Windows hoặc Mac.",
+            action: (
+              <ToastAction altText="Tải app LMS" onClick={() => window.open(DOWNLOAD_APP_URL, "_blank")}>
+                Tải app
+              </ToastAction>
+            ),
+          })
+        : openTool(tool.id);
 
   const section = (title: string, tools: ToolInfo[], offset: number, aside?: React.ReactNode) => (
     <div>
@@ -180,8 +205,17 @@ export default function HomeDashboard() {
       <div className="relative h-full overflow-y-auto pb-14">
         {/* Rows fill the width; the clock sits on the first section line, aligned with the rows' right edge */}
         <div className="mx-auto flex w-full max-w-[1760px] min-[2200px]:max-w-[2400px] flex-col gap-9 px-10 pt-7 xl:px-16">
-          {section("AI qua ChatGPT", viaChatGpt, 0, <LiveClock />)}
-          {section("Chạy trên máy", local, viaChatGpt.length)}
+          {IS_WEB ? (
+            <>
+              {section("Chạy ngay trên trình duyệt", local, 0, <LiveClock />)}
+              {section("AI qua ChatGPT · trong app máy tính", viaChatGpt, local.length)}
+            </>
+          ) : (
+            <>
+              {section("AI qua ChatGPT", viaChatGpt, 0, <LiveClock />)}
+              {section("Chạy trên máy", local, viaChatGpt.length)}
+            </>
+          )}
         </div>
       </div>
 

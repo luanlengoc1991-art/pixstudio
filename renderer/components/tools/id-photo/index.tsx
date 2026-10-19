@@ -5,12 +5,14 @@ import { CropAside, CropStage, cropToSource, saveCrop, useCropState } from "./cr
 import { PrintAside, PrintStage, usePrintState } from "./print-layout";
 import { AiAside, AiStage, useAiPanelState, useAiRunner } from "./ai-panel";
 import { newId } from "./shared";
+import { IS_WEB } from "@/lib/platform";
 
 type Mode = "ai" | "crop" | "print";
 
 export default function IdPhotoTool() {
   const { toast } = useToast();
-  const [mode, setMode] = useState<Mode>("ai");
+  // "Ảnh thẻ AI" goes through ChatGPT, which only the desktop app has
+  const [mode, setMode] = useState<Mode>(IS_WEB ? "crop" : "ai");
   const crop = useCropState();
   const print = usePrintState();
   const ai = useAiPanelState();
@@ -43,7 +45,7 @@ export default function IdPhotoTool() {
         value={mode}
         onChange={setMode}
         options={[
-          { value: "ai", label: "Ảnh thẻ AI" },
+          ...(IS_WEB ? [] : [{ value: "ai", label: "Ảnh thẻ AI" }]),
           { value: "crop", label: "Cắt ảnh" },
           { value: "print", label: "Xếp in" },
         ]}

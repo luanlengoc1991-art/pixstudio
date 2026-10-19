@@ -1,3 +1,4 @@
+import { localFileSrc } from "@/lib/platform";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
@@ -25,7 +26,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 // The app's file:// handler treats a query string as part of the file name,
 // so results get unique file names instead of cache-busting parameters.
-export const fileUrl = (path: string) => `file:///${sanitizePath(path)}`;
+export const fileUrl = (path: string) => localFileSrc(sanitizePath(path));
 
 export const fileName = (path: string) =>
   path.split(/[\\/]/).pop()?.replace(/\.[^.]+$/, "") || "anh";

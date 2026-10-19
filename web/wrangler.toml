@@ -1,0 +1,9 @@
+# Cloudflare Pages project for the LMS website (`npm run deploy:web`)
+name = "lms-studio"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-10-01"
+
+# AI models (ONNX), served same-origin by functions/models/[name].ts
+[[r2_buckets]]
+binding = "MODELS"
+bucket_name = "lms-web-models"

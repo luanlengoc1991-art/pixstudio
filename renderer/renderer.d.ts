@@ -15,6 +15,10 @@ export interface IElectronAPI {
     gpu: Record<string, any>;
   }>;
   getAppVersion: () => Promise<string>;
+  /** Website only (lib/web/runtime.ts) */
+  isWeb?: boolean;
+  /** Website only: object URL for an in-memory file path */
+  fileUrl?: (path: string) => string;
 }
 
 declare global {

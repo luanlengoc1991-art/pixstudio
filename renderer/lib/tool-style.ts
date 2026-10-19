@@ -1,3 +1,4 @@
+import { publicSrc } from "@/lib/platform";
 import { ToolId } from "@/lib/tools";
 
 /** Accent colours per tool: [light, main, deep] used for 3D icons, borders and buttons. */
@@ -24,10 +25,10 @@ export const TOOL_ACCENT: Record<ToolId, [string, string, string]> = {
  */
 const ICON_VERSION = 8;
 
-export const toolImage = (id: ToolId) => `public:///icons3d/${id}.png?v=${ICON_VERSION}`;
+export const toolImage = (id: ToolId) => publicSrc(`icons3d/${id}.png?v=${ICON_VERSION}`);
 
 export const STAT_IMAGES = {
-  tools: `public:///icons3d/stat-tools.png?v=${ICON_VERSION}`,
-  local: `public:///icons3d/stat-local.png?v=${ICON_VERSION}`,
-  cloud: `public:///icons3d/stat-cloud.png?v=${ICON_VERSION}`,
+  tools: publicSrc(`icons3d/stat-tools.png?v=${ICON_VERSION}`),
+  local: publicSrc(`icons3d/stat-local.png?v=${ICON_VERSION}`),
+  cloud: publicSrc(`icons3d/stat-cloud.png?v=${ICON_VERSION}`),
 };
