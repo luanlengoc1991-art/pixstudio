@@ -213,7 +213,7 @@ export default function HomeDashboard() {
           ) : (
             <>
               {section("AI qua ChatGPT", viaChatGpt, 0, <LiveClock />)}
-              {section("Chạy trên máy", local, viaChatGpt.length)}
+              {local.length > 0 && section("Chạy trên máy", local, viaChatGpt.length)}
             </>
           )}
         </div>

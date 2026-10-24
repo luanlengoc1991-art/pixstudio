@@ -7,8 +7,7 @@ import { chatGptActivatedAtom } from "@/atoms/chatgpt-atom";
 import ChatGptPanel from "@/components/chatgpt/chatgpt-panel";
 import TopBar from "@/components/shell/top-bar";
 import HomeDashboard from "@/components/shell/home-dashboard";
-import UpscaleTool from "@/components/tools/upscale-tool";
-import RemoveBgTool from "@/components/tools/remove-bg-tool";
+import { RemoveBgScreen, UpscaleScreen } from "@/components/tools/engine-screens";
 import VectorTool from "@/components/tools/vector-tool";
 import DieCutTool from "@/components/tools/die-cut-tool";
 import IdPhotoTool from "@/components/tools/id-photo";
@@ -19,10 +18,6 @@ import useUpscaylVersion from "@/components/hooks/use-upscayl-version";
 import { ToolId, TOOLS } from "@/lib/tools";
 
 const TOOL_VIEWS: Partial<Record<ToolId, () => JSX.Element>> = {
-  "remove-bg": RemoveBgTool,
-  vector: VectorTool,
-  "die-cut": DieCutTool,
-  "id-photo": IdPhotoTool,
   // Phase 2 tools share one screen driven by lib/ai-tools.ts
   ...Object.fromEntries(
     TOOLS.filter((tool) => tool.engine === "chatgpt").map((tool) => [
@@ -30,10 +25,16 @@ const TOOL_VIEWS: Partial<Record<ToolId, () => JSX.Element>> = {
       () => <ChatGptTool toolId={tool.id} />,
     ]),
   ),
-  // AI tools with their own screen
+  // Tools with their own screen (ChatGPT, on-device or both)
+  "remove-bg": RemoveBgScreen,
+  vector: VectorTool,
+  "die-cut": DieCutTool,
+  "id-photo": IdPhotoTool,
   "layer-separation": LayerSeparationTool,
   "ad-designer": AdDesignerTool,
 };
+// The upscaler is mounted on its own below
+delete TOOL_VIEWS.upscayl;
 
 const App = () => {
   const activeTab = useAtomValue(activeTabAtom);
@@ -57,7 +58,7 @@ const App = () => {
         </section>
         {/* The upscaler registers IPC listeners once, so it stays mounted */}
         <section className={activeTab === "upscayl" ? "h-full" : "hidden"}>
-          <UpscaleTool />
+          <UpscaleScreen />
         </section>
         {openTools.map((id) => {
           const View = TOOL_VIEWS[id];

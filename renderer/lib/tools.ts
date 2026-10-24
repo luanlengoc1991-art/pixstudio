@@ -44,6 +44,11 @@ export type ToolInfo = {
   engine: "local" | "chatgpt";
 };
 
+// Tools that also have an on-device version: the desktop app sends them through
+// ChatGPT (the on-device models gave rough, unrealistic results), the website
+// keeps the in-browser version since it has no ChatGPT window.
+const VIA_CHATGPT: ToolInfo["engine"] = IS_WEB ? "local" : "chatgpt";
+
 // Order and wording follow the pixAI 1.2.6 home screen
 export const TOOLS: ToolInfo[] = [
   {
@@ -54,7 +59,7 @@ export const TOOLS: ToolInfo[] = [
     icon: ImageUpscale,
     tint: "bg-sky-500/15 text-sky-600 dark:text-sky-300",
     status: "ready",
-    engine: "local",
+    engine: VIA_CHATGPT,
   },
   {
     id: "remove-bg",
@@ -64,7 +69,7 @@ export const TOOLS: ToolInfo[] = [
     icon: Eraser,
     tint: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
     status: "ready",
-    engine: "local",
+    engine: VIA_CHATGPT,
   },
   {
     id: "layer-separation",
@@ -114,7 +119,7 @@ export const TOOLS: ToolInfo[] = [
     icon: PenTool,
     tint: "bg-pink-500/15 text-pink-600 dark:text-pink-300",
     status: "ready",
-    engine: "local",
+    engine: VIA_CHATGPT,
   },
   {
     id: "ad-designer",
@@ -164,7 +169,7 @@ export const TOOLS: ToolInfo[] = [
     icon: Scissors,
     tint: "bg-red-500/15 text-red-600 dark:text-red-300",
     status: "ready",
-    engine: "local",
+    engine: VIA_CHATGPT,
   },
   {
     id: "id-photo",
@@ -174,7 +179,7 @@ export const TOOLS: ToolInfo[] = [
     icon: IdCard,
     tint: "bg-blue-500/15 text-blue-600 dark:text-blue-300",
     status: "ready",
-    engine: "local",
+    engine: VIA_CHATGPT,
   },
 ];
 

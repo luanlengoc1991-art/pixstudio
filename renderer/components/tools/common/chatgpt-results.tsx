@@ -133,9 +133,11 @@ export function ChatGptResults({
               <button className="btn btn-sm" onClick={() => setZoomed(current)}>
                 <Maximize2 className="h-4 w-4" /> Phóng to
               </button>
-              <button className="btn btn-sm" onClick={() => sendImageToTool({ toolId: "upscayl", path: current })}>
-                <ImageUpscale className="h-4 w-4" /> Kích nét 4K
-              </button>
+              {toolId !== "upscayl" && (
+                <button className="btn btn-sm" onClick={() => sendImageToTool({ toolId: "upscayl", path: current })}>
+                  <ImageUpscale className="h-4 w-4" /> Kích nét
+                </button>
+              )}
               {sendToLayers && (
                 <button className="btn btn-sm" onClick={() => sendImageToTool({ toolId: "layer-separation", path: current })}>
                   <Layers className="h-4 w-4" /> Bóc tách layer

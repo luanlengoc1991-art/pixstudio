@@ -10,7 +10,16 @@ import { ChatGptResults } from "./common/chatgpt-results";
 const STEP_LABELS = ["01", "02", "03", "04", "05", "06", "07", "08", "09"];
 
 /** Shared screen for the tools that run through the embedded ChatGPT tab. */
-export default function ChatGptTool({ toolId }: { toolId: ToolId }) {
+export default function ChatGptTool({
+  toolId,
+  modeSwitch,
+  extraActions,
+}: {
+  toolId: ToolId;
+  /** ChatGPT / on-device switch of tools that have both */
+  modeSwitch?: React.ReactNode;
+  extraActions?: (current: string) => React.ReactNode;
+}) {
   const config = AI_TOOLS[toolId]!;
   const { toast } = useToast();
   const job = useChatGptJob(toolId);
@@ -56,6 +65,7 @@ export default function ChatGptTool({ toolId }: { toolId: ToolId }) {
   let step = 0;
   const aside = (
     <>
+      {modeSwitch}
       {config.slots.map((slot, index) => (
         <Section key={slot.key} step={STEP_LABELS[step++]} title={slot.label} hint={slot.hint}>
           <ImageInput
@@ -117,6 +127,7 @@ export default function ChatGptTool({ toolId }: { toolId: ToolId }) {
         resultLabel={config.resultLabel}
         inputPaths={imagePaths}
         expected={expected}
+        extraActions={extraActions}
         emptyText={`Chọn ảnh và tùy chọn bên trái rồi bấm "${config.action}". App tự gửi sang ChatGPT (tài khoản của bạn), chờ tạo xong và lấy ảnh về đây.`}
       />
     </ToolLayout>

@@ -57,7 +57,111 @@ export const withNote = (prompt: string, note: string) =>
 const pick = <T extends Record<string, string>>(map: T, key: string) =>
   map[key as keyof T] ?? Object.values(map)[0];
 
+/** Keeps people real: the main complaint about the on-device models was waxy, fake-looking faces. */
+const REAL_PEOPLE =
+  "If there are people: keep each face 100% the same person (identity, face shape, eyes, nose, mouth, age, expression, makeup, hairstyle). Render true photographic skin with natural pores, fine texture and subtle imperfections; no airbrushed, plastic, waxy, doll-like, painted or AI-looking skin, no beautification, no changes to body shape.";
+
 export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
+  upscayl: {
+    slots: [{ key: "source", label: "Ảnh cần làm nét", required: true }],
+    fields: [
+      {
+        type: "choice",
+        key: "subject",
+        title: "Loại ảnh",
+        options: [
+          { value: "people", label: "Chân dung / người", hint: "Giữ đúng mặt, da thật" },
+          { value: "product", label: "Sản phẩm", hint: "Chất liệu, chữ trên bao bì" },
+          { value: "scene", label: "Phong cảnh / kiến trúc", hint: "Chi tiết, đường thẳng" },
+          { value: "graphic", label: "Thiết kế / chữ / logo", hint: "Cạnh sắc, đúng chữ" },
+        ],
+      },
+      {
+        type: "choice",
+        key: "strength",
+        title: "Mức xử lý",
+        options: [
+          { value: "faithful", label: "Giữ nguyên tối đa", hint: "Chỉ khử mờ, khử nhiễu" },
+          { value: "rebuild", label: "Tái tạo chi tiết", hint: "Ảnh rất mờ, vỡ, nhỏ" },
+        ],
+      },
+    ],
+    steps: ["Đang gửi ảnh sang ChatGPT...", "AI đang phân tích vùng mờ, nhiễu & vỡ hạt...", "Đang dựng lại chi tiết da, tóc, chất liệu chân thực...", "Đang làm nét cạnh & cân lại ánh sáng tự nhiên...", "Đang xuất ảnh độ phân giải cao..."],
+    resultLabel: "Đã làm nét",
+    action: "Làm nét bằng ChatGPT",
+    buildPrompt: ({ subject, strength }) =>
+      [
+        "Enhance the attached photo into a sharp, clean, high-resolution version of the SAME photo, as if it had been shot with a professional full-frame camera and a sharp lens.",
+        "Keep the exact composition, framing, aspect ratio, pose, clothing, colors, lighting direction and background. Do not add, remove, move or restyle anything.",
+        strength === "rebuild"
+          ? "The source is very blurry, low-resolution or compressed: rebuild the missing fine detail convincingly, remove blur, noise, JPEG blocks and banding."
+          : "Stay as close to the source as possible: only remove blur, noise and compression artifacts and recover fine detail; no creative changes.",
+        pick(
+          {
+            people: REAL_PEOPLE + " Individual hair strands, eyelashes, natural catchlights in the eyes, realistic fabric texture.",
+            product: "Crisp material texture and edges; reproduce every label, logo and printed text exactly (including Vietnamese diacritics), never invent or misspell text.",
+            scene: "Crisp natural detail in foliage, stone, glass and textures; straight architectural lines; no oversharpening halos.",
+            graphic: "Perfectly sharp edges and clean flat color areas; reproduce every letter, number and logo exactly (including Vietnamese diacritics), never invent or misspell text.",
+          },
+          subject,
+        ),
+        subject !== "people" ? REAL_PEOPLE : "",
+        "Natural photographic result, not painted, not over-processed, no HDR look. Highest available resolution.",
+        OUTPUT_RULES,
+      ].filter(Boolean).join(" "),
+  },
+
+  "remove-bg": {
+    slots: [{ key: "source", label: "Ảnh cần xóa nền", required: true }],
+    fields: [
+      {
+        type: "text",
+        key: "subject",
+        title: "Chủ thể cần giữ (không bắt buộc)",
+        placeholder: "Để trống: AI tự chọn chủ thể chính. VD: cô gái áo trắng, chai nước...",
+      },
+      {
+        type: "choice",
+        key: "background",
+        title: "Nền kết quả",
+        columns: 3,
+        options: [
+          { value: "transparent", label: "Trong suốt" },
+          { value: "white", label: "Trắng" },
+          { value: "blue", label: "Xanh ảnh thẻ" },
+          { value: "grey", label: "Xám studio" },
+          { value: "black", label: "Đen" },
+          { value: "pastel", label: "Pastel" },
+        ],
+      },
+    ],
+    steps: ["Đang gửi ảnh sang ChatGPT...", "AI đang nhận diện chủ thể & đường viền...", "Đang tách từng sợi tóc, mép vải, chi tiết nhỏ...", "Đang xuất ảnh PNG..."],
+    resultLabel: "Đã xóa nền",
+    action: "Xóa nền bằng ChatGPT",
+    buildPrompt: ({ subject, background }) =>
+      [
+        subject
+          ? `Cut out "${subject}" from the attached image and remove everything else.`
+          : "Cut out the main subject of the attached image and remove the background completely.",
+        "The subject must stay pixel-identical: same size, position, pose, colors, lighting, text and every detail. Do not redraw, retouch, beautify or regenerate the subject.",
+        REAL_PEOPLE,
+        "Precise, natural edges: keep individual hair strands, fur, semi-transparent fabric and fine gaps; no halo, no leftover background color, no added shadow.",
+        pick(
+          {
+            transparent: "Output a PNG with a real transparent alpha background (not a checkerboard pattern, not white).",
+            white: "Place the subject on a solid pure white (#FFFFFF) background.",
+            blue: "Place the subject on a solid light blue ID-photo background (#4A90D9).",
+            grey: "Place the subject on a smooth light grey studio background.",
+            black: "Place the subject on a solid black background.",
+            pastel: "Place the subject on a soft pastel studio background that suits the subject.",
+          },
+          background,
+        ),
+        "Keep the original canvas size and aspect ratio.",
+        OUTPUT_RULES,
+      ].join(" "),
+  },
+
   "layer-separation": {
     slots: [{ key: "source", label: "Ảnh gốc", required: true }],
     fields: [
@@ -269,6 +373,8 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
           background,
         ),
         "Natural anatomy, realistic fabric folds, consistent lighting.",
+        REAL_PEOPLE,
+        "It must look like a real unedited camera photo, not a render or illustration.",
         OUTPUT_RULES,
       ].join(" "),
   },
@@ -355,6 +461,7 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
         "Restore the attached old photograph.",
         "Remove scratches, dust, cracks, tears, folds, stains and mould; fill in missing or damaged areas.",
         "Faces must keep the exact identity, features, age and expression of the people in the photo; do not beautify or change anyone.",
+        "Skin must look like real photographed skin with natural texture, never smooth, plastic or painted.",
         strength === "full"
           ? "Sharpen details so it looks like a high-quality modern photo, while staying faithful to the original."
           : "Keep the authentic look and grain of a vintage photo; only repair damage and gently improve clarity.",

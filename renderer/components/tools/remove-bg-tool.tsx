@@ -26,7 +26,7 @@ import {
 
 type BackgroundMode = "transparent" | "white" | "color";
 
-export default function RemoveBgTool() {
+export default function RemoveBgTool({ modeSwitch }: { modeSwitch?: React.ReactNode }) {
   const { toast } = useToast();
   const [progress, setProgress] = useAtom(toolProgressAtom);
   const sendImageToTool = useSetAtom(sendImageToToolAtom);
@@ -87,6 +87,7 @@ export default function RemoveBgTool() {
 
   const aside = (
     <>
+      {modeSwitch}
       <Section step="01" title="Ảnh đầu vào">
         <ImageInput
           toolId="remove-bg"

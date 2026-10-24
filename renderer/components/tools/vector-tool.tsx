@@ -21,6 +21,8 @@ import {
   ToolLayout,
   ZoomModal,
 } from "./common";
+import { ChatGptJobBanner, useChatGptStep } from "./common/chatgpt-job";
+import { IS_WEB } from "@/lib/platform";
 
 const VECTOR_TYPES: { value: VectorType; label: string; hint: string }[] = [
   { value: "one-color-logo", label: "Logo 1 màu", hint: "Nét logo rõ, đơn sắc" },
@@ -33,7 +35,37 @@ const VECTOR_TYPES: { value: VectorType; label: string; hint: string }[] = [
   { value: "artwork", label: "Tranh nghệ thuật", hint: "Minh họa 48 màu, làm mịn" },
 ];
 
-const formatBytes = (bytes: number) =>
+// ChatGPT redraws the image as clean flat artwork first, so the tracer gets sharp
+// edges and solid colors instead of blur, noise and gradients. QR codes are traced
+// as they are: a redraw could break them.
+const CLEANUP_PROMPTS: Partial<Record<VectorType, string>> = {
+  "one-color-logo": "Redraw it as a clean single-color logo: solid pure black shapes on a pure white background, perfectly sharp edges, no gray, gradients, texture or noise.",
+  "color-logo": "Redraw it as a clean flat-color vector-style logo: solid color areas with the same colors, perfectly sharp edges, no gradients, shadows, texture or noise.",
+  icon: "Redraw it as a clean flat vector-style icon / sticker: solid color areas, perfectly sharp edges, no gradients, shadows, texture or noise.",
+  text: "Redraw it as clean solid ink on a pure white background: same lettering, strokes and stamp shapes, perfectly sharp edges, no paper texture, stains or noise.",
+  anime: "Redraw it as a clean vector-style cartoon illustration: crisp clean outlines and flat cel-shaded color areas, no texture or noise.",
+  portrait: "Redraw it as a clean vector-style portrait illustration with flat color areas and clean shapes, keeping the person's likeness, face and expression exactly.",
+  artwork: "Redraw it as a clean vector-style illustration with flat color areas and clean shapes, keeping the composition and colors.",
+};
+
+const cleanupPrompt = (type: VectorType, background: "transparent" | "white") =>
+  [
+    "Prepare the attached image for vector tracing.",
+    CLEANUP_PROMPTS[type],
+    "Keep exactly the same design, composition, proportions, colors and every letter (including Vietnamese diacritics); do not add, remove or misspell anything.",
+    background === "white" || type === "one-color-logo" || type === "text"
+      ? "Plain pure white background."
+      : "Real transparent alpha background (PNG, not a checkerboard).",
+    "Generate the final result as an image. Do not ask follow-up questions.",
+  ].join(" ");
+
+const CLEANUP_STEPS = [
+  "Đang gửi ảnh sang ChatGPT...",
+  "ChatGPT đang vẽ lại nét sạch, màu phẳng...",
+  "Đang nhận ảnh để chuyển Vector...",
+];
+
+const formatBytes =(bytes: number) =>
   bytes < 1024 ? `${bytes} B` : bytes < 1048576 ? `${Math.round(bytes / 1024)} KB` : `${(bytes / 1048576).toFixed(2)} MB`;
 
 export default function VectorTool() {
@@ -45,6 +77,9 @@ export default function VectorTool() {
   const [result, setResult] = useState<VectorizeResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [zoom, setZoom] = useState<"source" | "svg" | null>(null);
+  const [aiCleanup, setAiCleanup] = useState(!IS_WEB);
+  const cleanup = useChatGptStep("vector");
+  const useCleanup = aiCleanup && !!CLEANUP_PROMPTS[type];
 
   usePendingToolImage("vector", (path) => {
     setImagePath(path);
@@ -61,10 +96,19 @@ export default function VectorTool() {
       toast({ title: "Chưa có ảnh", description: "Hãy chọn hoặc dán một ảnh trước." });
       return;
     }
+    let source = imagePath;
+    if (useCleanup) {
+      try {
+        source = await cleanup.run(cleanupPrompt(type, background), imagePath, CLEANUP_STEPS);
+      } catch (error) {
+        toast({ title: "ChatGPT chưa làm sạch được ảnh", description: errorMessage(error) });
+        return;
+      }
+    }
     setBusy(true);
     setProgress("Đang bóc tách đường vector...");
     try {
-      const payload: VectorizePayload = { imagePath, type, background };
+      const payload: VectorizePayload = { imagePath: source, type, background };
       const output: VectorizeResult = await window.electron.invoke(
         ELECTRON_COMMANDS.VECTORIZE_IMAGE,
         payload,
@@ -134,6 +178,25 @@ export default function VectorTool() {
           ]}
         />
       </Section>
+      {!IS_WEB && (
+        <Section title="Làm sạch ảnh trước khi trace">
+          <Segmented
+            value={aiCleanup ? "chatgpt" : "local"}
+            onChange={(value: string) => setAiCleanup(value === "chatgpt")}
+            options={[
+              { value: "chatgpt", label: "ChatGPT vẽ lại nét sạch" },
+              { value: "local", label: "Trace ảnh gốc" },
+            ]}
+          />
+          <p className="text-[11px] font-light text-base-content/60">
+            {type === "qr-code"
+              ? "QR Code luôn trace trực tiếp để không sai mã."
+              : aiCleanup
+                ? "ChatGPT khử mờ, nhiễu, vẽ lại nét và màu phẳng, rồi app trace SVG trên máy: đường gọn, ít path hơn."
+                : "Trace thẳng ảnh gốc trên máy. Ảnh mờ hoặc chụp sẽ ra nhiều path rác."}
+          </p>
+        </Section>
+      )}
       <Section step="02" title="Ảnh đầu vào">
         <ImageInput
           toolId="vector"
@@ -148,9 +211,9 @@ export default function VectorTool() {
   );
 
   const footer = (
-    <button className="btn btn-primary w-full" disabled={busy} onClick={run}>
+    <button className="btn btn-primary w-full" disabled={busy || cleanup.running} onClick={run}>
       <WandSparkles className="h-4 w-4" />
-      {busy ? "Đang xử lý..." : "Tạo Vector"}
+      {busy || cleanup.running ? "Đang xử lý..." : "Tạo Vector"}
     </button>
   );
 
@@ -165,6 +228,7 @@ export default function VectorTool() {
         />
       ) : (
         <div className="flex h-full flex-col gap-3 p-4">
+          {(cleanup.running || cleanup.state?.status === "error") && <ChatGptJobBanner toolId="vector" steps={CLEANUP_STEPS} />}
           <div className="flex min-h-0 flex-1 gap-3">
             <PreviewCard label="Ảnh gốc (Bitmap)" src={fileUrl(imagePath)} onZoom={() => setZoom("source")} />
             <PreviewCard label="Vector SVG" src={svgUrl || undefined} onZoom={result ? () => setZoom("svg") : undefined}>

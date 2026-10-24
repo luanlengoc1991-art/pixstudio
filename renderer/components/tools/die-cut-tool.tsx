@@ -4,11 +4,8 @@ import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slide
 import { Download, FileCode2, ImageUpscale, Maximize2, Scissors } from "lucide-react";
 import { ELECTRON_COMMANDS } from "@common/electron-commands";
 import { DieCutPayload, DieCutResult, DieCutType } from "@common/types/types";
-import {
-  openToolAtom,
-  pendingUpscaleImageAtom,
-  toolProgressAtom,
-} from "@/atoms/workspace-atom";
+import { sendImageToToolAtom, toolProgressAtom } from "@/atoms/workspace-atom";
+import { IS_WEB } from "@/lib/platform";
 import { useToast } from "@/components/ui/use-toast";
 import {
   BusyOverlay,
@@ -26,16 +23,31 @@ import {
   ToolLayout,
   ZoomModal,
 } from "./common";
+import { ChatGptJobBanner, useChatGptStep } from "./common/chatgpt-job";
+
+const CUTOUT_PROMPT = [
+  "Remove the background of the attached design so only the design itself remains, on a real transparent alpha background (PNG, not a checkerboard, not white).",
+  "Keep the design pixel-identical: same size, position, colors, text (including Vietnamese diacritics), outlines and every detail. Do not redraw, restyle or add anything.",
+  "Clean, precise edges with no halo or leftover background. Keep the original canvas size.",
+  "Generate the final result as an image. Do not ask follow-up questions.",
+].join(" ");
+const CUTOUT_STEPS = [
+  "Đang gửi thiết kế sang ChatGPT...",
+  "ChatGPT đang tách nền, giữ nguyên thiết kế...",
+  "Đang nhận ảnh PNG để tạo đường bế...",
+];
 
 type ViewMode = "result" | "compare" | "line";
 
 export default function DieCutTool() {
   const { toast } = useToast();
   const [progress, setProgress] = useAtom(toolProgressAtom);
-  const openTool = useSetAtom(openToolAtom);
-  const setPendingUpscale = useSetAtom(pendingUpscaleImageAtom);
+  const sendImageToTool = useSetAtom(sendImageToToolAtom);
+  const cutout = useChatGptStep("die-cut");
 
   const [imagePath, setImagePath] = useState("");
+  // ChatGPT finds the outline of photos and JPG designs far better than the on-device model
+  const [aiCutout, setAiCutout] = useState(!IS_WEB);
   const [cutType, setCutType] = useState<DieCutType>("contour");
   const [offsetMm, setOffsetMm] = useState(2);
   const [smoothness, setSmoothness] = useState<DieCutPayload["smoothness"]>("auto");
@@ -57,11 +69,20 @@ export default function DieCutTool() {
       toast({ title: "Chưa có ảnh", description: "Hãy tải ảnh thiết kế PNG / JPG trước." });
       return;
     }
+    let source = imagePath;
+    if (aiCutout) {
+      try {
+        source = await cutout.run(CUTOUT_PROMPT, imagePath, CUTOUT_STEPS);
+      } catch (error) {
+        toast({ title: "ChatGPT chưa tách được nền", description: errorMessage(error) });
+        return;
+      }
+    }
     setBusy(true);
     setProgress("Đang tạo đường bế...");
     try {
       const payload: DieCutPayload = {
-        imagePath,
+        imagePath: source,
         cutType,
         offsetMm,
         smoothness,
@@ -126,6 +147,23 @@ export default function DieCutTool() {
           label="Tải ảnh thiết kế PNG / JPG"
         />
       </Section>
+      {!IS_WEB && (
+        <Section title="Nhận diện hình">
+          <Segmented
+            value={aiCutout ? "chatgpt" : "local"}
+            onChange={(value: string) => setAiCutout(value === "chatgpt")}
+            options={[
+              { value: "chatgpt", label: "ChatGPT tách nền" },
+              { value: "local", label: "Trên máy" },
+            ]}
+          />
+          <p className="text-[11px] font-light text-base-content/60">
+            {aiCutout
+              ? "ChatGPT tách nền chính xác trước, sau đó app tạo đường bế trên máy."
+              : "Dùng khi ảnh đã là PNG nền trong suốt sạch."}
+          </p>
+        </Section>
+      )}
       <Section step="02" title="Kiểu bế">
         <OptionCards
           value={cutType}
@@ -194,9 +232,9 @@ export default function DieCutTool() {
   );
 
   const footer = (
-    <button className="btn btn-primary w-full" disabled={busy} onClick={run}>
+    <button className="btn btn-primary w-full" disabled={busy || cutout.running} onClick={run}>
       <Scissors className="h-4 w-4" />
-      {busy ? "Đang xử lý..." : "TẠO ẢNH BẾ"}
+      {busy || cutout.running ? "Đang xử lý..." : "TẠO ẢNH BẾ"}
     </button>
   );
 
@@ -211,6 +249,7 @@ export default function DieCutTool() {
         />
       ) : (
         <div className="flex h-full flex-col gap-3 p-4">
+          {(cutout.running || cutout.state?.status === "error") && <ChatGptJobBanner toolId="die-cut" steps={CUTOUT_STEPS} />}
           {result && (
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-base-content/70">Chế độ xem:</span>
@@ -257,12 +296,9 @@ export default function DieCutTool() {
               </button>
               <button
                 className="btn btn-sm"
-                onClick={() => {
-                  setPendingUpscale(result.previewPath);
-                  openTool("upscayl");
-                }}
+                onClick={() => sendImageToTool({ toolId: "upscayl", path: result.previewPath })}
               >
-                <ImageUpscale className="h-4 w-4" /> Kích nét 4K
+                <ImageUpscale className="h-4 w-4" /> Kích nét
               </button>
               <button className="btn btn-sm" onClick={saveSvg}>
                 <FileCode2 className="h-4 w-4" /> Xuất Vector SVG

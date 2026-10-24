@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import { getTool, isAvailable, ToolId } from "@/lib/tools";
+import { IS_WEB } from "@/lib/platform";
 
 export type WorkspaceTab = "home" | "chatgpt" | ToolId;
 
@@ -44,7 +45,8 @@ export const pendingToolImageAtom = atom<Partial<Record<ToolId, string>>>({});
 
 /** Sends an image to a tool and opens it; the upscaler keeps its own atom */
 export const sendImageToToolAtom = atom(null, (_get, set, { toolId, path }: { toolId: ToolId; path: string }) => {
-  if (toolId === "upscayl") set(pendingUpscaleImageAtom, path);
+  // The desktop app upscales through ChatGPT first; the website only has the on-device upscaler
+  if (toolId === "upscayl" && IS_WEB) set(pendingUpscaleImageAtom, path);
   else set(pendingToolImageAtom, (prev) => ({ ...prev, [toolId]: path }));
   set(openToolAtom, toolId);
 });

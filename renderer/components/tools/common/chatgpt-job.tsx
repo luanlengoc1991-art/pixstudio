@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { AlertTriangle, CheckCircle2, Download, Loader2, MessageCircle, Square } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Cpu, Download, Loader2, MessageCircle, Sparkles, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ToolId } from "@/lib/tools";
 import { activeTabAtom } from "@/atoms/workspace-atom";
@@ -27,6 +27,69 @@ export const useChatGptJob = (toolId: ToolId) => {
     cancel: () => cancel(toolId),
   };
 };
+
+/**
+ * One ChatGPT pass inside an on-device tool (clean-up before tracing, cut-out
+ * before die-cutting): resolves with the first image ChatGPT returns.
+ */
+export const useChatGptStep = (toolId: ToolId) => {
+  const job = useChatGptJob(toolId);
+  const pending = useRef<{ jobId: string; resolve: (path: string) => void; reject: (error: Error) => void } | null>(null);
+
+  useEffect(() => {
+    const waiting = pending.current;
+    const state = job.state;
+    if (!waiting || !state || state.jobId !== waiting.jobId) return;
+    if (state.results.length && (state.status === "done" || state.status === "partial")) {
+      pending.current = null;
+      waiting.resolve(state.results[0]);
+    } else if (state.status === "error" || state.status === "cancelled" || state.status === "partial") {
+      pending.current = null;
+      waiting.reject(new Error(state.message || "ChatGPT không trả về ảnh."));
+    }
+  }, [job.state]);
+
+  const run = (prompt: string, imagePath: string, steps: string[]) =>
+    new Promise<string>((resolve, reject) => {
+      const jobId = job.submit({ prompt, imagePaths: [imagePath], expected: 1, steps });
+      pending.current = { jobId, resolve, reject };
+    });
+
+  return { ...job, run };
+};
+
+/** ChatGPT / on-device switch at the top of a tool that has both. */
+export function EngineSwitch({ value, onChange }: { value: "chatgpt" | "local"; onChange: (value: "chatgpt" | "local") => void }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex rounded-xl border border-base-content/10 bg-base-100 p-1">
+        {(
+          [
+            { value: "chatgpt", label: "ChatGPT", icon: Sparkles },
+            { value: "local", label: "Trên máy (offline)", icon: Cpu },
+          ] as const
+        ).map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-bold transition-all",
+              option.value === value ? "bg-primary text-primary-content shadow" : "text-base-content/70 hover:bg-base-200",
+            )}
+          >
+            <option.icon className="h-3.5 w-3.5" /> {option.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-[11px] font-light text-base-content/60">
+        {value === "chatgpt"
+          ? "Gửi qua ChatGPT (tài khoản của bạn): người, da, chi tiết thật hơn nhiều so với model trên máy."
+          : "Chạy model trên máy, không cần mạng. Nhanh nhưng ảnh người có thể thô, không tự nhiên."}
+      </p>
+    </div>
+  );
+}
 
 /**
  * Progress banner for a ChatGPT job: cycles the tool's progress lines while
