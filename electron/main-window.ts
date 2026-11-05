@@ -59,7 +59,7 @@ const createMainWindow = () => {
   fetchLocalStorage();
 
   // Every push to main publishes a release (see build-windows.yml); check at
-  // start and every 30 minutes, download in the background, ask to restart
+  // start and every 10 minutes, download in the background, install by itself when idle
   if (!electronIsDev) {
     // Windows installs in place; an unsigned Mac app can only offer the download
     const check =
@@ -67,7 +67,7 @@ const createMainWindow = () => {
         ? checkMacUpdate
         : () => autoUpdater.checkForUpdates().catch((error) => console.log("🚫 Update check failed:", error?.message || error));
     check();
-    setInterval(check, 30 * 60 * 1000);
+    setInterval(check, 10 * 60 * 1000);
   }
 
   mainWindow.webContents.send(ELECTRON_COMMANDS.OS, getPlatform());
