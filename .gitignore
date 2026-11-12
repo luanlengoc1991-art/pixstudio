@@ -58,3 +58,6 @@ dockerfile
 # TypeScript incremental build cache
 *.tsbuildinfo
 /dist-demo*/
+
+# bản build Next.js ở thư mục gốc
+/.next/
