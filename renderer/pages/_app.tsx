@@ -15,7 +15,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   return (
     <>
       <Head>
-        <title>LMS (LUAN MKT STUDIO)</title>
+        <title>LMS Studio</title>
         {IS_WEB && (
           <meta
             name="description"

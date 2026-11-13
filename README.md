@@ -1,4 +1,4 @@
-# LMS (LUAN MKT STUDIO)
+# LMS Studio
 
 Bộ công cụ xử lý ảnh bằng AI cho Windows, chạy ngay trên máy tính.
 Dựa trên [Upscayl](https://github.com/upscayl/upscayl) (giấy phép AGPL-3.0). Hướng dẫn gốc của Upscayl: [docs/UPSCAYL-README.md](docs/UPSCAYL-README.md).

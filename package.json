@@ -22,7 +22,7 @@
   ],
   "email": "nayam.emikx@aleeas.com",
   "license": "AGPL-3.0",
-  "description": "LMS (LUAN MKT STUDIO) - Bộ công cụ xử lý ảnh AI: kích nét, xóa nền, vector, bế file, ảnh thẻ (dựa trên Upscayl)",
+  "description": "LMS Studio - Bộ công cụ xử lý ảnh AI: kích nét, xóa nền, vector, bế file, ảnh thẻ (dựa trên Upscayl)",
   "keywords": [
     "AI",
     "Upscaler",
@@ -178,7 +178,7 @@
       "oneClick": false,
       "allowElevation": true,
       "perMachine": true,
-      "shortcutName": "LMS (LUAN MKT STUDIO)"
+      "shortcutName": "LMS Studio"
     },
     "files": [
       "export",
