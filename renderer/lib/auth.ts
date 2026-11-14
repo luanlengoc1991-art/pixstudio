@@ -5,7 +5,7 @@
 import { IS_WEB } from "@/lib/platform";
 
 export const AUTH_REQUIRED = !IS_WEB;
-export const API_BASE = IS_WEB ? "" : "https://lms-studio-c9y.pages.dev";
+export const API_BASE = IS_WEB ? "" : "https://lms.luangroup.asia";
 export const ADMIN_URL = `${API_BASE || ""}/admin/`;
 
 /** How long the app keeps working without reaching the server. */

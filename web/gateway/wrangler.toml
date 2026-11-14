@@ -1,0 +1,8 @@
+# Front door Worker for lms.luangroup.asia (deploy: `npm run deploy:gateway`).
+# The custom domain creates its own DNS record. Secret: `wrangler secret put GW_SECRET`
+# (same value as the Pages project's GW_SECRET).
+name = "lms-gateway"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+routes = [{ pattern = "lms.luangroup.asia", custom_domain = true }]

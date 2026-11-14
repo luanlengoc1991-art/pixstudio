@@ -40,6 +40,7 @@
     "dev": "tsc && electron .",
     "build": "tsc && npm run validate-schema && next build renderer",
     "build:web": "node scripts/build-web.js",
+    "deploy:gateway": "cd web/gateway && npx wrangler@4 deploy",
     "deploy:web": "node scripts/build-web.js && cd web && npx wrangler@4 pages deploy --project-name lms-studio --branch main --commit-dirty=true",
     "tsc": "tsc",
     "pack-app": "tsc && npm run build && electron-builder --dir",
