@@ -30,6 +30,8 @@ try {
   for (const file of ["vtracer.js", "vtracer.wasm"]) {
     fs.copyFileSync(path.join(root, "node_modules", "vtracer-wasm", file), path.join(dist, "wasm", file));
   }
+  // Admin page for accounts and license keys (talks to functions/api)
+  fs.cpSync(path.join(root, "web", "admin"), path.join(dist, "admin"), { recursive: true });
   // Pages serves _headers from the output root
   fs.writeFileSync(
     path.join(dist, "_headers"),
@@ -38,6 +40,9 @@ try {
       "  Cache-Control: public, max-age=31536000, immutable",
       "/icons3d/*",
       "  Cache-Control: public, max-age=604800",
+      "/admin/*",
+      "  Cache-Control: no-store",
+      "  X-Robots-Tag: noindex",
       "",
     ].join("\n"),
   );

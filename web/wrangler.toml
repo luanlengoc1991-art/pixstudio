@@ -7,3 +7,10 @@ compatibility_date = "2026-10-01"
 [[r2_buckets]]
 binding = "MODELS"
 bucket_name = "lms-web-models"
+
+# Accounts, license keys, devices and sessions (functions/api/[[path]].ts)
+[[d1_databases]]
+binding = "DB"
+database_name = "lms-auth"
+database_id = "2a69b52c-8388-4c5c-a2e1-3eabbf995c0c"
+migrations_dir = "migrations"

@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Tooltip } from "react-tooltip";
 import { IS_WEB } from "@/lib/platform";
 import { installWebRuntime } from "@/lib/web/runtime";
+import AuthGate from "@/components/auth-gate";
 
 // On the website, the browser takes the place of the Electron main process
 if (IS_WEB) installWebRuntime();
@@ -26,7 +27,9 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
       <base href="./" />
 
       <Provider>
-        <Component {...pageProps} data-theme="upscayl" />
+        <AuthGate>
+          <Component {...pageProps} data-theme="upscayl" />
+        </AuthGate>
         <Toaster />
         <Tooltip
           className="z-[999] max-w-sm break-words !bg-secondary"

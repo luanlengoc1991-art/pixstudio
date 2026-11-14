@@ -10,6 +10,7 @@ import { activeTabAtom, closeToolAtom, openToolAtom, openToolsAtom } from "@/ato
 import { chatGptActivatedAtom, chatGptConnectionAtom, chatGptQueueAtom } from "@/atoms/chatgpt-atom";
 import UpscaylSVGLogo from "@/components/icons/upscayl-logo-svg";
 import Icon3D from "@/components/ui/icon-3d";
+import { AccountMenu } from "@/components/auth-gate";
 
 const THEME_KEY = "theme";
 const LIGHT = "pixstudio";
@@ -300,6 +301,7 @@ export default function TopBar({ version }: { version: string }) {
         </div>
         {version && <span className="hidden text-[10px] text-base-content/40 xl:inline">v{version}</span>}
         <ThemeToggle />
+        <AccountMenu />
         {IS_WEB ? <DownloadAppButton /> : <ChatGptStatus />}
       </div>
 
