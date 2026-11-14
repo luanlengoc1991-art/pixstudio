@@ -53,6 +53,8 @@ const createMainWindow = () => {
 
   mainWindow.once("ready-to-show", () => {
     if (!mainWindow) return;
+    // Open filling the screen (taskbar stays visible)
+    mainWindow.maximize();
     mainWindow.show();
   });
 
