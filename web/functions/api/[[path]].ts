@@ -913,9 +913,9 @@ async function countActiveSuperAdmins(db: D1Database): Promise<number> {
 
 // ---------- admin routes ----------
 
-async function admin(request: Request, env: Env, parts: string[], body: Row, now: number) {
+async function admin(request: Request, env: Env, parts: string[], body: Row, now: number, existingSession?: SessionUser) {
   const db = env.DB;
-  const s = await authenticate(request, env, now);
+  const s = existingSession ?? (await authenticate(request, env, now));
   if (!isConsoleRole(s.role)) fail(403, "FORBIDDEN", "Tài khoản này không có quyền truy cập trang quản trị");
   const perms = permissionsFor(s.role);
   const meta = clientMeta(request, env);
@@ -925,11 +925,39 @@ async function admin(request: Request, env: Env, parts: string[], body: Row, now
   const todayKey = vnDayKey(now);
   const weekCutoffKey = vnDayKey(now - 6 * DAY);
 
-  // Refresh admin's own activity on dashboard polling (lightweight single-row update)
-  await db
-    .prepare("UPDATE sessions SET last_seen_at = ?, ip = CASE WHEN ? != '' THEN ? ELSE ip END WHERE token_hash = ?")
-    .bind(now, meta.ip, meta.ip, s.token_hash)
-    .run();
+  // Refresh admin's own activity once per HTTP request (skipped for internal snapshot fan-out)
+  if (!existingSession) {
+    await db
+      .prepare("UPDATE sessions SET last_seen_at = ?, expires_at = ?, ip = CASE WHEN ? != '' THEN ? ELSE ip END WHERE token_hash = ?")
+      .bind(now, now + SESSION_DAYS * DAY, meta.ip, meta.ip, s.token_hash)
+      .run();
+  }
+
+  // Single-roundtrip dashboard snapshot: 1 auth + 1 session update instead of 9 HTTP calls
+  if (area === "snapshot" && m === "GET") {
+    const [stats, users, keys, sessions, devices, logs, failures, roles] = await Promise.all([
+      admin(request, env, ["stats"], {}, now, s),
+      admin(request, env, ["users"], {}, now, s),
+      admin(request, env, ["keys"], {}, now, s),
+      admin(request, env, ["sessions"], {}, now, s),
+      admin(request, env, ["devices"], {}, now, s),
+      admin(request, env, ["logs"], {}, now, s),
+      admin(request, env, ["failures"], {}, now, s),
+      admin(request, env, ["roles"], {}, now, s),
+    ]);
+    return {
+      me: userView(s),
+      stats,
+      users: (users as { users: unknown[] }).users,
+      keys: (keys as { keys: unknown[] }).keys,
+      sessions: (sessions as { sessions: unknown[] }).sessions,
+      devices: (devices as { devices: unknown[] }).devices,
+      logs: (logs as { logs: unknown[] }).logs,
+      failures: (failures as { failures: unknown[] }).failures,
+      roles,
+      serverTime: now,
+    };
+  }
 
   if (area === "stats" && m === "GET") {
     const one = async (sql: string, ...args: unknown[]) =>

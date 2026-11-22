@@ -32,17 +32,35 @@ try {
   }
   // Admin page for accounts and license keys (talks to functions/api)
   fs.cpSync(path.join(root, "web", "admin"), path.join(dist, "admin"), { recursive: true });
-  // Pages serves _headers from the output root
+  // Pages serves _headers from the output root (ldc-cache-optimization)
   fs.writeFileSync(
     path.join(dist, "_headers"),
     [
+      "/",
+      "  Cache-Control: public, max-age=0, must-revalidate",
+      "/index.html",
+      "  Cache-Control: public, max-age=0, must-revalidate",
       "/_next/static/*",
       "  Cache-Control: public, max-age=31536000, immutable",
       "/icons3d/*",
-      "  Cache-Control: public, max-age=604800",
+      "  Cache-Control: public, max-age=604800, stale-while-revalidate=86400",
+      "/model-comparison/*",
+      "  Cache-Control: public, max-age=604800, stale-while-revalidate=86400",
+      "/wasm/*",
+      "  Cache-Control: public, max-age=604800, stale-while-revalidate=86400",
+      "/*.png",
+      "  Cache-Control: public, max-age=604800, stale-while-revalidate=86400",
+      "/*.svg",
+      "  Cache-Control: public, max-age=604800, stale-while-revalidate=86400",
+      "/*.webp",
+      "  Cache-Control: public, max-age=604800, stale-while-revalidate=86400",
+      "/*.jpg",
+      "  Cache-Control: public, max-age=604800, stale-while-revalidate=86400",
       "/admin/*",
       "  Cache-Control: no-store",
       "  X-Robots-Tag: noindex",
+      "/api/*",
+      "  Cache-Control: no-store",
       "",
     ].join("\n"),
   );

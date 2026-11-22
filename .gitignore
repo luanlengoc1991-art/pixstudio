@@ -61,3 +61,4 @@ dockerfile
 
 # bản build Next.js ở thư mục gốc
 /.next/
+.wrangler/

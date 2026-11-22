@@ -95,6 +95,7 @@ function SystemStats() {
   useEffect(() => {
     let alive = true;
     const read = async () => {
+      if (document.hidden) return;
       try {
         const next = await window.electron.invoke(ELECTRON_COMMANDS.GET_SYSTEM_STATS, undefined);
         if (alive) setStats(next);
@@ -102,9 +103,14 @@ function SystemStats() {
     };
     read();
     const timer = window.setInterval(read, 3000);
+    const onVis = () => {
+      if (!document.hidden) read();
+    };
+    document.addEventListener("visibilitychange", onVis);
     return () => {
       alive = false;
       window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
 

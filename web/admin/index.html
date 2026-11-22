@@ -5,21 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="dark">
-<title>LMS Studio · Quản trị</title>
+<title>LMS Studio · Trung tâm quản trị</title>
 <link rel="icon" href="/logo-lms.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#000;--bg2:#0a0a0a;--panel:rgba(25,25,25,.62);--panel-solid:#111;--raise:#191919;
-  --line:#262626;--line2:#363636;
-  --text:#fff;--muted:#c1c1c1;--faint:#666;
+  --bg:#000;--bg2:#0a0a0a;--panel:rgba(22,22,26,.72);--panel-solid:#101116;--raise:#191a22;
+  --line:#252630;--line2:#363846;
+  --text:#fff;--muted:#b9bccb;--faint:#767a8f;
   --brand:#f6bc17;--brand2:#ffd55d;--brand3:#f6bc17;
   --grad:linear-gradient(135deg,#f6bc17 0%,#ffd55d 100%);
-  --border-grad:linear-gradient(180deg,#424242,#262626);
-  --ok:#34d399;--ok-bg:rgba(52,211,153,.12);--bad:#fb7185;--bad-bg:rgba(251,113,133,.12);--warn:#fbbf24;--warn-bg:rgba(251,191,36,.12);--info:#38bdf8;--info-bg:rgba(56,189,248,.12);
+  --border-grad:linear-gradient(180deg,#444656,#23242e);
+  --ok:#34d399;--ok-bg:rgba(52,211,153,.13);--bad:#fb7185;--bad-bg:rgba(251,113,133,.13);
+  --warn:#fbbf24;--warn-bg:rgba(251,191,36,.13);--info:#38bdf8;--info-bg:rgba(56,189,248,.13);
+  --purple:#c084fc;--purple-bg:rgba(192,132,252,.13);
   --r-sm:8px;--r:12px;--r-lg:18px;--r-xl:24px;
-  --shadow:0 10px 40px -12px rgba(0,0,0,.8);--glow:0 8px 30px -10px rgba(246,188,23,.55);
+  --shadow:0 12px 44px -14px rgba(0,0,0,.85);--glow:0 8px 30px -10px rgba(246,188,23,.55);
   --mono:ui-monospace,"Cascadia Code",Consolas,monospace;
 }
 *{box-sizing:border-box}
@@ -27,54 +29,60 @@ html,body{min-height:100%}
 body{margin:0;font:14px/1.5 "Space Grotesk","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:var(--text);
   background:radial-gradient(900px 520px at 85% -12%,rgba(246,188,23,.13),transparent 60%),radial-gradient(800px 500px at -10% 30%,rgba(41,25,166,.22),transparent 60%),radial-gradient(700px 500px at 60% 120%,rgba(224,30,90,.12),transparent 60%),var(--bg);
   background-attachment:fixed;-webkit-font-smoothing:antialiased}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.5;
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.45;
   background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:64px 64px;
   -webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 75%);mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 75%)}
 ::selection{background:rgba(246,188,23,.4);color:#fff}
-/* capi-style: gradient hairline border on glass surfaces */
 .gb{position:relative;border:0!important}
 .gb::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:var(--border-grad);pointer-events:none;
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--brand)}
 .eyebrow::before{content:"";width:18px;height:2px;background:var(--brand);border-radius:2px}
-.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
-.reveal.in{opacity:1;transform:none}
 a{color:var(--brand3)}
-svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-svg.i.sm{width:15px;height:15px}
+svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+svg.i.sm{width:14px;height:14px}
 
 /* ---------- buttons & fields ---------- */
-button,input,select{font:inherit;color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--line2);background:rgba(255,255,255,.04);cursor:pointer;font-weight:600;white-space:nowrap;transition:background .15s,border-color .15s,transform .05s,box-shadow .15s}
-.btn:hover{background:rgba(255,255,255,.08);border-color:rgba(148,156,220,.4)}
+.btn:hover{background:rgba(255,255,255,.09);border-color:rgba(148,156,220,.45)}
 .btn:active{transform:translateY(1px)}
-.btn:focus-visible,.ib:focus-visible,.field input:focus-visible{outline:2px solid var(--brand3);outline-offset:2px}
+.btn:focus-visible,.ib:focus-visible,.field input:focus-visible,.field select:focus-visible{outline:2px solid var(--brand3);outline-offset:2px}
 .btn.primary{background:var(--brand);border:0;color:#000;text-transform:uppercase;letter-spacing:.04em;font-weight:700;box-shadow:var(--glow)}
 .btn.primary:hover{background:#ffd55d;transform:translateY(-1px);box-shadow:0 12px 34px -10px rgba(246,188,23,.75)}
 .btn.danger{background:var(--bad-bg);border-color:rgba(251,113,133,.35);color:var(--bad)}
+.btn.danger:hover{background:rgba(251,113,133,.22)}
 .btn.ghost{background:transparent;border-color:transparent}
-.btn.sm{height:32px;padding:0 13px;font-size:12.5px;border-radius:999px}
-.btn[disabled]{opacity:.6;cursor:wait}
-.ib{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;position:relative;transition:.15s}
-.ib:hover{background:rgba(255,255,255,.07);color:var(--text);border-color:var(--line)}
+.btn.sm{height:32px;padding:0 13px;font-size:12.5px}
+.btn.xs{height:26px;padding:0 10px;font-size:11.5px}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.ib{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;position:relative;transition:.15s}
+.ib:hover{background:rgba(255,255,255,.08);color:var(--text);border-color:var(--line)}
 .ib.bad:hover{background:var(--bad-bg);color:var(--bad);border-color:rgba(251,113,133,.3)}
 .ib.ok:hover{background:var(--ok-bg);color:var(--ok)}
-.ib[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#05060c;color:#fff;font-size:12px;font-weight:500;padding:4px 8px;border-radius:7px;white-space:nowrap;pointer-events:none;z-index:5;border:1px solid var(--line)}
-.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ib.warn:hover{background:var(--warn-bg);color:var(--warn)}
+.ib.info:hover{background:var(--info-bg);color:var(--info)}
+.ib[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#05060c;color:#fff;font-size:11.5px;font-weight:500;padding:4px 8px;border-radius:7px;white-space:nowrap;pointer-events:none;z-index:25;border:1px solid var(--line2)}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
 .field>span{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em}
 .field>small{font-size:11.5px;color:var(--faint)}
-.field input,.field select,.search input{height:40px;width:100%;background:rgba(5,6,14,.55);border:1px solid var(--line2);border-radius:var(--r);padding:0 12px;transition:border-color .15s,box-shadow .15s}
-.field input:hover,.field select:hover{border-color:rgba(148,156,220,.4)}
-.field input:focus,.field select:focus,.search input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px rgba(246,188,23,.18)}
-.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239aa1c3' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-.field select option{background:var(--panel-solid)}
+.field input,.field select,.search input,.sel{height:40px;width:100%;background:rgba(5,6,14,.62);border:1px solid var(--line2);border-radius:var(--r);padding:0 12px;transition:border-color .15s,box-shadow .15s}
+.field input:hover,.field select:hover,.sel:hover{border-color:rgba(148,156,220,.45)}
+.field input:focus,.field select:focus,.search input:focus,.sel:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(246,188,23,.18)}
+.field input:disabled,.field select:disabled{opacity:.45;cursor:not-allowed}
+.field select,.sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239aa1c3' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.field select option,.sel option{background:var(--panel-solid)}
+.sel{height:34px;width:auto;font-size:12.5px;border-radius:999px;padding:0 30px 0 12px}
 .with-icon{position:relative}
 .with-icon svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none}
 .with-icon input{padding-left:38px!important}
+.with-eye{position:relative}
+.with-eye .eye-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%)}
+.with-eye input{padding-right:38px!important}
 
 /* ---------- login ---------- */
 .login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
-.login{width:100%;max-width:400px;background:var(--panel);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line2);border-radius:var(--r-xl);padding:36px 30px 28px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.login{width:100%;max-width:410px;background:var(--panel);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line2);border-radius:var(--r-xl);padding:36px 30px 28px;box-shadow:var(--shadow);position:relative;overflow:hidden}
 .logo-glow{position:relative;width:76px;height:76px;margin:0 auto 14px}
 .logo-glow::before{content:"";position:absolute;inset:6px;border-radius:24px;background:var(--grad);filter:blur(22px);opacity:.55;animation:breathe 4s ease-in-out infinite}
 @keyframes breathe{50%{opacity:.85;transform:scale(1.08)}}
@@ -83,172 +91,212 @@ button,input,select{font:inherit;color:inherit}
 .login h1 em{font-style:normal;color:var(--brand)}
 .login p.sub{margin:4px 0 24px;text-align:center;color:var(--muted);font-size:13px}
 .login .field{margin-bottom:14px}
-.login .btn{width:100%;height:44px;margin-top:6px;font-size:15px}
+.login .btn.primary{width:100%;height:44px;margin-top:6px;font-size:15px}
 .alert{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:var(--r);font-size:13px;margin-top:12px}
 .alert.bad{background:var(--bad-bg);color:var(--bad);border:1px solid rgba(251,113,133,.25)}
 .alert:empty{display:none}
+.boot{min-height:100vh;display:grid;place-items:center;color:var(--muted);gap:12px}
+.spin{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* ---------- shell ---------- */
-header.top{position:sticky;top:0;z-index:20;background:rgba(10,11,20,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
-.top-in{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:12px 20px}
+/* ---------- shell & live bar ---------- */
+header.top{position:sticky;top:0;z-index:20;background:rgba(8,9,16,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 20px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:11px}
-.brand .logo-glow{width:40px;height:40px;margin:0}
+.brand .logo-glow{width:38px;height:38px;margin:0}
 .brand .logo-glow::before{filter:blur(12px);inset:4px;border-radius:12px}
 .brand b{display:block;font-size:16px;font-weight:800;letter-spacing:-.01em;line-height:1.1}
-.brand small{color:var(--muted);font-size:12px}
+.brand small{color:var(--muted);font-size:11.5px}
 .sp{flex:1}
-.me{display:flex;align-items:center;gap:10px;padding:4px 6px 4px 4px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.03)}
+.livebar{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03);font-size:12px;color:var(--muted)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(52,211,153,.7);animation:livepulse 2s infinite}
+.live-dot.off{background:var(--faint);animation:none}
+@keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.7)}70%{box-shadow:0 0 0 7px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.livebar b{color:var(--text);font-variant-numeric:tabular-nums}
+.livebar .sep{width:1px;height:14px;background:var(--line2)}
+.me{display:flex;align-items:center;gap:9px;padding:4px 6px 4px 4px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.03)}
 .me .who{line-height:1.15;padding-right:4px}
 .me .who b{font-size:13px;display:block}
-.crown{font-family:inherit;display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:linear-gradient(135deg,rgba(251,191,36,.25),rgba(217,70,239,.25));color:#fde68a;border:1px solid rgba(251,191,36,.35)}
-main{max-width:1280px;margin:0 auto;padding:24px 20px 60px}
-.hello{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-.hello h2{margin:6px 0 0;font-size:clamp(26px,3.4vw,40px);font-weight:700;letter-spacing:-.04em;line-height:1.05;text-transform:uppercase}
+.crown{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1px solid rgba(251,191,36,.35)}
+.crown.super_admin{background:linear-gradient(135deg,rgba(251,191,36,.28),rgba(217,70,239,.25));color:#fde68a}
+.crown.admin{background:var(--info-bg);color:var(--info);border-color:rgba(56,189,248,.35)}
+.crown.staff{background:var(--purple-bg);color:var(--purple);border-color:rgba(192,132,252,.35)}
+main{max-width:1440px;margin:0 auto;padding:22px 20px 64px}
+.hello{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.hello h2{margin:4px 0 0;font-size:clamp(22px,2.8vw,34px);font-weight:700;letter-spacing:-.04em;line-height:1.08;text-transform:uppercase}
 .hello h2 em{font-style:normal;color:var(--brand)}
-.hello p{margin:2px 0 0;color:var(--muted)}
+.hello p{margin:3px 0 0;color:var(--muted);font-size:13.5px}
+.hello-acts{display:flex;gap:8px;flex-wrap:wrap}
 
 /* ---------- stats ---------- */
-.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:22px}
-.stat{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 16px 14px;backdrop-filter:blur(12px)}
-.stat .ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;margin-bottom:12px}
-.stat b{display:block;font-size:34px;font-weight:700;letter-spacing:-.05em;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.stat span{display:block;margin-top:6px;color:var(--muted);font-size:12.5px}
-.stat::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;opacity:.16;filter:blur(8px);background:currentColor}
-.c1{color:#f6bc17}.c2{color:#2fea74}.c3{color:#15a4cf}.c4{color:#e01e5a}.c5{color:#ffd55d}
-.stat{transition:transform .25s,box-shadow .25s}.stat:hover{transform:translateY(-3px);box-shadow:0 18px 40px -18px currentColor}
-.stat .ico{background:color-mix(in srgb,currentColor 16%,transparent)}
-.stat b,.stat span{color:var(--text)}.stat span{color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.stat{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 15px 13px;backdrop-filter:blur(12px);cursor:pointer;text-align:left;transition:transform .2s,box-shadow .2s}
+.stat:hover{transform:translateY(-2px);box-shadow:0 16px 36px -18px currentColor}
+.stat .toprow{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.stat .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,currentColor 16%,transparent)}
+.stat b{display:block;font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--text)}
+.stat span.lbl{display:block;margin-top:5px;color:var(--muted);font-size:12px;font-weight:600}
+.stat small{display:block;margin-top:4px;color:var(--faint);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat::after{content:"";position:absolute;right:-26px;top:-26px;width:96px;height:96px;border-radius:50%;opacity:.14;filter:blur(8px);background:currentColor}
+.c1{color:#f6bc17}.c2{color:#34d399}.c3{color:#38bdf8}.c4{color:#c084fc}.c5{color:#ffd55d}.c6{color:#fb7185}
 
 /* ---------- tabs ---------- */
-.tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);margin-bottom:18px;flex-wrap:wrap}
-.tabs button{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:12.5px;cursor:pointer;transition:.15s}
+.tabs-wrap{overflow-x:auto;margin-bottom:18px;padding-bottom:2px}
+.tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);white-space:nowrap}
+.tabs button{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 15px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-size:12px;cursor:pointer;transition:.15s}
 .tabs button:hover{color:var(--text)}
 .tabs button.on{background:var(--brand);color:#000;box-shadow:var(--glow)}
-.tabs button.on .cnt{background:rgba(0,0,0,.18)}
-.tabs .cnt{font-size:11px;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.12)}
+.tabs button.on .cnt{background:rgba(0,0,0,.2);color:#000}
+.tabs .cnt{font-size:11px;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.11);font-variant-numeric:tabular-nums}
+.tabs .cnt.live{background:var(--ok-bg);color:var(--ok)}
+.tabs button.on .cnt.live{background:rgba(0,0,0,.22);color:#000}
 
 /* ---------- cards ---------- */
-.card{background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px;margin-bottom:18px}
-.card-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-.card-h .ico{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:rgba(246,188,23,.16);color:#f6bc17}
-.card-h h3{margin:0;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:-.01em}
+.card{background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:18px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.card-hl{display:flex;align-items:center;gap:12px}
+.card-h .ico{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:rgba(246,188,23,.16);color:#f6bc17;flex:none}
+.card-h h3{margin:0;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:-.01em}
 .card-h p{margin:1px 0 0;color:var(--muted);font-size:12.5px}
-.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;align-items:end}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;align-items:end}
 .form-grid .actions{display:flex;gap:8px}
 .form-grid .actions .btn{flex:1;height:40px}
-.hint{display:flex;gap:8px;align-items:flex-start;margin-top:14px;padding:10px 12px;border-radius:var(--r);background:var(--info-bg);color:#bae6fd;font-size:12.5px;border:1px solid rgba(56,189,248,.2)}
-.result{margin-top:16px;border:1px dashed rgba(246,188,23,.6);border-radius:var(--r);background:rgba(246,188,23,.08);padding:14px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;animation:pop .25s ease}
-.result pre{flex:1;min-width:220px;margin:0;font:13px/1.7 var(--mono);white-space:pre-wrap;word-break:break-all;user-select:all}
+.hint{display:flex;gap:8px;align-items:flex-start;margin-top:12px;padding:10px 12px;border-radius:var(--r);background:var(--info-bg);color:#bae6fd;font-size:12.5px;border:1px solid rgba(56,189,248,.2)}
+.result{margin-top:14px;border:1px dashed rgba(246,188,23,.6);border-radius:var(--r);background:rgba(246,188,23,.08);padding:12px 14px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;animation:pop .2s ease}
+.result pre{flex:1;min-width:220px;margin:0;font:12.5px/1.65 var(--mono);white-space:pre-wrap;word-break:break-all;user-select:all}
 @keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
 
 /* ---------- table ---------- */
 .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-.search{flex:1;min-width:200px;max-width:420px}
+.search{flex:1;min-width:210px;max-width:360px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer}
-.chip.on{background:rgba(246,188,23,.18);border-color:rgba(246,188,23,.5);color:#ffd55d}
+.chip{height:30px;padding:0 11px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.chip:hover{color:var(--text);border-color:rgba(148,156,220,.45)}
+.chip.on{background:rgba(246,188,23,.18);border-color:rgba(246,188,23,.55);color:#ffd55d}
 .tbl{overflow-x:auto;margin:0 -20px;padding:0 20px}
 table{width:100%;border-collapse:separate;border-spacing:0}
-th{position:sticky;top:0;text-align:left;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+th{position:sticky;top:0;text-align:left;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
 tbody tr{transition:background .12s}
-tbody tr:hover{background:rgba(255,255,255,.025)}
+tbody tr:hover{background:rgba(255,255,255,.028)}
 tbody tr:last-child td{border-bottom:0}
-.user{display:flex;align-items:center;gap:11px;min-width:0}
-.av{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:14px;color:#fff;flex:none;text-transform:uppercase}
-.user b{display:block;font-weight:700}
-.user small{display:block;color:var(--muted);font-size:12px;max-width:260px;overflow:hidden;text-overflow:ellipsis}
-.keytxt{display:inline-flex;align-items:center;gap:4px;font:600 13px var(--mono);letter-spacing:.03em;padding:4px 4px 4px 10px;border-radius:9px;background:rgba(5,6,14,.6);border:1px solid var(--line)}
-.pill{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.user{display:flex;align-items:center;gap:10px;min-width:0}
+.av-wrap{position:relative;flex:none}
+.av{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:800;font-size:13.5px;color:#fff;text-transform:uppercase}
+.on-dot{position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;border-radius:50%;border:2px solid #0d0e14;background:var(--faint)}
+.on-dot.live{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.user b{display:block;font-weight:700;font-size:13.5px}
+.user small{display:block;color:var(--muted);font-size:11.5px;max-width:230px;overflow:hidden;text-overflow:ellipsis}
+.stack{display:flex;flex-direction:column;gap:2px}
+.stack small{color:var(--faint);font-size:11.5px}
+.mono{font-family:var(--mono);font-size:12px}
+.keytxt{display:inline-flex;align-items:center;gap:4px;font:600 12.5px var(--mono);letter-spacing:.02em;padding:3px 4px 3px 9px;border-radius:9px;background:rgba(5,6,14,.65);border:1px solid var(--line)}
+.pill{display:inline-flex;align-items:center;gap:5px;height:23px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
 .pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .pill.ok{background:var(--ok-bg);color:var(--ok)}
 .pill.bad{background:var(--bad-bg);color:var(--bad)}
 .pill.warn{background:var(--warn-bg);color:var(--warn)}
 .pill.info{background:var(--info-bg);color:var(--info)}
-.pill.gold{background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(217,70,239,.18));color:#fde68a}
+.pill.purple{background:var(--purple-bg);color:var(--purple)}
+.pill.gold{background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(217,70,239,.2));color:#fde68a}
 .pill.mute{background:rgba(255,255,255,.06);color:var(--muted)}
-.meter{display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:0;background:none;padding:0;color:inherit}
-.meter i{display:block;width:54px;height:6px;border-radius:9px;background:rgba(255,255,255,.08);overflow:hidden}
+.meter{display:inline-flex;align-items:center;gap:7px;cursor:pointer;border:0;background:none;padding:0;color:inherit}
+.meter i{display:block;width:48px;height:6px;border-radius:9px;background:rgba(255,255,255,.09);overflow:hidden}
 .meter i u{display:block;height:100%;background:var(--grad);border-radius:9px}
-.meter span{font-variant-numeric:tabular-nums;font-weight:600;font-size:13px}
+.meter span{font-variant-numeric:tabular-nums;font-weight:600;font-size:12.5px}
 .acts{display:flex;gap:2px;justify-content:flex-end}
 .muted{color:var(--muted)}
-.empty{text-align:center;padding:40px 10px;color:var(--muted)}
-.empty .ico{width:52px;height:52px;margin:0 auto 10px;border-radius:16px;display:grid;place-items:center;background:rgba(255,255,255,.05)}
+.faint{color:var(--faint)}
+.empty{text-align:center;padding:34px 10px;color:var(--muted)}
+.empty .ico{width:48px;height:48px;margin:0 auto 10px;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.05)}
 
-/* ---------- dialog ---------- */
-dialog{padding:0;border:1px solid var(--line2);border-radius:var(--r-xl);background:var(--panel-solid);color:var(--text);width:min(460px,calc(100vw - 32px));box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}
-dialog.wide{width:min(680px,calc(100vw - 32px))}
-dialog::backdrop{background:rgba(3,4,10,.7);backdrop-filter:blur(4px)}
-dialog[open]{animation:pop .2s ease}
-.dh{display:flex;align-items:center;gap:12px;padding:20px 22px 0}
+/* ---------- dialog & 360 detail ---------- */
+dialog{padding:0;border:1px solid var(--line2);border-radius:var(--r-xl);background:var(--panel-solid);color:var(--text);width:min(480px,calc(100vw - 28px));max-height:calc(100vh - 28px);overflow:auto;box-shadow:0 30px 90px -20px rgba(0,0,0,.9)}
+dialog.wide{width:min(760px,calc(100vw - 28px))}
+dialog.xl{width:min(960px,calc(100vw - 28px))}
+dialog::backdrop{background:rgba(3,4,10,.76);backdrop-filter:blur(5px)}
+dialog[open]{animation:pop .18s ease}
+.dh{position:sticky;top:0;z-index:2;background:var(--panel-solid);display:flex;align-items:center;gap:12px;padding:18px 22px 14px;border-bottom:1px solid var(--line)}
 .dh .ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(246,188,23,.18);color:#f6bc17;flex:none}
 .dh .ico.bad{background:var(--bad-bg);color:var(--bad)}
 .dh h3{margin:0;font-size:17px}
-.dh p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.dh p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
 .db{padding:18px 22px;display:grid;gap:14px}
-.df{display:flex;justify-content:flex-end;gap:8px;padding:0 22px 20px}
-.quick{display:flex;gap:6px;flex-wrap:wrap}
-.quick button{height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer}
+.df{position:sticky;bottom:0;background:var(--panel-solid);display:flex;justify-content:flex-end;gap:8px;padding:12px 22px 18px;border-top:1px solid var(--line)}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.quick button{height:27px;padding:0 10px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer}
 .quick button:hover{color:var(--text);border-color:var(--brand)}
 .devs{display:grid;gap:8px}
-.dev{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--r);background:rgba(255,255,255,.02)}
-.dev .ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--info-bg);color:var(--info)}
-.dev div{flex:1;min-width:0}
-.dev b{display:block}
-.dev small{color:var(--muted);font-size:12px}
+.dev{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:var(--r);background:rgba(255,255,255,.02)}
+.dev .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--info-bg);color:var(--info);flex:none}
+.dev .info{flex:1;min-width:0}
+.dev b{display:block;font-size:13.5px}
+.dev small{color:var(--muted);font-size:11.5px;display:block}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.dbox{padding:11px 13px;border-radius:var(--r);border:1px solid var(--line);background:rgba(255,255,255,.025)}
+.dbox span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700}
+.dbox b{display:block;font-size:15px;margin-top:3px}
+.dbox small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.dsec h4{margin:4px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--brand2);display:flex;align-items:center;justify-content:space-between}
+.bars{display:grid;gap:6px}
+.bar-row{display:grid;grid-template-columns:86px 1fr 90px;gap:10px;align-items:center;font-size:12px}
+.bar-track{height:8px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
+.bar-fill{height:100%;border-radius:999px;background:var(--grad)}
+
+/* ---------- rbac matrix ---------- */
+.matrix td,.matrix th{text-align:center}
+.matrix td:first-child,.matrix th:first-child{text-align:left;white-space:normal}
+.yes{color:var(--ok);font-weight:700}
+.no{color:var(--faint)}
 
 /* ---------- toast ---------- */
-.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);display:flex;align-items:center;gap:8px;background:#05060c;border:1px solid var(--line2);border-radius:999px;padding:10px 18px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:50;box-shadow:var(--shadow);max-width:calc(100vw - 32px)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);display:flex;align-items:center;gap:8px;background:#05060c;border:1px solid var(--line2);border-radius:999px;padding:10px 18px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:60;box-shadow:var(--shadow);max-width:calc(100vw - 32px)}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .toast.ok svg{color:var(--ok)}.toast.bad svg{color:var(--bad)}
 
 /* ---------- guide ---------- */
-.guide{display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start}
+.guide{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:start}
 .toc{position:sticky;top:84px;display:grid;gap:2px;padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg)}
 .toc a{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;color:var(--muted);text-decoration:none;font-weight:600;font-size:13px}
 .toc a:hover{background:rgba(255,255,255,.05);color:var(--text)}
 .toc a i{font-style:normal;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:11px;background:rgba(246,188,23,.18);color:#f6bc17}
 .gsec{scroll-margin-top:84px}
-.gsec h3{display:flex;align-items:center;gap:10px;margin:0 0 4px;font-size:18px}
-.gsec h3 i{font-style:normal;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:13px;background:var(--brand);color:#000}
-.gsec h3{text-transform:uppercase;letter-spacing:-.02em}
-.gsec>p{margin:0 0 16px;color:var(--muted)}
-.gsec h4{margin:18px 0 10px;font-size:14px;color:#ffd55d}
-.steps{display:grid;gap:10px;counter-reset:s;margin:0;padding:0;list-style:none}
-.steps li{position:relative;padding:12px 14px 12px 50px;border:1px solid var(--line);border-radius:var(--r);background:rgba(255,255,255,.02)}
-.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:12px;top:11px;width:26px;height:26px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:12.5px;background:rgba(246,188,23,.2);color:#ffd55d}
+.gsec h3{display:flex;align-items:center;gap:10px;margin:0 0 4px;font-size:17px;text-transform:uppercase;letter-spacing:-.02em}
+.gsec h3 i{font-style:normal;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:12.5px;background:var(--brand);color:#000}
+.gsec>p{margin:0 0 14px;color:var(--muted)}
+.gsec h4{margin:16px 0 8px;font-size:13.5px;color:#ffd55d}
+.steps{display:grid;gap:9px;counter-reset:s;margin:0;padding:0;list-style:none}
+.steps li{position:relative;padding:11px 14px 11px 46px;border:1px solid var(--line);border-radius:var(--r);background:rgba(255,255,255,.02)}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:12px;top:10px;width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:12px;background:rgba(246,188,23,.2);color:#ffd55d}
 .gt{width:100%;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .gt td,.gt th{white-space:normal;vertical-align:top}
 .gt th{position:static;background:rgba(255,255,255,.03)}
-.gt td:first-child{font-weight:600;width:34%}
-.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
-.kv div{padding:14px;border:1px solid var(--line);border-radius:var(--r);background:rgba(255,255,255,.02)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.kv div{padding:13px;border:1px solid var(--line);border-radius:var(--r);background:rgba(255,255,255,.02)}
 .kv b{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.kv span{color:var(--muted);font-size:13px}
+.kv span{color:var(--muted);font-size:12.5px}
 .note{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r);background:var(--warn-bg);border:1px solid rgba(251,191,36,.25);color:#fde68a;font-size:13px;margin-top:12px}
-code,kbd{font:12.5px var(--mono);padding:2px 6px;border-radius:6px;background:rgba(5,6,14,.7);border:1px solid var(--line)}
+code,kbd{font:12px var(--mono);padding:2px 6px;border-radius:6px;background:rgba(5,6,14,.7);border:1px solid var(--line)}
 
 /* ---------- responsive ---------- */
-@media (max-width:1100px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:1200px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:860px){
-  .guide{grid-template-columns:1fr}.toc{position:static;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .guide{grid-template-columns:1fr}.toc{position:static;grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+  .livebar .hide-sm{display:none}
 }
 @media (max-width:760px){
-  .top-in{padding:10px 16px}.brand small,.me .who{display:none}
-  main{padding:16px 16px 50px}
-  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat:last-child{grid-column:1/-1}
-  .card{padding:16px}
+  .top-in{padding:10px 14px}.brand small,.me .who{display:none}
+  main{padding:14px 14px 50px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .card{padding:15px}
   .tbl{margin:0;padding:0;overflow:visible}
   table.rows thead{display:none}
   table.rows,table.rows tbody,table.rows tr,table.rows td{display:block;width:100%}
   table.rows tr{border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;padding:6px 4px;background:rgba(255,255,255,.02)}
-  table.rows td{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;padding:7px 10px;white-space:normal}
-  table.rows td[data-l]::before{content:attr(data-l);font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
-  table.rows td.first{border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:4px}
+  table.rows td{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;padding:6px 10px;white-space:normal;text-align:right}
+  table.rows td[data-l]::before{content:attr(data-l);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);text-align:left}
+  table.rows td.first{border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:4px;text-align:left}
   .acts{justify-content:flex-start;flex-wrap:wrap}
-  .tabs{display:flex;flex-wrap:nowrap}.tabs button{flex:1;justify-content:center;padding:0 8px;gap:6px;font-size:11px;letter-spacing:.02em;white-space:nowrap}.tabs .cnt{display:none}
-  .hello h2{font-size:20px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -259,26 +307,117 @@ code,kbd{font:12.5px var(--mono);padding:2px 6px;border-radius:6px;background:rg
 <div class="toast" id="toast"></div>
 <script>
 const API = "/api";
-let token = localStorage.getItem("lms.admin.token") || "";
-let me = JSON.parse(localStorage.getItem("lms.admin.me") || "null");
-let tab = localStorage.getItem("lms.admin.tab") || "users";
-let data = { stats: {}, users: [], keys: [] };
-let filter = "", status = "all";
-const result = { users: "", keys: "" };
+const POLL_MS = 15000;
+const CACHE_KEY = "lms.admin.cache.v2";
 
+let token = localStorage.getItem("lms.admin.token") || "";
+let me = safeParse(localStorage.getItem("lms.admin.me"), null);
+let tab = localStorage.getItem("lms.admin.tab") || "users";
+let autoRefresh = localStorage.getItem("lms.admin.live") !== "0";
+let state = safeParse(sessionStorage.getItem(CACHE_KEY), null) || {
+  loaded: false,
+  now: Date.now(),
+  clockOffset: 0,
+  lastSyncAt: 0,
+  stats: {},
+  users: [],
+  keys: [],
+  sessions: [],
+  devices: [],
+  logs: [],
+  failures: [],
+  roles: null,
+};
+let filter = "";
+let statusFilter = "all";
+let sortBy = "newest";
+let logCat = "all";
+let shellMounted = false;
+let currentPaneTab = "";
+let refreshing = false;
+let pollTimer = null;
+let clockTimer = null;
+const createdResult = { users: "", keys: "", lastUserText: "", lastKeysText: "" };
+
+const ROLE_RANK = { user: 0, staff: 1, admin: 2, super_admin: 3 };
+const ROLE_INFO = {
+  super_admin: { label: "Quản trị tối cao", badge: "Tối cao", pill: "gold" },
+  admin: { label: "Quản trị viên", badge: "Quản trị", pill: "info" },
+  staff: { label: "Hỗ trợ / CTV", badge: "Hỗ trợ", pill: "purple" },
+  user: { label: "Người dùng", badge: "Người dùng", pill: "mute" },
+};
+const TOOL_NAMES = {
+  home: "Trang chủ", upscayl: "Kích nét ảnh", "remove-bg": "Xoá nền PNG", "layer-separation": "Bóc tách Layer",
+  "print-restoration": "Phục hồi ấn phẩm", "product-retoucher": "Retoucher SP", "render-2d-to-3d": "Render 2D→3D",
+  vector: "Chuyển Vector", "ad-designer": "Thiết kế QC", "fake-model": "Fake Model AI",
+  "signboard-mockup": "Phối cảnh biển hiệu", "old-photo-restoration": "Phục hồi ảnh cũ",
+  "die-cut": "Bế file in ấn", "id-photo": "Ảnh thẻ", chatgpt: "ChatGPT",
+};
+
+function safeParse(raw, fallback) {
+  try { return raw ? JSON.parse(raw) : fallback; } catch { return fallback; }
+}
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const serverNow = () => Date.now() + (state.clockOffset || 0);
 const fmt = (t) => (t ? new Date(t).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" }) : "—");
+const fmtSec = (t) => (t ? new Date(t).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—");
 const day = (t) => (t ? new Date(t).toLocaleDateString("vi-VN") : "—");
-function ago(t) {
-  if (!t) return "Chưa đăng nhập";
-  const m = Math.round((Date.now() - t) / 60000);
-  if (m < 1) return "Vừa xong"; if (m < 60) return m + " phút trước";
-  const h = Math.round(m / 60); if (h < 24) return h + " giờ trước";
-  const d = Math.round(h / 24); return d < 30 ? d + " ngày trước" : day(t);
+
+function ago(t, empty = "Chưa có") {
+  if (!t) return empty;
+  const sec = Math.max(0, Math.floor((serverNow() - t) / 1000));
+  if (sec < 45) return "Vừa xong";
+  if (sec < 3600) return Math.floor(sec / 60) + " phút trước";
+  const h = Math.floor(sec / 3600);
+  if (h < 24) return h + " giờ trước";
+  const d = Math.floor(h / 24);
+  return d < 30 ? d + " ngày trước" : day(t);
 }
 
-// ---- icons (simple line icons drawn for this page) ----
+function fmtDur(sec) {
+  const s = Math.max(0, Math.floor(Number(sec) || 0));
+  if (s === 0) return "0 phút";
+  if (s < 60) return s + " giây";
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + " phút";
+  const h = Math.floor(m / 60);
+  const rm = m % 60;
+  if (h < 24) return rm ? `${h}g ${rm}p` : `${h} giờ`;
+  const d = Math.floor(h / 24);
+  const rh = h % 24;
+  return rh ? `${d}n ${rh}g` : `${d} ngày`;
+}
+
+function fmtCountdown(exp, now = serverNow()) {
+  if (exp === null || exp === undefined) return '<span class="pill gold">Vĩnh viễn</span>';
+  const diff = exp - now;
+  if (diff <= 0) {
+    return `<span class="pill bad" title="Hết hạn lúc ${fmt(exp)}">Hết hạn · ${day(exp)}</span>`;
+  }
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+  let text = "";
+  if (days >= 1) text = `Còn ${days} ngày${hours % 24 ? " " + (hours % 24) + "g" : ""}`;
+  else if (hours >= 1) text = `Còn ${hours} giờ${mins % 60 ? " " + (mins % 60) + "p" : ""}`;
+  else text = `Còn ${Math.max(1, mins)} phút`;
+  const cls = days < 7 ? "warn" : "ok";
+  return `<span class="pill ${cls}" title="Hết hạn lúc ${fmt(exp)}">${text}</span>`;
+}
+
+function perms() {
+  return me?.permissions || {};
+}
+function canManage(target) {
+  if (!me || !target) return false;
+  if (me.role === "super_admin") return true;
+  if (target.id === me.id) return false;
+  return (ROLE_RANK[me.role] || 0) > (ROLE_RANK[target.role] || 0);
+}
+function isConsoleRole(r) { return r === "super_admin" || r === "admin" || r === "staff"; }
+
+// ---- SVG line icons ----
 const P = {
   users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
@@ -298,430 +437,1278 @@ const P = {
   ban: '<circle cx="12" cy="12" r="9"/><path d="m5.7 5.7 12.6 12.6"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
   unlink: '<path d="M9 15 6.5 17.5a3.5 3.5 0 0 1-5-5L4 10M15 9l2.5-2.5a3.5 3.5 0 0 1 5 5L20 14M8 2v3M2 8h3M16 22v-3M22 16h-3"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
   pass: '<rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4M12 15v2"/>',
   eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeoff: '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5.5 20 2 12 2 12a21.77 21.77 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c6.5 0 10 8 10 8a21.8 21.8 0 0 1-2.16 3.19M1 1l22 22"/>',
   alert: '<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>',
   crown: '<path d="m2 18 2-11 5 5 3-7 3 7 5-5 2 11z"/><path d="M4 21h16"/>',
+  shield: '<path d="M12 2 4 5v6c0 5.5 3.8 10 8 11 4.2-1 8-5.5 8-11V5z"/>',
   devices: '<rect x="2" y="4" width="14" height="10" rx="2"/><rect x="17" y="8" width="5" height="12" rx="1"/><path d="M6 18h6"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4z"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/>',
 };
 const I = (n, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24">${P[n] || ""}</svg>`;
 const hue = (s) => [...String(s)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
-const avatar = (name) => { const h = hue(name); return `<span class="av" style="background:linear-gradient(135deg,hsl(${h} 70% 55%),hsl(${(h + 50) % 360} 75% 45%))">${esc(String(name).slice(0, 1))}</span>`; };
+const avatar = (name, online = null) => {
+  const h = hue(name);
+  const dot = online === null ? "" : `<span class="on-dot ${online ? "live" : ""}" title="${online ? "Đang trực tuyến" : "Ngoại tuyến"}"></span>`;
+  return `<span class="av-wrap"><span class="av" style="background:linear-gradient(135deg,hsl(${h} 70% 52%),hsl(${(h + 50) % 360} 75% 42%))">${esc(String(name).slice(0, 1))}</span>${dot}</span>`;
+};
+const rolePill = (r) => {
+  const info = ROLE_INFO[r] || ROLE_INFO.user;
+  return `<span class="pill ${info.pill}">${esc(info.badge)}</span>`;
+};
 
 function toast(msg, kind = "ok") {
   const t = $("#toast");
   t.className = "toast " + kind;
   t.innerHTML = I(kind === "ok" ? "check" : "alert") + esc(msg);
   requestAnimationFrame(() => t.classList.add("on"));
-  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 2600);
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove("on"), 3000);
+}
+
+function clearSession(reason) {
+  token = "";
+  me = null;
+  shellMounted = false;
+  currentPaneTab = "";
+  localStorage.removeItem("lms.admin.token");
+  localStorage.removeItem("lms.admin.me");
+  sessionStorage.removeItem(CACHE_KEY);
+  stopTimers();
+  renderLogin($("#app"), reason || "");
 }
 
 async function api(path, method = "GET", body) {
   const r = await fetch(API + path, {
     method,
     headers: { "content-type": "application/json", ...(token ? { authorization: "Bearer " + token } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    cache: "no-store",
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) {
-    if (r.status === 401 && token) { token = ""; localStorage.removeItem("lms.admin.token"); render(); }
-    throw new Error(j.error?.message || "Lỗi " + r.status);
+    const code = j.error?.code || "";
+    const msg = j.error?.message || "Lỗi " + r.status;
+    if (token && (r.status === 401 || code === "DISABLED" || (r.status === 403 && (path === "/auth/me" || path.startsWith("/admin/snapshot"))))) {
+      clearSession(msg);
+    }
+    throw new Error(msg);
   }
   return j;
 }
-async function act(fn, ok) { try { await fn(); if (ok) toast(ok); await load(); } catch (e) { toast(e.message, "bad"); } }
 
-// ---- dialogs (replace the browser's prompt/confirm) ----
+async function act(fn, okMsg) {
+  try {
+    const res = await fn();
+    if (okMsg) toast(okMsg);
+    await loadAll(true);
+    return res;
+  } catch (e) {
+    toast(e.message || "Có lỗi xảy ra", "bad");
+  }
+}
+
+// ---- modal system ----
 const dlg = $("#dlg");
-function modal({ icon = "info", tone = "", title, text = "", fields = [], body = "", ok = "Xác nhận", okTone = "primary", cancel = "Huỷ", wide = false }) {
+function modal({ icon = "info", tone = "", title, text = "", fields = [], body = "", ok = "Xác nhận", okTone = "primary", cancel = "Huỷ", size = "", onOpen = null }) {
   return new Promise((resolve) => {
-    dlg.className = wide ? "wide" : "";
+    if (dlg.open) dlg.close();
+    dlg.className = size;
     dlg.innerHTML = `<form method="dialog" id="mf">
-      <div class="dh"><div class="ico ${tone}">${I(icon)}</div><div><h3>${esc(title)}</h3>${text ? `<p>${text}</p>` : ""}</div></div>
+      <div class="dh"><div class="ico ${tone}">${I(icon)}</div><div style="flex:1;min-width:0"><h3>${esc(title)}</h3>${text ? `<p>${text}</p>` : ""}</div></div>
       <div class="db">${body}${fields.map((f) => `<label class="field"><span>${esc(f.label)}</span>
-        ${f.options ? `<select name="${f.name}">${f.options.map(([v, l]) => `<option value="${v}" ${String(f.value) === String(v) ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`
-          : `<input name="${f.name}" type="${f.type || "text"}" value="${esc(f.value ?? "")}" ${f.min !== undefined ? `min="${f.min}"` : ""} ${f.required ? "required" : ""} ${f.minlength ? `minlength="${f.minlength}"` : ""} placeholder="${esc(f.placeholder || "")}" autocomplete="off">`}
-        ${f.quick ? `<div class="quick">${f.quick.map(([v, l]) => `<button type="button" data-q="${f.name}" data-v="${v}">${esc(l)}</button>`).join("")}</div>` : ""}
+        ${f.options
+          ? `<select name="${esc(f.name)}" ${f.disabled ? "disabled" : ""}>${f.options.map(([v, l]) => `<option value="${esc(v)}" ${String(f.value ?? "") === String(v) ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`
+          : `<input name="${esc(f.name)}" type="${esc(f.type || "text")}" value="${esc(f.value ?? "")}" ${f.min !== undefined ? `min="${f.min}"` : ""} ${f.max !== undefined ? `max="${f.max}"` : ""} ${f.required ? "required" : ""} ${f.minlength ? `minlength="${f.minlength}"` : ""} placeholder="${esc(f.placeholder || "")}" autocomplete="off">`}
+        ${f.quick ? `<div class="quick">${f.quick.map(([v, l]) => `<button type="button" data-q="${esc(f.name)}" data-v="${esc(v)}">${esc(l)}</button>`).join("")}</div>` : ""}
         ${f.hint ? `<small>${esc(f.hint)}</small>` : ""}</label>`).join("")}</div>
-      <div class="df">${cancel ? `<button type="button" class="btn ghost" id="mcancel">${esc(cancel)}</button>` : ""}<button class="btn ${okTone}" id="mok">${esc(ok)}</button></div></form>`;
+      <div class="df">${cancel ? `<button type="button" class="btn ghost" id="mcancel">${esc(cancel)}</button>` : ""}${ok ? `<button class="btn ${okTone}" id="mok">${esc(ok)}</button>` : ""}</div></form>`;
     let done = false;
-    const finish = (v) => { if (done) return; done = true; dlg.close(); resolve(v); };
-    dlg.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => { dlg.querySelector(`[name="${b.dataset.q}"]`).value = b.dataset.v; }));
-    $("#mcancel") && ($("#mcancel").onclick = () => finish(null));
+    const finish = (v) => { if (done) return; done = true; if (dlg.open) dlg.close(); resolve(v); };
+    dlg.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => {
+      const inp = dlg.querySelector(`[name="${b.dataset.q}"]`);
+      if (inp) { inp.value = b.dataset.v; inp.dispatchEvent(new Event("input")); }
+    }));
+    const cbtn = $("#mcancel");
+    if (cbtn) cbtn.onclick = () => finish(null);
     $("#mf").onsubmit = (e) => { e.preventDefault(); finish(Object.fromEntries(new FormData(e.target))); };
     dlg.onclose = () => finish(null);
     dlg.showModal();
-    const first = dlg.querySelector("input,select"); (first || $("#mok")).focus();
+    if (onOpen) onOpen(dlg, finish);
+    const first = dlg.querySelector("input:not([disabled]),select:not([disabled])");
+    (first || $("#mok") || cbtn)?.focus();
   });
 }
-const confirmBox = (title, text, ok = "Đồng ý", danger = true) => modal({ icon: danger ? "alert" : "info", tone: danger ? "bad" : "", title, text, ok, okTone: danger ? "danger" : "primary" }).then((v) => v !== null);
-const showText = (title, text, info = "") => modal({ icon: "key", title, text: info, body: `<div class="result" style="margin:0"><pre>${esc(text)}</pre></div>`, ok: "Chép & đóng", cancel: "Đóng" }).then((v) => { if (v) copy(text); });
 
-function expiry(exp, now = Date.now()) {
-  if (exp === null || exp === undefined || exp >= 9e15) return '<span class="pill gold">Vĩnh viễn</span>';
-  const days = Math.ceil((exp - now) / 86400000);
-  if (days <= 0) return '<span class="pill bad">Hết hạn ' + day(exp) + "</span>";
-  return '<span class="pill ' + (days <= 7 ? "warn" : "ok") + '" title="' + day(exp) + '">Còn ' + days + " ngày · " + day(exp) + "</span>";
-}
-const meter = (n, max, key) => `<button class="meter" onclick="showDevices('${key}')" title="Xem máy"><i><u style="width:${Math.min(100, max ? (n / max) * 100 : 0)}%"></u></i><span>${n}/${max}</span></button>`;
+const confirmBox = (title, text, ok = "Đồng ý", danger = true) =>
+  modal({ icon: danger ? "alert" : "info", tone: danger ? "bad" : "", title, text, ok, okTone: danger ? "danger" : "primary" }).then((v) => v !== null);
 
-// ---------- screens ----------
-function render() {
-  const app = $("#app");
-  if (!token) return renderLogin(app);
-  localStorage.setItem("lms.admin.tab", tab);
-  const s = data.stats;
-  const stat = (c, ic, v, l) => `<div class="stat gb reveal ${c}"><div class="ico">${I(ic)}</div><b data-count="${v ?? ""}">${v ?? "…"}</b><span>${l}</span></div>`;
-  app.innerHTML = `<header class="top"><div class="top-in">
-      <div class="brand"><div class="logo-glow"><img src="/logo-lms.png" alt=""></div><div><b>LMS Studio</b><small>Trung tâm quản trị bản quyền</small></div></div>
-      <span class="sp"></span>
-      <div class="me">${avatar(me?.username || "A")}<div class="who"><b>${esc(me?.displayName || me?.username || "Quản trị")}</b><span class="crown">${I("crown", "sm")} Tối cao</span></div>
-        <button class="ib" data-tip="Đổi mật khẩu" onclick="changePw()">${I("pass")}</button>
-        <button class="ib bad" data-tip="Đăng xuất" onclick="logout()">${I("out")}</button></div>
-    </div></header>
-    <main>
-      <div class="hello reveal"><div><span class="eyebrow">Bảng điều khiển</span><h2>Xin chào, <em>${esc(me?.displayName || me?.username || "quản trị viên")}</em></h2><p>Quản lý tài khoản, key bản quyền và máy đang dùng LMS Studio.</p></div>
-        <button class="btn primary" onclick="setTab('users');setTimeout(()=>document.querySelector('#uf input')?.focus(),50)">${I("plus")} Tạo tài khoản</button></div>
-      <div class="stats">
-        ${stat("c1", "users", s.users, "Tài khoản")}
-        ${stat("c2", "key", s.liveKeys, "Key đang hiệu lực")}
-        ${stat("c3", "spark", s.unusedKeys, "Key chưa dùng")}
-        ${stat("c4", "monitor", s.devices, "Máy đã kích hoạt")}
-        ${stat("c5", "pulse", s.activeToday, "Máy mở app 24h qua")}
-      </div>
-      <div class="tabs" role="tablist">
-        <button class="${tab === "users" ? "on" : ""}" onclick="setTab('users')">${I("users", "sm")} Tài khoản <span class="cnt">${data.users.length}</span></button>
-        <button class="${tab === "keys" ? "on" : ""}" onclick="setTab('keys')">${I("key", "sm")} Key bản quyền <span class="cnt">${data.keys.length}</span></button>
-        <button class="${tab === "guide" ? "on" : ""}" onclick="setTab('guide')">${I("book", "sm")} Hướng dẫn</button>
-      </div>
-      <div id="pane"></div>
-    </main>`;
-  tab === "users" ? renderUsers() : tab === "keys" ? renderKeys() : renderGuide();
-  fx();
-}
-let counted = false, animateNext = true;
-function fx() {
-  if (!animateNext) document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in"));
-  else {
-  if (data.loaded || !token) animateNext = false;
-  const io = window.IntersectionObserver ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .08 }) : null;
-  document.querySelectorAll(".reveal:not(.in)").forEach((el, i) => { el.style.transitionDelay = Math.min(i, 6) * 60 + "ms"; io ? io.observe(el) : el.classList.add("in"); });
-  setTimeout(() => document.querySelectorAll(".reveal:not(.in)").forEach((el) => el.classList.add("in")), 1200);
-  }
-  if (counted || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const nums = [...document.querySelectorAll("[data-count]")].filter((b) => b.dataset.count !== "");
-  if (!nums.length) return; counted = true;
-  nums.forEach((b) => { const to = +b.dataset.count, t0 = performance.now(); const step = (t) => { const k = Math.min(1, (t - t0) / 900); b.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); });
-}
-function setTab(t) { animateNext = true; tab = t; filter = ""; status = "all"; render(); }
+const showText = (title, text, info = "") =>
+  modal({ icon: "key", title, text: info, body: `<div class="result" style="margin:0"><pre>${esc(text)}</pre></div>`, ok: "Chép & đóng", cancel: "Đóng" }).then((v) => { if (v) copy(text); });
 
-function renderLogin(app) {
-  app.innerHTML = `<div class="login-wrap"><form class="login gb reveal" id="lf">
+function copy(t) {
+  navigator.clipboard.writeText(String(t ?? "")).then(() => toast("Đã chép vào bộ nhớ tạm"), () => toast("Không chép được", "bad"));
+}
+
+// ---- login screen ----
+function browserDeviceName() {
+  const ua = navigator.userAgent;
+  const os = /Windows/.test(ua) ? "Windows" : /Mac OS/.test(ua) ? "macOS" : /Android/.test(ua) ? "Android" : /iPhone|iPad/.test(ua) ? "iOS" : /Linux/.test(ua) ? "Linux" : "Trình duyệt";
+  const br = /Edg\//.test(ua) ? "Edge" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "Web";
+  return `Trang quản trị · ${br} (${os})`;
+}
+
+function renderLogin(app, initialError = "") {
+  app.innerHTML = `<div class="login-wrap"><form class="login gb" id="lf">
       <div class="logo-glow"><img src="/logo-lms.png" alt=""></div>
-      <span class="eyebrow" style="display:flex;justify-content:center">Quản trị</span><h1>LMS <em>Studio</em></h1><p class="sub">Trung tâm quản trị · chỉ dành cho quản trị viên</p>
+      <span class="eyebrow" style="display:flex;justify-content:center">Quản trị</span>
+      <h1>LMS <em>Studio</em></h1>
+      <p class="sub">Trung tâm quản trị · chỉ dành cho quản trị viên & nhân sự</p>
       <label class="field"><span>Tên đăng nhập</span><div class="with-icon">${I("user", "sm")}<input name="u" autocomplete="username" required autofocus></div></label>
-      <label class="field"><span>Mật khẩu</span><div class="with-icon">${I("lock", "sm")}<input name="p" type="password" autocomplete="current-password" required></div></label>
+      <label class="field"><span>Mật khẩu</span><div class="with-icon with-eye">${I("lock", "sm")}<input name="p" id="lpw" type="password" autocomplete="current-password" required><button type="button" class="ib eye-btn" id="teye" title="Hiện/ẩn mật khẩu">${I("eye", "sm")}</button></div></label>
       <button class="btn primary" id="lbtn">Đăng nhập</button>
-      <div class="alert bad" id="lerr"></div></form></div>`;
-  fx();
+      <div class="alert bad" id="lerr">${initialError ? I("alert", "sm") + "<span>" + esc(initialError) + "</span>" : ""}</div>
+    </form></div>`;
+  $("#teye").onclick = () => {
+    const inp = $("#lpw");
+    const show = inp.type === "password";
+    inp.type = show ? "text" : "password";
+    $("#teye").innerHTML = I(show ? "eyeoff" : "eye", "sm");
+  };
   $("#lf").onsubmit = async (e) => {
     e.preventDefault();
     const f = e.target, b = $("#lbtn"), err = $("#lerr");
-    b.disabled = true; b.textContent = "Đang đăng nhập…"; err.innerHTML = "";
+    b.disabled = true; b.textContent = "Đang xác thực…"; err.innerHTML = "";
     try {
       let id = localStorage.getItem("lms.admin.device");
       if (!id) { id = crypto.randomUUID(); localStorage.setItem("lms.admin.device", id); }
-      const r = await api("/auth/login", "POST", { username: f.u.value.trim(), password: f.p.value, deviceId: id, deviceName: "Trang quản trị" });
-      if (r.user.role !== "admin") { await fetch(API + "/auth/logout", { method: "POST", headers: { authorization: "Bearer " + r.token } }); throw new Error("Tài khoản này không phải quản trị viên"); }
-      token = r.token; me = r.user;
-      localStorage.setItem("lms.admin.token", token); localStorage.setItem("lms.admin.me", JSON.stringify(me));
-      animateNext = true; render(); load();
-    } catch (x) { err.innerHTML = I("alert", "sm") + "<span>" + esc(x.message) + "</span>"; b.disabled = false; b.textContent = "Đăng nhập"; }
+      const r = await api("/auth/login", "POST", {
+        username: f.u.value.trim(),
+        password: f.p.value,
+        deviceId: id,
+        deviceName: browserDeviceName(),
+        platform: "admin-web",
+      });
+      if (!isConsoleRole(r.user.role)) {
+        await fetch(API + "/auth/logout", { method: "POST", headers: { authorization: "Bearer " + r.token } }).catch(() => {});
+        throw new Error("Tài khoản này không có quyền vào trang quản trị");
+      }
+      token = r.token;
+      me = r.user;
+      if (r.serverTime) state.clockOffset = r.serverTime - Date.now();
+      localStorage.setItem("lms.admin.token", token);
+      localStorage.setItem("lms.admin.me", JSON.stringify(me));
+      shellMounted = false;
+      mountShell();
+      startTimers();
+      await loadAll(true);
+    } catch (x) {
+      err.innerHTML = I("alert", "sm") + "<span>" + esc(x.message) + "</span>";
+      b.disabled = false;
+      b.textContent = "Đăng nhập";
+    }
   };
 }
 
-function searchBox(ph, rerender) {
-  return `<div class="search with-icon">${I("search", "sm")}<input id="q" placeholder="${ph}" value="${esc(filter)}"></div>`;
+// ---- shell (mounted once, zero flicker on refresh) ----
+function mountShell() {
+  if (shellMounted) return;
+  const app = $("#app");
+  const rInfo = ROLE_INFO[me?.role] || ROLE_INFO.admin;
+  app.innerHTML = `<header class="top"><div class="top-in">
+      <div class="brand"><div class="logo-glow"><img src="/logo-lms.png" alt=""></div><div><b>LMS Studio</b><small>Trung tâm quản trị & giám sát trực tiếp</small></div></div>
+      <span class="sp"></span>
+      <div class="livebar" id="livebar">
+        <span class="live-dot ${autoRefresh ? "" : "off"}" id="livedot"></span>
+        <span id="livetext">Đang tải…</span>
+        <span class="sep hide-sm"></span>
+        <b class="hide-sm" id="liveclock">--:--:--</b>
+        <button class="ib" data-act="toggle-live" id="btn-live" data-tip="${autoRefresh ? "Tạm dừng tự cập nhật" : "Bật tự cập nhật 15s"}">${I("pulse", "sm")}</button>
+        <button class="ib" data-act="refresh-now" id="btn-refresh" data-tip="Làm mới ngay">${I("reset", "sm")}</button>
+      </div>
+      <div class="me">${avatar(me?.username || "A", true)}<div class="who"><b id="me-name">${esc(me?.displayName || me?.username || "Quản trị")}</b><span class="crown ${esc(me?.role || "admin")}" id="me-role">${I(me?.role === "super_admin" ? "crown" : "shield", "sm")} ${esc(rInfo.badge)}</span></div>
+        <button class="ib" data-act="change-pw" data-tip="Đổi mật khẩu">${I("pass")}</button>
+        <button class="ib bad" data-act="logout" data-tip="Đăng xuất">${I("out")}</button></div>
+    </div></header>
+    <main>
+      <div class="hello">
+        <div>
+          <span class="eyebrow">Bảng điều khiển thời gian thực</span>
+          <h2>Xin chào, <em id="hello-name">${esc(me?.displayName || me?.username || "quản trị viên")}</em></h2>
+          <p>Toàn cảnh tài khoản, thời gian sử dụng, key bản quyền, thiết bị, phiên trực tuyến và phân quyền quản trị.</p>
+        </div>
+        <div class="hello-acts">
+          ${perms().createUser ? `<button class="btn primary" data-act="jump-create-user">${I("plus", "sm")} Tạo tài khoản</button>` : ""}
+          ${perms().manageKeys ? `<button class="btn" data-act="jump-create-key">${I("key", "sm")} Tạo key</button>` : ""}
+        </div>
+      </div>
+      <div class="stats" id="stats-grid"></div>
+      <div class="tabs-wrap"><div class="tabs" id="tab-bar" role="tablist"></div></div>
+      <div id="pane"></div>
+    </main>`;
+  shellMounted = true;
+  currentPaneTab = "";
+  renderStatsAndTabs();
+  renderActiveTab(true);
+  updateClock();
 }
-function bindSearch(rerender) {
-  const q = $("#q"); if (!q) return;
-  q.oninput = () => { filter = q.value; rerender(); fx(); const n = $("#q"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); };
-  document.querySelectorAll("[data-st]").forEach((c) => (c.onclick = () => { status = c.dataset.st; rerender(); fx(); }));
-}
-const chips = (list) => `<div class="chips">${list.map(([v, l]) => `<button class="chip ${status === v ? "on" : ""}" data-st="${v}">${l}</button>`).join("")}</div>`;
-const emptyRow = (cols, icon, text) => `<tr><td colspan="${cols}"><div class="empty"><div class="ico">${I(icon)}</div>${text}</div></td></tr>`;
 
-function renderUsers() {
-  const f = filter.toLowerCase(), now = Date.now();
-  const rows = data.users.filter((u) => {
-    if (f && ![u.username, u.display_name, u.note].join(" ").toLowerCase().includes(f)) return false;
-    if (status === "locked") return !!u.disabled;
-    if (status === "nokey") return u.role !== "admin" && (u.expires_at === null || u.expires_at < now);
-    if (status === "soon") return u.role !== "admin" && u.expires_at !== null && u.expires_at < 9e15 && u.expires_at > now && u.expires_at - now < 7 * 864e5;
-    return true;
-  });
-  $("#pane").innerHTML = `<div class="card gb reveal">
-      <div class="card-h"><div class="ico">${I("plus")}</div><div><h3>Tạo tài khoản mới</h3><p>Khách chỉ cần tên đăng nhập và mật khẩu. Key được gắn sẵn nếu chọn "Cấp key kèm".</p></div></div>
+function renderStatsAndTabs() {
+  if (!shellMounted) return;
+  const s = state.stats || {};
+  const loaded = state.loaded;
+  const v = (x) => (loaded && x !== undefined ? x : "…");
+  const warnCount = loaded ? (s.expiringSoonKeys || 0) + (s.expiredKeys || 0) + (s.blockedLogins || 0) : "…";
+
+  $("#stats-grid").innerHTML = `
+    <button class="stat gb c1" data-act="stat-jump" data-tab="users" data-st="all">
+      <div class="toprow"><div class="ico">${I("users")}</div></div>
+      <b>${v(s.totalUsers)}</b>
+      <span class="lbl">Tổng tài khoản</span>
+      <small>${loaded ? `${s.users || 0} khách · ${s.admins || 0} quản trị · ${s.lockedUsers || 0} khoá` : "Đang tải…"}</small>
+    </button>
+    <button class="stat gb c2" data-act="stat-jump" data-tab="sessions" data-st="all">
+      <div class="toprow"><div class="ico">${I("pulse")}</div></div>
+      <b>${v(s.onlineUsers)}</b>
+      <span class="lbl">Đang trực tuyến</span>
+      <small>${loaded ? `${s.onlineSessions || 0} phiên online · ${s.activeTodayUsers || 0} dùng 24h` : "Đang tải…"}</small>
+    </button>
+    <button class="stat gb c3" data-act="stat-jump" data-tab="keys" data-st="live">
+      <div class="toprow"><div class="ico">${I("key")}</div></div>
+      <b>${v(s.liveKeys)}</b>
+      <span class="lbl">Key hiệu lực</span>
+      <small>${loaded ? `${s.unusedKeys || 0} chưa dùng · ${s.expiringSoonKeys || 0} sắp hết` : "Đang tải…"}</small>
+    </button>
+    <button class="stat gb c4" data-act="stat-jump" data-tab="sessions" data-st="all">
+      <div class="toprow"><div class="ico">${I("devices")}</div></div>
+      <b>${v(s.devices)}</b>
+      <span class="lbl">Thiết bị & Phiên</span>
+      <small>${loaded ? `${s.activeToday || 0} máy 24h · ${s.activeSessions || 0} phiên sống` : "Đang tải…"}</small>
+    </button>
+    <button class="stat gb c5" data-act="stat-jump" data-tab="users" data-st="all" data-sort="usage">
+      <div class="toprow"><div class="ico">${I("clock")}</div></div>
+      <b>${loaded ? fmtDur(s.todayActiveSeconds) : "…"}</b>
+      <span class="lbl">Dùng hôm nay</span>
+      <small>${loaded ? `Tổng tích luỹ: ${fmtDur(s.totalActiveSeconds)}` : "Đang tải…"}</small>
+    </button>
+    <button class="stat gb c6" data-act="stat-jump" data-tab="users" data-st="soon">
+      <div class="toprow"><div class="ico">${I("alert")}</div></div>
+      <b>${warnCount}</b>
+      <span class="lbl">Cảnh báo & Hạn</span>
+      <small>${loaded ? `${s.expiredKeys || 0} hết hạn · ${s.blockedLogins || 0} bị chặn ĐN` : "Đang tải…"}</small>
+    </button>`;
+
+  const tabBtn = (id, icon, label, cnt, liveCls = "") =>
+    `<button class="${tab === id ? "on" : ""}" data-act="tab" data-tab="${id}">${I(icon, "sm")} ${label}${cnt !== null ? ` <span class="cnt ${liveCls}">${cnt}</span>` : ""}</button>`;
+  $("#tab-bar").innerHTML =
+    tabBtn("users", "users", "Tài khoản", state.users.length) +
+    tabBtn("keys", "key", "Key bản quyền", state.keys.length) +
+    tabBtn("sessions", "devices", "Phiên & Thiết bị", state.sessions.length, (s.onlineSessions || 0) > 0 ? "live" : "") +
+    tabBtn("logs", "list", "Nhật ký", state.logs.length) +
+    tabBtn("roles", "shield", "Phân quyền", s.admins ?? state.users.filter((u) => isConsoleRole(u.role)).length) +
+    tabBtn("guide", "book", "Hướng dẫn", null);
+
+  const rInfo = ROLE_INFO[me?.role] || ROLE_INFO.admin;
+  if ($("#me-name")) $("#me-name").textContent = me?.displayName || me?.username || "Quản trị";
+  if ($("#hello-name")) $("#hello-name").textContent = me?.displayName || me?.username || "quản trị viên";
+  if ($("#me-role")) {
+    $("#me-role").className = "crown " + (me?.role || "admin");
+    $("#me-role").innerHTML = I(me?.role === "super_admin" ? "crown" : "shield", "sm") + " " + esc(rInfo.badge);
+  }
+}
+
+function renderActiveTab(forceFull = false) {
+  if (!shellMounted) return;
+  localStorage.setItem("lms.admin.tab", tab);
+  const switched = forceFull || currentPaneTab !== tab;
+  currentPaneTab = tab;
+  if (tab === "users") renderUsersPane(switched);
+  else if (tab === "keys") renderKeysPane(switched);
+  else if (tab === "sessions") renderSessionsPane();
+  else if (tab === "logs") renderLogsPane(switched);
+  else if (tab === "roles") renderRolesPane();
+  else renderGuidePane();
+}
+
+// ---- TAB 1: USERS ----
+function renderUsersPane(rebuildForm) {
+  const pane = $("#pane");
+  const p = perms();
+  if (rebuildForm || !$("#users-table-host")) {
+    const roleOpts = (p.creatableRoles || ["user"]).map((r) => `<option value="${r}">${esc(ROLE_INFO[r].label)}</option>`).join("");
+    pane.innerHTML = `${p.createUser ? `<div class="card gb" id="create-user-card">
+      <div class="card-h"><div class="card-hl"><div class="ico">${I("plus")}</div><div><h3>Tạo tài khoản mới</h3><p>Hỗ trợ phân quyền 4 cấp và chọn chế độ kích hoạt key chính xác.</p></div></div></div>
       <form id="uf" class="form-grid">
         <label class="field"><span>Tên đăng nhập</span><input name="username" required pattern="[A-Za-z0-9._@\\-]{3,64}" placeholder="vd: khach01" title="3–64 ký tự: chữ, số, . _ @ -"></label>
         <label class="field"><span>Mật khẩu</span><input name="password" required minlength="6" placeholder="Ít nhất 6 ký tự"></label>
         <label class="field"><span>Tên hiển thị</span><input name="displayName" placeholder="vd: Anh Nam"></label>
         <label class="field"><span>Ghi chú</span><input name="note" placeholder="vd: Gói 1 tháng, đã TT"></label>
-        <label class="field"><span>Vai trò</span><select name="role"><option value="user">Người dùng</option><option value="admin">Quản trị (toàn quyền)</option></select></label>
-        <label class="field"><span>Cấp key kèm</span><select name="withKey"><option value="1">Có</option><option value="">Không</option></select></label>
-        <label class="field"><span>Số ngày</span><input name="days" type="number" value="30" min="0"><small>0 = vĩnh viễn</small></label>
-        <label class="field"><span>Số máy</span><input name="maxDevices" type="number" value="1" min="1" max="100"><small>&nbsp;</small></label>
+        <label class="field"><span>Vai trò</span><select name="role" id="uf-role">${roleOpts}</select></label>
+        <label class="field" data-keyfield><span>Cấp key kèm</span><select name="withKey" id="uf-withkey"><option value="1">Có</option><option value="">Không</option></select></label>
+        <label class="field" data-keyfield><span>Số ngày</span><input name="days" id="uf-days" type="number" value="30" min="0" max="36500"><small>0 = vĩnh viễn</small></label>
+        <label class="field" data-keyfield><span>Bắt đầu tính hạn</span><select name="activateMode" id="uf-mode"><option value="first_login">Từ lần đăng nhập đầu</option><option value="immediate">Ngay khi tạo</option></select></label>
+        <label class="field" data-keyfield><span>Số máy tối đa</span><input name="maxDevices" id="uf-max" type="number" value="1" min="1" max="100"><small>1–100 máy</small></label>
         <div class="actions"><button class="btn primary">${I("plus", "sm")} Tạo tài khoản</button></div>
-      </form>${result.users}</div>
-    <div class="card gb reveal">
-      <div class="toolbar">${searchBox("Tìm tên, tên hiển thị, ghi chú…")}${chips([["all", "Tất cả"], ["soon", "Sắp hết hạn"], ["nokey", "Chưa có / hết key"], ["locked", "Đã khoá"]])}</div>
-      <div class="tbl"><table class="rows"><thead><tr><th>Tài khoản</th><th>Vai trò</th><th>Hạn dùng</th><th>Key</th><th>Máy</th><th>Hoạt động</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-      ${rows.map((u) => `<tr>
-        <td class="first"><div class="user">${avatar(u.username)}<div><b>${esc(u.username)}</b><small>${esc(u.display_name)}${u.note ? " · " + esc(u.note) : ""}</small></div></div></td>
-        <td data-l="Vai trò">${u.role === "admin" ? '<span class="pill gold">Quản trị</span>' : '<span class="pill mute">Người dùng</span>'}</td>
-        <td data-l="Hạn dùng">${u.role === "admin" ? '<span class="muted">Không giới hạn</span>' : u.expires_at === null ? '<span class="pill bad">Chưa có key</span>' : expiry(u.expires_at)}</td>
-        <td data-l="Key">${u.key_count ? `<button class="chip" onclick="showUserKeys('${esc(u.username)}')">${u.key_count} key</button>` : '<span class="muted">—</span>'}</td>
-        <td data-l="Máy">${u.devices}</td>
-        <td data-l="Hoạt động" title="${fmt(u.last_login_at)}"><span class="muted">${ago(u.last_login_at)}</span></td>
-        <td data-l="Trạng thái">${u.disabled ? '<span class="pill bad">Đã khoá</span>' : '<span class="pill ok">Hoạt động</span>'}</td>
-        <td><div class="acts">
-          ${u.role === "admin" ? "" : `<button class="ib ok" data-tip="Cấp key" onclick="giveKey('${esc(u.username)}')">${I("key")}</button>`}
-          <button class="ib" data-tip="Đặt lại mật khẩu" onclick="resetPw(${u.id},'${esc(u.username)}')">${I("reset")}</button>
-          <button class="ib" data-tip="${u.disabled ? "Mở khoá" : "Khoá"}" onclick="toggleUser(${u.id},${u.disabled ? 0 : 1},'${esc(u.username)}')">${I(u.disabled ? "unlock" : "lock")}</button>
-          <button class="ib bad" data-tip="Xoá tài khoản" onclick="delUser(${u.id},'${esc(u.username)}')">${I("trash")}</button></div></td></tr>`).join("") || emptyRow(8, "users", filter || status !== "all" ? "Không có tài khoản phù hợp." : "Chưa có tài khoản. Tạo tài khoản đầu tiên ở trên.")}
-      </tbody></table></div></div>`;
-  bindSearch(renderUsers);
-  $("#uf").onsubmit = (e) => {
-    e.preventDefault();
-    const f = Object.fromEntries(new FormData(e.target));
-    act(async () => {
-      const r = await api("/admin/users", "POST", { ...f, withKey: !!f.withKey, days: +f.days, maxDevices: +f.maxDevices });
-      const info = `Tài khoản: ${r.username}\nMật khẩu: ${f.password}` + (r.keys.length ? `\nKey: ${r.keys[0]}\nHạn: ${+f.days ? f.days + " ngày kể từ lần đăng nhập đầu" : "Vĩnh viễn"} · ${f.maxDevices} máy` : "");
-      data.lastUser = info;
-      result.users = `<div class="result"><pre>${esc(info)}</pre><button type="button" class="btn sm primary" onclick="copy(data.lastUser)">${I("copy", "sm")} Chép gửi khách</button></div>`;
-    }, "Đã tạo tài khoản");
-  };
+      </form>
+      <div id="uf-result">${createdResult.users}</div>
+    </div>` : ""}
+    <div class="card gb" id="users-table-host"></div>`;
+
+    const uf = $("#uf");
+    if (uf) {
+      const syncKeyFields = () => {
+        const isUser = $("#uf-role").value === "user";
+        const withKey = isUser && $("#uf-withkey").value === "1";
+        uf.querySelectorAll("[data-keyfield]").forEach((el) => {
+          const isToggle = el.querySelector("#uf-withkey");
+          el.style.display = isUser ? "" : "none";
+          if (!isToggle) el.querySelectorAll("input,select").forEach((inp) => (inp.disabled = !withKey));
+        });
+      };
+      $("#uf-role").onchange = syncKeyFields;
+      $("#uf-withkey").onchange = syncKeyFields;
+      syncKeyFields();
+      uf.onsubmit = (e) => {
+        e.preventDefault();
+        const f = Object.fromEntries(new FormData(e.target));
+        const isUser = f.role === "user";
+        const withKey = isUser && !!f.withKey;
+        const days = +f.days || 0;
+        const maxDevices = +f.maxDevices || 1;
+        const activateMode = f.activateMode || "first_login";
+        act(async () => {
+          const r = await api("/admin/users", "POST", {
+            username: f.username,
+            password: f.password,
+            displayName: f.displayName,
+            note: f.note,
+            role: f.role,
+            withKey,
+            days,
+            maxDevices,
+            activateMode,
+          });
+          const durText = !days
+            ? "Vĩnh viễn"
+            : activateMode === "first_login"
+              ? `${days} ngày (bắt đầu tính từ lần đăng nhập đầu)`
+              : `${days} ngày (tính từ hôm nay)`;
+          const info =
+            `Tài khoản: ${r.username}\nMật khẩu: ${f.password}\nVai trò: ${ROLE_INFO[r.role]?.label || r.role}` +
+            (r.keys?.length ? `\nKey: ${r.keys[0]}\nHạn dùng: ${durText} · ${maxDevices} máy` : "");
+          createdResult.lastUserText = info;
+          createdResult.users = `<div class="result"><pre>${esc(info)}</pre><button type="button" class="btn sm primary" data-act="copy-last-user">${I("copy", "sm")} Chép gửi khách</button></div>`;
+          if ($("#uf-result")) $("#uf-result").innerHTML = createdResult.users;
+          uf.reset();
+          syncKeyFields();
+        }, "Đã tạo tài khoản thành công");
+      };
+    }
+  }
+  renderUsersTable();
 }
 
-function renderKeys() {
-  const f = filter.toLowerCase(), now = data.now || Date.now();
-  const rows = data.keys.filter((k) => {
-    if (f && ![k.key, k.username, k.note].join(" ").toLowerCase().includes(f)) return false;
-    if (status === "unused") return k.user_id === null;
-    if (status === "live") return k.status === "active" && k.user_id !== null && (k.expires_at === null || k.expires_at > now);
-    if (status === "expired") return k.user_id !== null && k.expires_at !== null && k.expires_at <= now;
-    if (status === "revoked") return k.status !== "active";
+function userLicenseCell(u, now) {
+  if (u.license_state === "exempt") return `<span class="pill mute">Không giới hạn</span>`;
+  if (u.license_state === "forever") {
+    return `<div class="stack"><span class="pill gold">Vĩnh viễn</span>${u.active_key ? `<small class="mono">${esc(u.active_key)}</small>` : ""}</div>`;
+  }
+  if (u.license_state === "pending") {
+    return `<div class="stack"><span class="pill info">Chờ ĐN đầu · ${u.pending_days} ngày</span><small class="mono">${esc(u.active_key || "")}</small></div>`;
+  }
+  if (u.license_state === "live") {
+    return `<div class="stack">${fmtCountdown(u.expires_at, now)}<small>Hết: ${day(u.expires_at)} · <span class="mono">${esc(u.active_key || "")}</span></small></div>`;
+  }
+  if (u.license_state === "expired") {
+    return `<div class="stack">${fmtCountdown(u.expires_at, now)}<small class="mono">${esc(u.active_key || "")}</small></div>`;
+  }
+  return `<span class="pill bad">Chưa có key</span>`;
+}
+
+function renderUsersTable() {
+  const host = $("#users-table-host");
+  if (!host) return;
+  const activeId = document.activeElement?.id;
+  const selStart = activeId === "q" ? document.activeElement.selectionStart : null;
+  const f = filter.toLowerCase();
+  const now = serverNow();
+  const p = perms();
+
+  let rows = state.users.filter((u) => {
+    if (f && ![u.username, u.display_name, u.note, u.active_key, u.last_ip, u.last_device, ROLE_INFO[u.role]?.label].join(" ").toLowerCase().includes(f)) return false;
+    if (statusFilter === "online") return !!u.is_online;
+    if (statusFilter === "admins") return isConsoleRole(u.role);
+    if (statusFilter === "locked") return !!u.disabled || !!u.login_blocked;
+    if (statusFilter === "nokey") return u.role === "user" && (u.license_state === "none" || u.license_state === "expired");
+    if (statusFilter === "soon") return u.license_state === "live" && u.expires_at !== null && u.expires_at > now && u.expires_at - now <= 7 * 864e5;
     return true;
   });
-  $("#pane").innerHTML = `<div class="card gb reveal">
-      <div class="card-h"><div class="ico">${I("key")}</div><div><h3>Tạo key bản quyền</h3><p>Tạo hàng loạt để bán/gửi sau, hoặc gán thẳng cho một tài khoản.</p></div></div>
-      <form id="kf" class="form-grid">
-        <label class="field"><span>Số lượng</span><input name="count" type="number" value="1" min="1" max="100"><small>Tối đa 100 mỗi lần</small></label>
-        <label class="field"><span>Số ngày</span><input name="days" type="number" value="30" min="0"><small>0 = vĩnh viễn</small></label>
-        <label class="field"><span>Số máy</span><input name="maxDevices" type="number" value="1" min="1" max="100"><small>Mỗi key</small></label>
-        <label class="field"><span>Gán cho tài khoản</span><input name="username" placeholder="Bỏ trống = key rời" list="ulist"><small>Tuỳ chọn</small></label>
-        <label class="field"><span>Ghi chú</span><input name="note" placeholder="vd: Đợt KM 11/2026"><small>&nbsp;</small></label>
-        <div class="actions" style="align-self:center"><button class="btn primary">${I("spark", "sm")} Tạo key</button></div>
-      </form>
-      <datalist id="ulist">${data.users.filter((u) => u.role !== "admin").map((u) => `<option value="${esc(u.username)}">`).join("")}</datalist>
-      ${result.keys}
-      <div class="hint">${I("info", "sm")}<span>Key rời: hạn bắt đầu tính từ lúc khách nhập key lần đầu. Key gán cho tài khoản: hạn tính từ bây giờ. Mỗi key chỉ dùng cho một tài khoản.</span></div></div>
-    <div class="card gb reveal">
-      <div class="toolbar">${searchBox("Tìm key, tài khoản, ghi chú…")}${chips([["all", "Tất cả"], ["live", "Đang dùng"], ["unused", "Chưa dùng"], ["expired", "Hết hạn"], ["revoked", "Thu hồi"]])}</div>
-      <div class="tbl"><table class="rows"><thead><tr><th>Key</th><th>Tài khoản</th><th>Hạn</th><th>Máy</th><th>Trạng thái</th><th>Ghi chú</th><th>Tạo</th><th></th></tr></thead><tbody>
-      ${rows.map((k) => `<tr>
-        <td class="first"><span class="keytxt">${esc(k.key)}<button class="ib" data-tip="Chép key" onclick="copy('${k.key}')">${I("copy", "sm")}</button></span></td>
-        <td data-l="Tài khoản">${k.username ? `<div class="user">${avatar(k.username)}<b>${esc(k.username)}</b></div>` : '<span class="pill info">Chưa dùng</span>'}</td>
-        <td data-l="Hạn">${k.user_id === null ? `<span class="muted">${k.duration_days ? k.duration_days + " ngày · chưa kích hoạt" : "Vĩnh viễn · chưa kích hoạt"}</span>` : expiry(k.expires_at, now)}</td>
-        <td data-l="Máy">${meter(k.devices, k.max_devices, k.key)}</td>
-        <td data-l="Trạng thái">${k.status === "active" ? '<span class="pill ok">Hiệu lực</span>' : '<span class="pill bad">Thu hồi</span>'}</td>
-        <td data-l="Ghi chú">${k.note ? esc(k.note) : '<span class="muted">—</span>'}</td>
-        <td data-l="Tạo"><span class="muted">${day(k.created_at)}</span></td>
+
+  rows = [...rows].sort((a, b) => {
+    if (sortBy === "active") return (b.last_active_at || 0) - (a.last_active_at || 0);
+    if (sortBy === "usage") return (b.total_active_seconds || 0) - (a.total_active_seconds || 0);
+    if (sortBy === "today") return (b.today_active_seconds || 0) - (a.today_active_seconds || 0);
+    if (sortBy === "expiry") return (a.expires_at ?? 9e15) - (b.expires_at ?? 9e15);
+    return (b.created_at || 0) - (a.created_at || 0);
+  });
+
+  const chipsHtml = [
+    ["all", `Tất cả (${state.users.length})`],
+    ["online", `Đang online (${state.users.filter((u) => u.is_online).length})`],
+    ["admins", "Quản trị & Hỗ trợ"],
+    ["soon", "Sắp hết hạn"],
+    ["nokey", "Chưa có / hết key"],
+    ["locked", "Khoá / Chặn ĐN"],
+  ]
+    .map(([v, l]) => `<button class="chip ${statusFilter === v ? "on" : ""}" data-st="${v}">${l}</button>`)
+    .join("");
+
+  host.innerHTML = `<div class="toolbar">
+      <div class="search with-icon">${I("search", "sm")}<input id="q" placeholder="Tìm tài khoản, ghi chú, key, IP, tên máy…" value="${esc(filter)}"></div>
+      <div class="chips">${chipsHtml}</div>
+      <span class="sp"></span>
+      <select class="sel" id="sort-sel" title="Sắp xếp">
+        <option value="newest" ${sortBy === "newest" ? "selected" : ""}>Mới tạo</option>
+        <option value="active" ${sortBy === "active" ? "selected" : ""}>Hoạt động gần nhất</option>
+        <option value="today" ${sortBy === "today" ? "selected" : ""}>Dùng hôm nay nhiều nhất</option>
+        <option value="usage" ${sortBy === "usage" ? "selected" : ""}>Tổng thời gian dùng</option>
+        <option value="expiry" ${sortBy === "expiry" ? "selected" : ""}>Sắp hết hạn trước</option>
+      </select>
+      <button class="btn sm" data-act="export-users">${I("download", "sm")} Xuất CSV</button>
+    </div>
+    <div class="tbl"><table class="rows"><thead><tr>
+      <th>Tài khoản</th><th>Vai trò</th><th>Bản quyền & Hạn dùng</th><th>Máy / Phiên</th><th>Thời gian sử dụng</th><th>Hoạt động & Mốc thời gian</th><th>Trạng thái</th><th></th>
+    </tr></thead><tbody>
+    ${rows.map((u) => {
+      const mng = canManage(u);
+      const isSelf = me && u.id === me.id;
+      const toolLabel = u.last_tool ? (TOOL_NAMES[u.last_tool] || u.last_tool) : "";
+      return `<tr>
+        <td class="first"><div class="user">${avatar(u.username, !!u.is_online)}<div>
+          <b>${esc(u.username)}${isSelf ? ' <span class="faint" style="font-weight:500">(bạn)</span>' : ""}</b>
+          <small>${esc(u.display_name || "—")}${u.note ? " · " + esc(u.note) : ""}</small>
+        </div></div></td>
+        <td data-l="Vai trò">${rolePill(u.role)}</td>
+        <td data-l="Bản quyền">${userLicenseCell(u, now)}</td>
+        <td data-l="Máy / Phiên"><div class="stack">
+          <span>${u.devices} máy · ${u.active_sessions} phiên${u.online_sessions ? ` <span style="color:var(--ok);font-weight:700">(${u.online_sessions} online)</span>` : ""}</span>
+          <small>${u.key_count ? `<button class="btn xs ghost" style="padding:0;height:auto;color:var(--brand2)" data-act="user-keys" data-user="${esc(u.username)}">Xem ${u.key_count} key</button>` : "Chưa có key"}</small>
+        </div></td>
+        <td data-l="Thời gian dùng"><div class="stack">
+          <span>Hôm nay: <b>${fmtDur(u.today_active_seconds)}</b></span>
+          <small>7n: ${fmtDur(u.week_active_seconds)} · Tổng: ${fmtDur(u.total_active_seconds)} · ${u.login_count} lượt ĐN</small>
+        </div></td>
+        <td data-l="Hoạt động"><div class="stack">
+          <span title="${fmt(u.last_active_at)}">${u.is_online ? '<span style="color:var(--ok);font-weight:700">● Đang trực tuyến</span>' : `<span class="muted">${ago(u.last_active_at, "Chưa đăng nhập")}</span>`}${toolLabel ? ` · <span style="color:var(--info)">${esc(toolLabel)}</span>` : ""}</span>
+          <small>Tạo: ${day(u.created_at)}${u.last_ip ? " · IP " + esc(u.last_ip) : ""}</small>
+        </div></td>
+        <td data-l="Trạng thái"><div class="stack">
+          ${u.disabled ? '<span class="pill bad">Đã khoá</span>' : '<span class="pill ok">Hoạt động</span>'}
+          ${u.login_blocked ? '<span class="pill warn" style="margin-top:3px">Bị chặn ĐN</span>' : u.failed_logins ? `<small style="color:var(--warn)">${u.failed_logins}/10 lần sai MK</small>` : ""}
+        </div></td>
         <td><div class="acts">
-          <button class="ib ok" data-tip="Gia hạn" onclick="extend('${k.key}')">${I("clock")}</button>
-          <button class="ib" data-tip="Số máy & danh sách máy" onclick="showDevices('${k.key}')">${I("devices")}</button>
-          ${k.status === "active" ? `<button class="ib bad" data-tip="Thu hồi" onclick="setStatus('${k.key}','revoked')">${I("ban")}</button>` : `<button class="ib ok" data-tip="Khôi phục" onclick="setStatus('${k.key}','active')">${I("check")}</button>`}
-          ${k.user_id !== null ? `<button class="ib" data-tip="Gỡ khỏi tài khoản" onclick="unassign('${k.key}')">${I("unlink")}</button>` : ""}
-          <button class="ib bad" data-tip="Xoá key" onclick="delKey('${k.key}')">${I("trash")}</button></div></td></tr>`).join("") || emptyRow(8, "key", filter || status !== "all" ? "Không có key phù hợp." : "Chưa có key nào.")}
-      </tbody></table></div></div>`;
-  bindSearch(renderKeys);
-  $("#kf").onsubmit = (e) => {
-    e.preventDefault();
-    const f = Object.fromEntries(new FormData(e.target));
-    act(async () => {
-      const r = await api("/admin/keys", "POST", { ...f, count: +f.count, days: +f.days, maxDevices: +f.maxDevices });
-      data.lastKeys = r.keys.join("\n");
-      result.keys = `<div class="result"><pre>${esc(data.lastKeys)}</pre><button type="button" class="btn sm primary" onclick="copy(data.lastKeys)">${I("copy", "sm")} Chép ${r.keys.length > 1 ? "tất cả " + r.keys.length + " key" : "key"}</button></div>`;
-    }, "Đã tạo key");
-  };
+          <button class="ib info" data-tip="Xem chi tiết 360°" data-act="user-detail" data-id="${u.id}">${I("eye")}</button>
+          ${(mng && p.editUser) || isSelf ? `<button class="ib" data-tip="Sửa thông tin & quyền" data-act="user-edit" data-id="${u.id}">${I("edit")}</button>` : ""}
+          ${u.role === "user" && p.manageKeys ? `<button class="ib ok" data-tip="Cấp key" data-act="give-key" data-user="${esc(u.username)}">${I("key")}</button>` : ""}
+          ${u.failed_logins && p.unlockFailures ? `<button class="ib warn" data-tip="Mở chặn đăng nhập" data-act="unlock-fail" data-user="${esc(u.username)}">${I("shield")}</button>` : ""}
+          ${mng && p.resetPassword ? `<button class="ib" data-tip="Đặt lại mật khẩu" data-act="reset-pw" data-id="${u.id}" data-user="${esc(u.username)}">${I("reset")}</button>` : ""}
+          ${mng && !isSelf && p.lockUser ? `<button class="ib" data-tip="${u.disabled ? "Mở khoá" : "Khoá tài khoản"}" data-act="toggle-user" data-id="${u.id}" data-dis="${u.disabled ? 0 : 1}" data-user="${esc(u.username)}">${I(u.disabled ? "unlock" : "lock")}</button>` : ""}
+          ${mng && !isSelf && p.deleteUser ? `<button class="ib bad" data-tip="Xoá tài khoản" data-act="del-user" data-id="${u.id}" data-user="${esc(u.username)}">${I("trash")}</button>` : ""}
+        </div></td>
+      </tr>`;
+    }).join("") || emptyRow(8, "users", filter || statusFilter !== "all" ? "Không có tài khoản nào khớp bộ lọc." : "Chưa có tài khoản.")}
+    </tbody></table></div>`;
+
+  bindToolbar(renderUsersTable);
+  const sSel = $("#sort-sel");
+  if (sSel) sSel.onchange = () => { sortBy = sSel.value; renderUsersTable(); };
+  if (activeId === "q" && $("#q")) { const n = $("#q"); n.focus(); if (selStart !== null) n.setSelectionRange(selStart, selStart); }
 }
 
-// ---------- guide ----------
-function renderGuide() {
-  const sec = (id, n, title, sub, html) => `<section class="card gb gsec reveal" id="${id}"><h3><i>${n}</i>${title}</h3><p>${sub}</p>${html}</section>`;
+// ---- TAB 2: KEYS ----
+function keyStateOf(k, now) {
+  if (k.status !== "active") return "revoked";
+  if (k.user_id === null) return "unused";
+  if (k.activated_at === null && k.expires_at === null && k.duration_days > 0) return "pending";
+  if (k.expires_at !== null && k.expires_at <= now) return "expired";
+  return "live";
+}
+
+function renderKeysPane(rebuildForm) {
+  const pane = $("#pane");
+  const p = perms();
+  if (rebuildForm || !$("#keys-table-host")) {
+    pane.innerHTML = `${p.manageKeys ? `<div class="card gb" id="create-key-card">
+      <div class="card-h"><div class="card-hl"><div class="ico">${I("key")}</div><div><h3>Tạo key bản quyền</h3><p>Tạo hàng loạt để bán sau hoặc gán thẳng cho tài khoản có sẵn.</p></div></div></div>
+      <form id="kf" class="form-grid">
+        <label class="field"><span>Số lượng</span><input name="count" type="number" value="1" min="1" max="100"><small>Tối đa 100 / lần</small></label>
+        <label class="field"><span>Số ngày</span><input name="days" type="number" value="30" min="0" max="36500"><small>0 = vĩnh viễn</small></label>
+        <label class="field"><span>Số máy</span><input name="maxDevices" type="number" value="1" min="1" max="100"><small>Mỗi key</small></label>
+        <label class="field"><span>Gán cho tài khoản</span><input name="username" placeholder="Bỏ trống = key rời" list="ulist"><small>Tuỳ chọn</small></label>
+        <label class="field"><span>Bắt đầu tính hạn</span><select name="activateMode"><option value="first_login">Từ lần đăng nhập đầu</option><option value="immediate">Ngay khi tạo</option></select><small>Khi gán tài khoản</small></label>
+        <label class="field"><span>Ghi chú</span><input name="note" placeholder="vd: Gói 1 năm, KM 11/2026"><small>&nbsp;</small></label>
+        <div class="actions"><button class="btn primary">${I("spark", "sm")} Tạo key</button></div>
+      </form>
+      <datalist id="ulist">${state.users.filter((u) => u.role === "user").map((u) => `<option value="${esc(u.username)}">`).join("")}</datalist>
+      <div id="kf-result">${createdResult.keys}</div>
+      <div class="hint">${I("info", "sm")}<span>Key rời luôn bắt đầu đếm ngược từ lúc khách nhập key lần đầu. Key gán trực tiếp cho tài khoản có thể chọn tính ngay hoặc tính từ lần khách mở app đầu tiên.</span></div>
+    </div>` : ""}
+    <div class="card gb" id="keys-table-host"></div>`;
+
+    const kf = $("#kf");
+    if (kf) {
+      kf.onsubmit = (e) => {
+        e.preventDefault();
+        const f = Object.fromEntries(new FormData(e.target));
+        act(async () => {
+          const r = await api("/admin/keys", "POST", {
+            count: +f.count || 1,
+            days: +f.days || 0,
+            maxDevices: +f.maxDevices || 1,
+            username: f.username || "",
+            note: f.note || "",
+            activateMode: f.activateMode || "first_login",
+          });
+          createdResult.lastKeysText = r.keys.join("\n");
+          createdResult.keys = `<div class="result"><pre>${esc(createdResult.lastKeysText)}</pre><button type="button" class="btn sm primary" data-act="copy-last-keys">${I("copy", "sm")} Chép ${r.keys.length > 1 ? "tất cả " + r.keys.length + " key" : "key"}</button></div>`;
+          if ($("#kf-result")) $("#kf-result").innerHTML = createdResult.keys;
+        }, "Đã tạo key thành công");
+      };
+    }
+  }
+  renderKeysTable();
+}
+
+function renderKeysTable() {
+  const host = $("#keys-table-host");
+  if (!host) return;
+  const activeId = document.activeElement?.id;
+  const selStart = activeId === "q" ? document.activeElement.selectionStart : null;
+  const f = filter.toLowerCase();
+  const now = serverNow();
+  const p = perms();
+
+  const rows = state.keys.filter((k) => {
+    if (f && ![k.key, k.username, k.display_name, k.note].join(" ").toLowerCase().includes(f)) return false;
+    const st = keyStateOf(k, now);
+    if (statusFilter === "live") return st === "live";
+    if (statusFilter === "pending") return st === "pending";
+    if (statusFilter === "unused") return st === "unused";
+    if (statusFilter === "expired") return st === "expired";
+    if (statusFilter === "revoked") return st === "revoked";
+    return true;
+  });
+
+  const chipsHtml = [
+    ["all", `Tất cả (${state.keys.length})`],
+    ["live", "Đang hiệu lực"],
+    ["pending", "Chờ kích hoạt"],
+    ["unused", "Chưa dùng"],
+    ["expired", "Hết hạn"],
+    ["revoked", "Thu hồi"],
+  ]
+    .map(([v, l]) => `<button class="chip ${statusFilter === v ? "on" : ""}" data-st="${v}">${l}</button>`)
+    .join("");
+
+  host.innerHTML = `<div class="toolbar">
+      <div class="search with-icon">${I("search", "sm")}<input id="q" placeholder="Tìm mã key, tài khoản, ghi chú…" value="${esc(filter)}"></div>
+      <div class="chips">${chipsHtml}</div>
+    </div>
+    <div class="tbl"><table class="rows"><thead><tr>
+      <th>Key</th><th>Tài khoản</th><th>Hạn dùng & Kích hoạt</th><th>Máy</th><th>Trạng thái</th><th>Ghi chú</th><th>Ngày tạo</th><th></th>
+    </tr></thead><tbody>
+    ${rows.map((k) => {
+      const st = keyStateOf(k, now);
+      const pct = Math.min(100, k.max_devices ? (k.devices / k.max_devices) * 100 : 0);
+      let expCell = "";
+      if (st === "unused") expCell = `<span class="muted">${k.duration_days ? k.duration_days + " ngày · chưa gắn" : "Vĩnh viễn · chưa gắn"}</span>`;
+      else if (st === "pending") expCell = `<div class="stack"><span class="pill info">Chờ ĐN đầu · ${k.duration_days} ngày</span><small>Chưa bắt đầu đếm ngược</small></div>`;
+      else expCell = `<div class="stack">${fmtCountdown(k.expires_at, now)}<small>${k.activated_at ? "KH: " + day(k.activated_at) : ""}${k.expires_at ? " → " + day(k.expires_at) : ""}</small></div>`;
+      return `<tr>
+        <td class="first"><span class="keytxt">${esc(k.key)}<button class="ib" data-tip="Chép key" data-act="copy-text" data-val="${esc(k.key)}">${I("copy", "sm")}</button></span></td>
+        <td data-l="Tài khoản">${k.username
+          ? `<div class="user">${avatar(k.username)}<div><b>${esc(k.username)}</b><small>${esc(k.display_name || "")}</small></div></div>`
+          : st === "unused" && p.manageKeys
+            ? `<button class="chip" data-act="assign-key" data-key="${esc(k.key)}">${I("link", "sm")} Gán tài khoản</button>`
+            : '<span class="pill mute">Chưa gắn</span>'}</td>
+        <td data-l="Hạn dùng">${expCell}</td>
+        <td data-l="Máy"><button class="meter" data-act="key-devices" data-key="${esc(k.key)}" title="Xem & chỉnh máy"><i><u style="width:${pct}%"></u></i><span>${k.devices}/${k.max_devices}</span></button></td>
+        <td data-l="Trạng thái">${k.status === "active" ? '<span class="pill ok">Hiệu lực</span>' : '<span class="pill bad">Thu hồi</span>'}</td>
+        <td data-l="Ghi chú">${k.note ? esc(k.note) : '<span class="muted">—</span>'}</td>
+        <td data-l="Ngày tạo"><span class="muted" title="${fmt(k.created_at)}">${day(k.created_at)}</span></td>
+        <td><div class="acts">
+          ${p.manageKeys ? `<button class="ib ok" data-tip="Gia hạn / Đặt hạn" data-act="extend-key" data-key="${esc(k.key)}">${I("clock")}</button>` : ""}
+          ${p.manageKeys ? `<button class="ib" data-tip="Sửa ghi chú" data-act="edit-key-note" data-key="${esc(k.key)}">${I("edit")}</button>` : ""}
+          <button class="ib info" data-tip="Xem thiết bị" data-act="key-devices" data-key="${esc(k.key)}">${I("devices")}</button>
+          ${p.revokeKey ? (k.status === "active"
+            ? `<button class="ib bad" data-tip="Thu hồi key" data-act="key-status" data-key="${esc(k.key)}" data-val="revoked">${I("ban")}</button>`
+            : `<button class="ib ok" data-tip="Khôi phục key" data-act="key-status" data-key="${esc(k.key)}" data-val="active">${I("check")}</button>`) : ""}
+          ${k.user_id !== null && p.revokeKey ? `<button class="ib" data-tip="Gỡ khỏi tài khoản" data-act="unassign-key" data-key="${esc(k.key)}">${I("unlink")}</button>` : ""}
+          ${p.deleteKey ? `<button class="ib bad" data-tip="Xoá vĩnh viễn" data-act="del-key" data-key="${esc(k.key)}">${I("trash")}</button>` : ""}
+        </div></td>
+      </tr>`;
+    }).join("") || emptyRow(8, "key", filter || statusFilter !== "all" ? "Không có key nào phù hợp." : "Chưa có key nào.")}
+    </tbody></table></div>`;
+
+  bindToolbar(renderKeysTable);
+  if (activeId === "q" && $("#q")) { const n = $("#q"); n.focus(); if (selStart !== null) n.setSelectionRange(selStart, selStart); }
+}
+
+// ---- TAB 3: SESSIONS & DEVICES ----
+function renderSessionsPane() {
+  const pane = $("#pane");
+  const p = perms();
+  const now = serverNow();
+
+  const sessRows = state.sessions.map((s) => {
+    const canKick = !s.is_current && p.manageSessions && (s.user_id === me?.id || canManage({ id: s.user_id, role: s.user_role }));
+    const tool = s.current_tool ? (TOOL_NAMES[s.current_tool] || s.current_tool) : "—";
+    return `<tr>
+      <td class="first"><div class="user">${avatar(s.username, !!s.is_online)}<div>
+        <b>${esc(s.username)}${s.is_current ? ' <span class="pill gold" style="margin-left:4px">Phiên này</span>' : ""}</b>
+        <small>${esc(s.display_name || "—")} · ${ROLE_INFO[s.user_role]?.badge || s.user_role}</small>
+      </div></div></td>
+      <td data-l="Thiết bị / Nền tảng"><div class="stack">
+        <span>${esc(s.device_name || "Không rõ")}</span>
+        <small>${esc(s.platform || "—")}${s.app_version ? " · v" + esc(s.app_version) : ""}</small>
+      </div></td>
+      <td data-l="Công cụ">${esc(tool)}</td>
+      <td data-l="IP / Khu vực"><span class="mono">${esc(s.ip || "—")}</span>${s.country ? ` <span class="faint">(${esc(s.country)})</span>` : ""}</td>
+      <td data-l="Thời lượng phiên"><div class="stack"><b>${fmtDur(s.active_seconds)}</b><small>Vào lúc ${fmt(s.created_at)}</small></div></td>
+      <td data-l="Hoạt động">${s.is_online ? '<span class="pill ok">Đang online</span>' : `<span class="muted" title="${fmt(s.last_seen_at)}">${ago(s.last_seen_at)}</span>`}</td>
+      <td><div class="acts">
+        <button class="ib info" data-tip="Xem tài khoản" data-act="user-detail" data-id="${s.user_id}">${I("eye")}</button>
+        ${canKick ? `<button class="ib bad" data-tip="Đăng xuất phiên này" data-act="kick-session" data-id="${s.id}" data-user="${esc(s.username)}">${I("out")}</button>` : ""}
+      </div></td>
+    </tr>`;
+  }).join("");
+
+  const devRows = state.devices.map((d) => {
+    const canRm = p.manageDevices && (!d.user_id || d.user_id === me?.id || canManage({ id: d.user_id, role: d.user_role }));
+    return `<tr>
+      <td class="first"><div class="stack"><b>${esc(d.device_name || "Không rõ")}</b><small class="mono">${esc(d.device_id.slice(0, 16))}…</small></div></td>
+      <td data-l="Tài khoản">${d.username ? `<div class="user">${avatar(d.username, !!d.is_online)}<b>${esc(d.username)}</b></div>` : '<span class="muted">—</span>'}</td>
+      <td data-l="Key"><span class="mono">${esc(d.license_key)}</span></td>
+      <td data-l="Hệ thống">${esc(d.platform || "—")}${d.app_version ? " · v" + esc(d.app_version) : ""}</td>
+      <td data-l="IP cuối"><span class="mono">${esc(d.last_ip || "—")}</span></td>
+      <td data-l="Thời gian dùng"><b>${fmtDur(d.total_active_seconds)}</b></td>
+      <td data-l="Hoạt động"><div class="stack"><span>${d.is_online ? '<span style="color:var(--ok);font-weight:700">● Online</span>' : ago(d.last_seen)}</span><small>Lần đầu: ${day(d.first_seen)}</small></div></td>
+      <td><div class="acts">${canRm ? `<button class="ib bad" data-tip="Gỡ máy khỏi key" data-act="rm-device" data-id="${d.id}" data-name="${esc(d.device_name)}">${I("trash")}</button>` : ""}</div></td>
+    </tr>`;
+  }).join("");
+
+  const failRows = state.failures.map((fl) => `<tr>
+    <td class="first"><b>${esc(fl.username)}</b></td>
+    <td data-l="Số lần sai"><span class="pill ${fl.is_blocked ? "bad" : "warn"}">${fl.count} / 10 lần</span></td>
+    <td data-l="Mốc thử đầu">${fmt(fl.first_at)} (${ago(fl.first_at)})</td>
+    <td data-l="Trạng thái">${fl.is_blocked ? '<span class="pill bad">Đang bị chặn 15 phút</span>' : '<span class="pill mute">Đang theo dõi</span>'}</td>
+    <td><div class="acts">${p.unlockFailures ? `<button class="btn xs" data-act="unlock-fail" data-user="${esc(fl.username)}">${I("shield", "sm")} Mở chặn</button>` : ""}</div></td>
+  </tr>`).join("");
+
+  pane.innerHTML = `<div class="card gb">
+      <div class="card-h"><div class="card-hl"><div class="ico">${I("pulse")}</div><div><h3>Phiên đăng nhập đang hoạt động (${state.sessions.length})</h3><p>Theo dõi ai đang mở app hoặc trang quản trị ngay lúc này, địa chỉ IP, công cụ đang dùng và cưỡng bức đăng xuất tức thì.</p></div></div></div>
+      <div class="tbl"><table class="rows"><thead><tr><th>Tài khoản</th><th>Thiết bị / Nền tảng</th><th>Công cụ</th><th>IP / Khu vực</th><th>Thời lượng</th><th>Trạng thái</th><th></th></tr></thead>
+      <tbody>${sessRows || emptyRow(7, "pulse", "Không có phiên đăng nhập nào.")}</tbody></table></div>
+    </div>
+    <div class="card gb">
+      <div class="card-h"><div class="card-hl"><div class="ico">${I("devices")}</div><div><h3>Toàn bộ thiết bị đã kích hoạt (${state.devices.length})</h3><p>Mọi máy tính đã gắn vào key bản quyền trên toàn hệ thống.</p></div></div></div>
+      <div class="tbl"><table class="rows"><thead><tr><th>Thiết bị</th><th>Tài khoản</th><th>Key</th><th>Hệ thống</th><th>IP cuối</th><th>Thời gian dùng</th><th>Hoạt động</th><th></th></tr></thead>
+      <tbody>${devRows || emptyRow(8, "monitor", "Chưa có thiết bị nào được kích hoạt.")}</tbody></table></div>
+    </div>
+    <div class="card gb">
+      <div class="card-h"><div class="card-hl"><div class="ico" style="background:var(--bad-bg);color:var(--bad)">${I("shield")}</div><div><h3>Giới hạn đăng nhập sai mật khẩu (${state.failures.length})</h3><p>Tài khoản gõ sai 10 lần liên tiếp trong 15 phút sẽ tạm bị chặn để chống dò mật khẩu.</p></div></div></div>
+      <div class="tbl"><table class="rows"><thead><tr><th>Tên đăng nhập</th><th>Số lần sai</th><th>Thời điểm</th><th>Trạng thái</th><th></th></tr></thead>
+      <tbody>${failRows || emptyRow(5, "check", "Không có tài khoản nào bị ghi nhận sai mật khẩu.")}</tbody></table></div>
+    </div>`;
+}
+
+// ---- TAB 4: AUDIT LOGS ----
+function logBadge(action) {
+  if (action === "login_ok") return '<span class="pill ok">Đăng nhập</span>';
+  if (action === "login_fail" || action === "login_blocked") return '<span class="pill bad">ĐN thất bại</span>';
+  if (action === "logout" || action === "session_revoke") return '<span class="pill mute">Đăng xuất</span>';
+  if (action.startsWith("user_role")) return '<span class="pill gold">Phân quyền</span>';
+  if (action === "user_lock" || action === "user_delete") return '<span class="pill bad">Khoá / Xoá TK</span>';
+  if (action.startsWith("user_")) return '<span class="pill info">Tài khoản</span>';
+  if (action === "key_revoke" || action === "key_delete") return '<span class="pill bad">Thu hồi / Xoá key</span>';
+  if (action.startsWith("key_")) return '<span class="pill warn">Key bản quyền</span>';
+  if (action.startsWith("device_")) return '<span class="pill purple">Thiết bị</span>';
+  if (action.startsWith("password_")) return '<span class="pill warn">Mật khẩu</span>';
+  return `<span class="pill mute">${esc(action)}</span>`;
+}
+
+function renderLogsPane(rebuild) {
+  const pane = $("#pane");
+  const p = perms();
+  const activeId = document.activeElement?.id;
+  const selStart = activeId === "q" ? document.activeElement.selectionStart : null;
+  const f = filter.toLowerCase();
+
+  const rows = state.logs.filter((l) => {
+    if (f && ![l.actor_username, l.summary, l.action, l.ip, l.target_id].join(" ").toLowerCase().includes(f)) return false;
+    if (logCat === "auth") return l.target_type === "auth" || l.action.startsWith("login") || l.action === "logout" || l.action.startsWith("password");
+    if (logCat === "user") return l.target_type === "user";
+    if (logCat === "key") return l.target_type === "license";
+    if (logCat === "session") return l.target_type === "device" || l.target_type === "session";
+    return true;
+  });
+
+  pane.innerHTML = `<div class="card gb">
+    <div class="card-h">
+      <div class="card-hl"><div class="ico">${I("list")}</div><div><h3>Nhật ký hệ thống & tài khoản (${rows.length})</h3><p>Ghi nhận mọi lượt đăng nhập, kích hoạt key, thay đổi tài khoản, phân quyền và quản trị (lưu giữ 90 ngày).</p></div></div>
+      ${p.pruneLogs ? `<button class="btn sm danger" data-act="prune-logs">${I("trash", "sm")} Dọn nhật ký cũ</button>` : ""}
+    </div>
+    <div class="toolbar">
+      <div class="search with-icon">${I("search", "sm")}<input id="q" placeholder="Tìm tài khoản, nội dung, IP…" value="${esc(filter)}"></div>
+      <div class="chips">${[
+        ["all", "Tất cả"], ["auth", "Đăng nhập & Bảo mật"], ["user", "Tài khoản & Quyền"], ["key", "Key bản quyền"], ["session", "Thiết bị & Phiên"],
+      ].map(([v, l]) => `<button class="chip ${logCat === v ? "on" : ""}" data-logcat="${v}">${l}</button>`).join("")}</div>
+    </div>
+    <div class="tbl"><table class="rows"><thead><tr><th>Thời gian</th><th>Loại</th><th>Người thực hiện</th><th>Nội dung</th><th>IP</th></tr></thead><tbody>
+    ${rows.map((l) => `<tr>
+      <td class="first"><div class="stack"><span class="mono">${fmtSec(l.created_at)}</span><small>${ago(l.created_at)}</small></div></td>
+      <td data-l="Loại">${logBadge(l.action)}</td>
+      <td data-l="Người thực hiện"><b>${esc(l.actor_username || "Hệ thống")}</b> ${l.actor_role ? rolePill(l.actor_role) : ""}</td>
+      <td data-l="Nội dung" style="white-space:normal;max-width:520px">${esc(l.summary)}</td>
+      <td data-l="IP"><span class="mono muted">${esc(l.ip || "—")}</span></td>
+    </tr>`).join("") || emptyRow(5, "list", "Chưa có nhật ký nào.")}
+    </tbody></table></div>
+  </div>`;
+
+  const q = $("#q");
+  if (q) q.oninput = () => { filter = q.value; renderLogsPane(); };
+  pane.querySelectorAll("[data-logcat]").forEach((b) => (b.onclick = () => { logCat = b.dataset.logcat; renderLogsPane(); }));
+  if (activeId === "q" && $("#q")) { const n = $("#q"); n.focus(); if (selStart !== null) n.setSelectionRange(selStart, selStart); }
+}
+
+// ---- TAB 5: ROLES & PERMISSIONS ----
+function renderRolesPane() {
+  const pane = $("#pane");
+  const rData = state.roles;
+  const members = rData?.members || state.users.filter((u) => isConsoleRole(u.role));
+  const matrixRows = [
+    ["Xem toàn bộ tài khoản, thời gian, key, phiên & nhật ký", "viewAll"],
+    ["Tạo tài khoản khách hàng", "createUser"],
+    ["Sửa tên hiển thị & ghi chú", "editUser"],
+    ["Đổi phân quyền tài khoản (Nâng / Hạ quyền)", "changeRole"],
+    ["Đặt lại mật khẩu tài khoản khác", "resetPassword"],
+    ["Khoá / Mở khoá tài khoản", "lockUser"],
+    ["Xoá vĩnh viễn tài khoản", "deleteUser"],
+    ["Tạo, gán & gia hạn key bản quyền", "manageKeys"],
+    ["Thu hồi / Khôi phục / Gỡ key", "revokeKey"],
+    ["Xoá vĩnh viễn key", "deleteKey"],
+    ["Gỡ thiết bị khỏi key", "manageDevices"],
+    ["Cưỡng bức đăng xuất phiên đang hoạt động", "manageSessions"],
+    ["Mở chặn giới hạn đăng nhập sai", "unlockFailures"],
+    ["Dọn dẹp nhật ký hệ thống", "pruneLogs"],
+  ];
+  const roleCols = rData?.roles || ["super_admin", "admin", "staff", "user"].map((r) => ({ role: r, ...ROLE_INFO[r], permissions: {} }));
+
+  pane.innerHTML = `<div class="card gb">
+      <div class="card-h"><div class="card-hl"><div class="ico">${I("crown")}</div><div><h3>Đội ngũ quản trị & nhân sự (${members.length})</h3><p>Các tài khoản có quyền đăng nhập vào trung tâm quản trị. Quản trị tối cao cuối cùng luôn được hệ thống bảo vệ chống khoá/xoá nhầm.</p></div></div></div>
+      <div class="tbl"><table class="rows"><thead><tr><th>Tài khoản</th><th>Vai trò</th><th>Đăng nhập cuối</th><th>IP gần nhất</th><th>Số lượt ĐN</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+      ${members.map((u) => {
+        const mng = canManage(u);
+        return `<tr>
+          <td class="first"><div class="user">${avatar(u.username, !!u.online_sessions)}<div><b>${esc(u.username)}${me && u.id === me.id ? ' <span class="faint">(bạn)</span>' : ""}</b><small>${esc(u.display_name || "—")}</small></div></div></td>
+          <td data-l="Vai trò">${rolePill(u.role)}</td>
+          <td data-l="Đăng nhập cuối" title="${fmt(u.last_login_at)}">${ago(u.last_login_at, "Chưa đăng nhập")}</td>
+          <td data-l="IP"><span class="mono muted">${esc(u.last_ip || "—")}</span></td>
+          <td data-l="Lượt ĐN">${u.login_count || 0}</td>
+          <td data-l="Trạng thái">${u.disabled ? '<span class="pill bad">Đã khoá</span>' : '<span class="pill ok">Hoạt động</span>'}</td>
+          <td><div class="acts">
+            <button class="ib info" data-tip="Chi tiết 360°" data-act="user-detail" data-id="${u.id}">${I("eye")}</button>
+            ${mng && perms().changeRole ? `<button class="btn xs" data-act="user-edit" data-id="${u.id}">${I("shield", "sm")} Đổi quyền</button>` : ""}
+          </div></td>
+        </tr>`;
+      }).join("") || emptyRow(7, "shield", "Chưa có thành viên quản trị.")}
+      </tbody></table></div>
+    </div>
+    <div class="card gb">
+      <div class="card-h"><div class="card-hl"><div class="ico">${I("shield")}</div><div><h3>Ma trận phân quyền 4 cấp (RBAC)</h3><p>Mọi thao tác đều được kiểm tra trực tiếp trên máy chủ API — cấp thấp hơn không bao giờ tác động được lên cấp ngang hoặc cao hơn.</p></div></div></div>
+      <div class="kv" style="margin-bottom:16px">${roleCols.map((rc) => `<div><b>${rolePill(rc.role)} ${esc(rc.label)}</b><span>${esc(rc.description || "")}</span></div>`).join("")}</div>
+      <div class="tbl"><table class="matrix"><thead><tr><th>Chức năng / Quyền hạn</th>${roleCols.map((rc) => `<th>${esc(rc.badge)}</th>`).join("")}</tr></thead><tbody>
+      ${matrixRows.map(([label, key]) => `<tr><td>${esc(label)}</td>${roleCols.map((rc) => `<td>${rc.permissions?.[key] ? '<span class="yes">✓</span>' : '<span class="no">—</span>'}</td>`).join("")}</tr>`).join("")}
+      </tbody></table></div>
+    </div>`;
+}
+
+// ---- TAB 6: GUIDE ----
+function renderGuidePane() {
+  const sec = (id, n, title, sub, html) => `<section class="card gb gsec" id="${id}"><h3><i>${n}</i>${title}</h3><p>${sub}</p>${html}</section>`;
   const tbl = (head, rows) => `<table class="gt"><thead><tr>${head.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
   $("#pane").innerHTML = `<div class="guide">
     <nav class="toc">
-      <a href="#g1"><i>A</i>Tài khoản tối cao</a><a href="#g2"><i>B</i>Quản lý tài khoản</a><a href="#g3"><i>C</i>Quản lý key</a>
-      <a href="#g4"><i>D</i>Khách kích hoạt app</a><a href="#g5"><i>E</i>Tình huống thường gặp</a><a href="#g6"><i>F</i>Thông báo lỗi</a><a href="#g7"><i>G</i>Bảo mật</a>
+      <a href="#g1"><i>A</i>Phân quyền 4 cấp</a>
+      <a href="#g2"><i>B</i>Giám sát thời gian thực</a>
+      <a href="#g3"><i>C</i>Quản lý tài khoản & 360°</a>
+      <a href="#g4"><i>D</i>Key bản quyền</a>
+      <a href="#g5"><i>E</i>Luồng App Desktop</a>
+      <a href="#g6"><i>F</i>Khôi phục & Bảo mật</a>
     </nav>
     <div>
-    ${sec("g1", "A", "Tài khoản tối cao", "Bạn đang dùng tài khoản quản trị có toàn quyền.", `
+    ${sec("g1", "A", "Phân quyền quản trị 4 cấp", "Phân tách chặt chẽ giữa chủ hệ thống, quản trị viên, nhân sự hỗ trợ và khách hàng.", `
       <div class="kv">
-        <div><b>${I("crown", "sm")} Toàn quyền</b><span>Tạo, khoá, xoá tài khoản; tạo, gia hạn, thu hồi key; gỡ máy.</span></div>
-        <div><b>${I("monitor", "sm")} Dùng app không cần key</b><span>Đăng nhập app desktop không cần key, không giới hạn số máy.</span></div>
-        <div><b>${I("pass", "sm")} Đổi mật khẩu</b><span>Bấm biểu tượng ổ khoá ở góc trên bên phải. Nên đổi ngay lần đầu.</span></div>
-      </div>
-      <h4>Quên mật khẩu quản trị</h4>
-      <p class="muted" style="margin:0 0 8px">Trên máy đã đăng nhập Cloudflare, mở terminal ở thư mục dự án và chạy:</p>
+        <div><b>${I("crown", "sm")} Quản trị tối cao (super_admin)</b><span>Toàn quyền tuyệt đối, tạo/đổi quyền/khoá/xoá mọi cấp, dọn nhật ký. Hệ thống luôn bảo vệ Quản trị tối cao cuối cùng.</span></div>
+        <div><b>${I("shield", "sm")} Quản trị viên (admin)</b><span>Quản lý toàn bộ khách hàng, nhân sự hỗ trợ, key, máy và phiên. Không thể chỉnh sửa hay khoá Quản trị tối cao hoặc Quản trị viên khác.</span></div>
+        <div><b>${I("users", "sm")} Hỗ trợ / CTV (staff)</b><span>Xem đầy đủ thông tin tài khoản, thời gian và nhật ký; tạo khách, cấp/gia hạn key, gỡ máy, đá phiên khách, mở chặn đăng nhập. Không được xoá tài khoản/key hoặc đổi phân quyền.</span></div>
+      </div>`)}
+    ${sec("g2", "B", "Cập nhật liên tục & Theo dõi thời gian", "Trang quản trị tự đồng bộ mỗi 15 giây (tự tạm dừng khi ẩn tab để tiết kiệm tài nguyên).", `
+      <div class="kv">
+        <div><b>${I("pulse", "sm")} Trạng thái trực tuyến</b><span>App desktop gửi nhịp tim mỗi 60 giây khi đang mở, báo công cụ đang dùng, phiên bản app, IP và thời lượng sử dụng.</span></div>
+        <div><b>${I("clock", "sm")} Thống kê thời gian chi tiết</b><span>Ghi nhận riêng thời gian dùng hôm nay, 7 ngày gần nhất, tổng tích luỹ, số lượt đăng nhập và biểu đồ 14 ngày của từng tài khoản.</span></div>
+        <div><b>${I("out", "sm")} Kiểm soát tức thì</b><span>Khi bạn khoá tài khoản, thu hồi key, gỡ máy hoặc đá phiên — app của khách tự đăng xuất trong vòng tối đa 60 giây.</span></div>
+      </div>`)}
+    ${sec("g3", "C", "Hồ sơ tài khoản 360°", "Bấm biểu tượng con mắt trên bất kỳ tài khoản nào để xem toàn bộ hồ sơ.", `
+      <ol class="steps">
+        <li>Xem đầy đủ ngày tạo, vai trò, trạng thái online, IP, thiết bị gần nhất, tổng thời gian dùng và biểu đồ 14 ngày.</li>
+        <li>Xem toàn bộ key, toàn bộ máy đã kích hoạt và mọi phiên đang đăng nhập; bấm <b>Đăng xuất toàn bộ phiên</b> bất cứ lúc nào.</li>
+        <li>Xem 50 dòng nhật ký hoạt động gần nhất riêng của tài khoản đó.</li>
+      </ol>`)}
+    ${sec("g4", "D", "Quản lý Key bản quyền", "Hai chế độ tính hạn rõ ràng và gia hạn linh hoạt.", `
+      ${tbl(["Thao tác", "Mô tả"], [
+        ["Tính từ lần đăng nhập đầu", "Key gắn sẵn vào tài khoản nhưng chỉ bắt đầu đếm ngược khi khách mở app đăng nhập lần đầu tiên."],
+        ["Tính ngay khi tạo", "Hạn sử dụng bắt đầu đếm ngay tại thời điểm tạo hoặc gán key."],
+        ["Gia hạn linh hoạt", "Hỗ trợ cộng/bớt ngày, đặt chính xác còn N ngày từ hôm nay, chọn ngày hết hạn trên lịch hoặc chuyển Vĩnh viễn."],
+        ["Gán key rời", "Key chưa dùng có thể gán thẳng cho bất kỳ tài khoản nào chỉ với 1 lần bấm."],
+      ])}`)}
+    ${sec("g5", "E", "Luồng hoạt động App Desktop LMS Studio", "Khách đăng nhập 1 lần, tự đồng bộ bản quyền và chống chỉnh lùi đồng hồ.", `
+      <ol class="steps">
+        <li>Khách mở app desktop LMS Studio → nhập tên đăng nhập & mật khẩu (nhập thêm key nếu tài khoản chưa gắn sẵn).</li>
+        <li>App tự lấy tên máy thực, hệ điều hành và phiên bản để hiển thị rõ trên trang quản trị.</li>
+        <li>App đồng bộ nhịp tim 60 giây/lần khi đang mở; mất mạng vẫn dùng tối đa 72 giờ (tự khoá nếu phát hiện chỉnh lùi đồng hồ máy).</li>
+        <li>Khách bấm biểu tượng tài khoản góc trên phải để xem hạn dùng chi tiết, đổi mật khẩu (hộp thoại tích hợp), hoặc đăng xuất.</li>
+      </ol>`)}
+    ${sec("g6", "F", "Khôi phục quyền tối cao & Bảo mật", "Bảo mật chuẩn sản phẩm thương mại.", `
+      <p class="muted" style="margin:0 0 8px">Quên mật khẩu Quản trị tối cao? Trên máy đã đăng nhập Cloudflare, chạy ở thư mục dự án:</p>
       <code>node web/scripts/create-admin.js admin MatKhauMoi123</code>
-      <div class="note">${I("alert", "sm")}<span>Vai trò <b>Quản trị</b> có toàn quyền như bạn. Chỉ cấp cho người thật sự tin tưởng; khách hàng luôn để <b>Người dùng</b>.</span></div>`)}
-    ${sec("g2", "B", "Quản lý tài khoản", "Tab Tài khoản. Khách không tự đăng ký được; chỉ quản trị viên tạo.", `
-      <h4>Tạo tài khoản cho khách (cách nhanh nhất)</h4>
-      <ol class="steps">
-        <li>Nhập <b>Tên đăng nhập</b>, <b>Mật khẩu</b>, <b>Tên hiển thị</b> và <b>Ghi chú</b> (vd: “Anh Nam, gói 1 tháng, đã TT”).</li>
-        <li>Để <b>Vai trò = Người dùng</b>, <b>Cấp key kèm = Có</b>.</li>
-        <li>Chọn <b>Số ngày</b> (30, 90, 365… hoặc <b>0 = vĩnh viễn</b>) và <b>Số máy</b> (mặc định 1).</li>
-        <li>Bấm <b>Tạo tài khoản</b> rồi <b>Chép gửi khách</b>. Khách chỉ cần tên đăng nhập và mật khẩu, không phải nhập key.</li>
-      </ol>
-      <h4>Các nút trên mỗi dòng</h4>
-      ${tbl(["Nút", "Tác dụng"], [
-        [I("key", "sm") + " Cấp key", "Cấp thêm key cho tài khoản chưa có key hoặc đã hết hạn."],
-        [I("reset", "sm") + " Đặt lại mật khẩu", "Khi khách quên. Mọi máy của khách phải đăng nhập lại."],
-        [I("lock", "sm") + " Khoá / Mở khoá", "Chặn tạm thời; app của khách tự đăng xuất ở lần kiểm tra sau."],
-        [I("trash", "sm") + " Xoá", "Xoá hẳn tài khoản; key của tài khoản bị thu hồi."],
-      ])}
-      <p class="muted" style="margin:10px 0 0">Bộ lọc nhanh: <b>Sắp hết hạn</b> (dưới 7 ngày), <b>Chưa có / hết key</b>, <b>Đã khoá</b>.</p>`)}
-    ${sec("g3", "C", "Quản lý key bản quyền", "Tab Key bản quyền. Key có dạng LMS-XXXX-XXXX-XXXX-XXXX, khách gõ hoa hay thường đều được.", `
-      <h4>Tạo key hàng loạt</h4>
-      <ol class="steps">
-        <li>Nhập <b>Số lượng</b> (tối đa 100), <b>Số ngày</b> (0 = vĩnh viễn), <b>Số máy</b>, <b>Ghi chú</b>.</li>
-        <li><b>Gán cho tài khoản</b>: bỏ trống để tạo key rời (khách tự nhập lúc đăng nhập).</li>
-        <li>Bấm <b>Tạo key</b> rồi <b>Chép tất cả</b>.</li>
-      </ol>
-      <h4>Các nút trên mỗi dòng</h4>
-      ${tbl(["Nút", "Tác dụng"], [
-        [I("clock", "sm") + " Gia hạn", "Cộng thêm ngày (số âm để bớt) hoặc chuyển thành vĩnh viễn."],
-        [I("devices", "sm") + " Máy", "Xem máy đang dùng, đổi số máy tối đa, gỡ từng máy."],
-        [I("ban", "sm") + " Thu hồi / " + I("check", "sm") + " Khôi phục", "Tắt key ngay lập tức, hoặc bật lại."],
-        [I("unlink", "sm") + " Gỡ khỏi tài khoản", "Tách key và xoá danh sách máy; key trở về “Chưa dùng”."],
-        [I("trash", "sm") + " Xoá", "Xoá hẳn key."],
-      ])}
-      <div class="kv" style="margin-top:14px">
-        <div><b>${I("clock", "sm")} Hạn tính từ lần đầu</b><span>Key 30 ngày tạo hôm nay, khách dùng tuần sau vẫn đủ 30 ngày.</span></div>
-        <div><b>${I("key", "sm")} Một key, một tài khoản</b><span>Key đã dùng cho A thì B nhập sẽ bị báo “key đã được dùng”.</span></div>
-        <div><b>${I("monitor", "sm")} Suất máy</b><span>Mỗi máy mở app lần đầu chiếm 1 suất. Đổi máy: gỡ máy cũ trước.</span></div>
-      </div>`)}
-    ${sec("g4", "D", "Khách kích hoạt app desktop", "App LMS Studio từ bản v1.2.16 khoá cho tới khi đăng nhập.", `
-      <ol class="steps">
-        <li>Cài và mở <b>LMS Studio</b>. Màn hình <b>Đăng nhập</b> hiện ra.</li>
-        <li>Nhập <b>tên đăng nhập</b> và <b>mật khẩu</b> bạn cấp. Tài khoản đã có key thì vào app luôn.</li>
-        <li>Chưa có key hoặc key hết hạn: app hiện ô <b>Nhập key bản quyền</b>; khách dán key rồi bấm Đăng nhập.</li>
-        <li>Key được kích hoạt và bắt đầu tính hạn. Nút <b>hình người</b> góc trên phải hiện key, hạn dùng, số máy, đổi mật khẩu, đăng xuất.</li>
-      </ol>
-      <div class="kv" style="margin-top:14px">
-        <div><b>${I("reset", "sm")} Tự kiểm tra</b><span>App kiểm tra với máy chủ mỗi 30 phút và khi mở lại.</span></div>
-        <div><b>${I("pulse", "sm")} Mất mạng</b><span>Vẫn dùng được tối đa 72 giờ kể từ lần kiểm tra thành công gần nhất.</span></div>
-        <div><b>${I("clock", "sm")} Hết hạn</b><span>Bạn bấm Gia hạn (khách đăng nhập lại), hoặc gửi key mới cho khách nhập.</span></div>
-      </div>`)}
-    ${sec("g5", "E", "Tình huống thường gặp", "Làm gì trong từng trường hợp.", tbl(["Tình huống", "Cách làm"], [
-      ["Khách mới, gói 1 tháng", "Tạo tài khoản → Cấp key kèm: Có · 30 ngày · 1 máy"],
-      ["Khách mua vĩnh viễn", "Số ngày = <b>0</b>"],
-      ["Khách đổi máy tính", "Key → " + I("devices", "sm") + " Máy → Gỡ máy cũ → khách đăng nhập máy mới"],
-      ["Khách muốn dùng 2 máy", "Key → " + I("devices", "sm") + " Máy → Đổi số máy = 2"],
-      ["Khách quên mật khẩu", "Tài khoản → " + I("reset", "sm") + " Đặt lại mật khẩu"],
-      ["Chưa thanh toán, cần chặn ngay", I("lock", "sm") + " Khoá tài khoản hoặc " + I("ban", "sm") + " Thu hồi key"],
-      ["Tặng thêm 7 ngày", I("clock", "sm") + " Gia hạn → bấm “+7 ngày”"],
-      ["Nhân viên cần quyền quản trị", "Tạo tài khoản với Vai trò = Quản trị"],
-    ]))}
-    ${sec("g6", "F", "Thông báo lỗi khách có thể gặp", "Ý nghĩa và cách xử lý.", tbl(["Thông báo", "Nguyên nhân · cách xử lý"], [
-      ["Sai tên đăng nhập hoặc mật khẩu", "Gõ sai. Sai 10 lần liên tiếp bị chặn 15 phút."],
-      ["Tài khoản đã bị khoá", "Bạn đã bấm Khoá. Mở khoá để khách dùng lại."],
-      ["Cần key / Key đã hết hạn", "Khách nhập key mới, hoặc bạn Gia hạn key cũ."],
-      ["Key không đúng / Key đã được dùng", "Gõ sai key, hoặc key thuộc tài khoản khác."],
-      ["Đã đủ số máy", "Gỡ máy cũ hoặc tăng số máy của key."],
-      ["Không kết nối được máy chủ", "Kiểm tra mạng của khách."],
-    ]))}
-    ${sec("g7", "G", "Bảo mật", "Những gì hệ thống tự bảo vệ.", `<div class="kv">
-      <div><b>${I("lock", "sm")} Mật khẩu được băm</b><span>Không lưu dạng chữ; ngay cả quản trị viên chỉ đặt lại được, không xem được.</span></div>
-      <div><b>${I("ban", "sm")} Chống dò mật khẩu</b><span>Sai 10 lần trong 15 phút thì tạm chặn tài khoản đó.</span></div>
-      <div><b>${I("eye", "sm")} Trang quản trị riêng tư</b><span>Không lưu cache, không hiện trên Google, chỉ vai trò Quản trị vào được.</span></div>
-      <div><b>${I("monitor", "sm")} Chỉ khoá app desktop</b><span>Bản web lms.luangroup.asia vẫn mở tự do.</span></div></div>`)}
+      <div class="note">${I("lock", "sm")}<span>Mật khẩu được băm bằng PBKDF2-SHA256 (100.000 vòng); mã phiên lưu dạng băm SHA-256 và không bao giờ hiển thị qua API; toàn bộ trang <code>/admin/</code> và <code>/api/*</code> dùng <code>Cache-Control: no-store</code>.</span></div>`)}
     </div></div>`;
 }
 
-// ---------- actions ----------
-function copy(t) { navigator.clipboard.writeText(t).then(() => toast("Đã chép"), () => toast("Không chép được", "bad")); }
-async function giveKey(username) {
-  const v = await modal({ icon: "key", title: "Cấp key cho " + username, text: "Key được gắn thẳng vào tài khoản, hạn tính từ bây giờ.", ok: "Cấp key",
-    fields: [{ name: "days", label: "Số ngày", type: "number", value: 30, min: 0, quick: [[30, "30 ngày"], [90, "3 tháng"], [365, "1 năm"], [0, "Vĩnh viễn"]] },
-             { name: "maxDevices", label: "Số máy", type: "number", value: 1, min: 1 }] });
-  if (!v) return;
-  act(async () => { const r = await api("/admin/keys", "POST", { username, days: +v.days, maxDevices: +v.maxDevices }); setTimeout(() => showText("Key mới của " + username, r.keys[0], "Đã kích hoạt cho tài khoản."), 30); }, "Đã cấp key");
+function emptyRow(cols, icon, text) {
+  return `<tr><td colspan="${cols}"><div class="empty"><div class="ico">${I(icon)}</div>${esc(text)}</div></td></tr>`;
 }
-function showUserKeys(username) { animateNext = true; tab = "keys"; filter = username; status = "all"; render(); }
-async function resetPw(id, u) {
-  const v = await modal({ icon: "reset", title: "Đặt lại mật khẩu", text: "Cho tài khoản <b>" + esc(u) + "</b>. Mọi máy của tài khoản phải đăng nhập lại.", ok: "Đặt lại",
-    fields: [{ name: "p", label: "Mật khẩu mới", value: "", required: true, minlength: 6, placeholder: "Ít nhất 6 ký tự" }] });
-  if (v) act(() => api("/admin/users/" + id, "PATCH", { password: v.p }), "Đã đặt lại mật khẩu");
-}
-async function toggleUser(id, disabled, u) {
-  if (disabled && !(await confirmBox("Khoá tài khoản " + u + "?", "App của khách sẽ tự đăng xuất ở lần kiểm tra sau. Có thể mở khoá lại bất cứ lúc nào.", "Khoá"))) return;
-  act(() => api("/admin/users/" + id, "PATCH", { disabled: !!disabled }), disabled ? "Đã khoá" : "Đã mở khoá");
-}
-async function delUser(id, u) { if (await confirmBox("Xoá tài khoản " + u + "?", "Không thể hoàn tác. Key của tài khoản sẽ bị thu hồi.", "Xoá vĩnh viễn")) act(() => api("/admin/users/" + id, "DELETE"), "Đã xoá tài khoản"); }
-async function extend(key) {
-  const v = await modal({ icon: "clock", title: "Gia hạn key", text: `<code>${esc(key)}</code>`, ok: "Gia hạn",
-    fields: [{ name: "d", label: "Cộng thêm (ngày) · số âm để bớt", type: "number", value: 30, quick: [[7, "+7 ngày"], [30, "+30 ngày"], [90, "+3 tháng"], [365, "+1 năm"]] },
-             { name: "forever", label: "Hoặc", options: [["", "Cộng theo số ngày ở trên"], ["1", "Chuyển thành vĩnh viễn"]], value: "" }] });
-  if (!v) return;
-  act(() => api("/admin/keys/" + encodeURIComponent(key), "PATCH", v.forever ? { forever: true } : { addDays: +v.d }), "Đã gia hạn");
-}
-async function setStatus(key, s) {
-  if (s === "revoked" && !(await confirmBox("Thu hồi key?", `<code>${esc(key)}</code><br>Người dùng sẽ bị khoá app ngay lần kiểm tra sau.`, "Thu hồi"))) return;
-  act(() => api("/admin/keys/" + encodeURIComponent(key), "PATCH", { status: s }), s === "active" ? "Đã khôi phục key" : "Đã thu hồi key");
-}
-async function unassign(key) { if (await confirmBox("Gỡ key khỏi tài khoản?", "Danh sách máy bị xoá, key trở về “Chưa dùng” để cấp cho người khác.", "Gỡ")) act(() => api("/admin/keys/" + encodeURIComponent(key), "PATCH", { unassign: true }), "Đã gỡ key"); }
-async function delKey(key) { if (await confirmBox("Xoá hẳn key?", `<code>${esc(key)}</code><br>Không thể hoàn tác.`, "Xoá")) act(() => api("/admin/keys/" + encodeURIComponent(key), "DELETE"), "Đã xoá key"); }
-async function showDevices(key) {
-  try {
-    const k = data.keys.find((x) => x.key === key) || { max_devices: 1 };
-    const r = await api("/admin/keys/" + encodeURIComponent(key) + "/devices");
-    const list = r.devices.length ? `<div class="devs">${r.devices.map((d) => `<div class="dev"><div class="ico">${I("monitor")}</div><div><b>${esc(d.device_name)}</b><small>Lần đầu ${fmt(d.first_seen)} · gần nhất ${ago(d.last_seen)}</small></div>
-        <button type="button" class="btn sm danger" data-rm="${d.id}">Gỡ máy</button></div>`).join("")}</div>` : `<div class="empty" style="padding:20px"><div class="ico">${I("monitor")}</div>Chưa có máy nào dùng key này.</div>`;
-    const p = modal({ icon: "devices", title: "Máy dùng key", text: `<code>${esc(key)}</code> · ${r.devices.length}/${k.max_devices} máy`, wide: true, body: list, ok: "Lưu số máy", cancel: "Đóng",
-      fields: [{ name: "max", label: "Số máy tối đa", type: "number", value: k.max_devices, min: 1, quick: [[1, "1"], [2, "2"], [3, "3"], [5, "5"]] }] });
-    dlg.querySelectorAll("[data-rm]").forEach((b) => (b.onclick = async () => {
-      dlg.close();
-      if (await confirmBox("Gỡ máy này?", "Máy đó sẽ bị đăng xuất và trả lại 1 suất.", "Gỡ máy")) { await act(() => api("/admin/devices/" + b.dataset.rm, "DELETE"), "Đã gỡ máy"); }
-      showDevices(key);
-    }));
-    const v = await p;
-    if (v && +v.max !== k.max_devices) act(() => api("/admin/keys/" + encodeURIComponent(key), "PATCH", { maxDevices: +v.max }), "Đã đổi số máy");
-  } catch (e) { toast(e.message, "bad"); }
-}
-async function changePw() {
-  const v = await modal({ icon: "pass", title: "Đổi mật khẩu quản trị", ok: "Đổi mật khẩu",
-    fields: [{ name: "o", label: "Mật khẩu hiện tại", type: "password", required: true }, { name: "n", label: "Mật khẩu mới", type: "password", required: true, minlength: 6, placeholder: "Ít nhất 6 ký tự" }] });
-  if (v) act(() => api("/auth/password", "POST", { oldPassword: v.o, newPassword: v.n }), "Đã đổi mật khẩu");
-}
-async function logout() { animateNext = true; try { await api("/auth/logout", "POST"); } catch {} token = ""; localStorage.removeItem("lms.admin.token"); render(); }
 
-async function load() {
-  if (!token) return;
+function bindToolbar(rerender) {
+  const q = $("#q");
+  if (q) q.oninput = () => { filter = q.value; rerender(); };
+  document.querySelectorAll("[data-st]").forEach((c) => (c.onclick = () => { statusFilter = c.dataset.st; rerender(); }));
+}
+
+// ---- actions & modals ----
+async function openUserDetail(id) {
   try {
-    const [stats, users, keys] = await Promise.all([api("/admin/stats"), api("/admin/users"), api("/admin/keys")]);
-    data.loaded = true; data.stats = stats; data.users = users.users; data.keys = keys.keys; data.now = keys.now;
-    const self = data.users.find((u) => me && u.username.toLowerCase() === String(me.username).toLowerCase());
-    if (self) { me = { ...me, displayName: self.display_name || self.username }; localStorage.setItem("lms.admin.me", JSON.stringify(me)); }
-    const q = document.activeElement?.id === "q";
-    render();
-    if (q && $("#q")) { const n = $("#q"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
+    const d = await api("/admin/users/" + id);
+    const u = d.user;
+    const now = d.now || serverNow();
+    const mng = canManage(u);
+    const p = perms();
+    const maxSec = Math.max(60, ...(d.daily || []).map((x) => x.active_seconds || 0));
+    const dailyHtml = d.daily?.length
+      ? `<div class="bars">${d.daily.map((r) => `<div class="bar-row"><span class="mono muted">${esc(r.day)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, Math.round(((r.active_seconds || 0) / maxSec) * 100))}%"></div></div><span style="text-align:right;font-variant-numeric:tabular-nums"><b>${fmtDur(r.active_seconds)}</b> · ${r.sessions_count || 0}p</span></div>`).join("")}</div>`
+      : `<div class="muted" style="font-size:12.5px">Chưa có dữ liệu sử dụng theo ngày.</div>`;
+
+    const keysHtml = d.keys?.length
+      ? `<div class="devs">${d.keys.map((k) => `<div class="dev"><div class="ico">${I("key")}</div><div class="info"><b class="mono">${esc(k.key)}</b><small>Tạo ${day(k.created_at)} · ${k.activated_at ? "KH " + day(k.activated_at) : "Chưa kích hoạt"} · ${k.devices}/${k.max_devices} máy${k.note ? " · " + esc(k.note) : ""}</small></div>${k.status !== "active" ? '<span class="pill bad">Thu hồi</span>' : k.activated_at === null && k.expires_at === null && k.duration_days > 0 ? `<span class="pill info">Chờ ĐN · ${k.duration_days}n</span>` : fmtCountdown(k.expires_at, now)}</div>`).join("")}</div>`
+      : `<div class="muted" style="font-size:12.5px">Chưa có key nào gắn với tài khoản này.</div>`;
+
+    const sessHtml = d.sessions?.length
+      ? `<div class="devs">${d.sessions.map((s) => `<div class="dev"><div class="ico" style="${s.is_online ? "background:var(--ok-bg);color:var(--ok)" : ""}">${I("monitor")}</div><div class="info"><b>${esc(s.device_name || "Không rõ")} ${s.is_online ? '<span class="pill ok" style="margin-left:4px">Online</span>' : ""}${s.is_current ? ' <span class="pill gold">Phiên hiện tại</span>' : ""}</b><small>${esc(s.platform || "—")}${s.app_version ? " v" + esc(s.app_version) : ""} · IP ${esc(s.ip || "—")} · Vào ${fmt(s.created_at)} · Dùng ${fmtDur(s.active_seconds)}${s.current_tool ? " · " + esc(TOOL_NAMES[s.current_tool] || s.current_tool) : ""}</small></div>${!s.is_current && p.manageSessions && (mng || u.id === me?.id) ? `<button type="button" class="btn xs danger" data-d-kick="${s.id}">Đá phiên</button>` : ""}</div>`).join("")}</div>`
+      : `<div class="muted" style="font-size:12.5px">Không có phiên nào đang đăng nhập.</div>`;
+
+    const logsHtml = d.logs?.length
+      ? `<div class="devs">${d.logs.slice(0, 15).map((l) => `<div class="dev" style="padding:8px 10px"><div class="info"><b style="font-size:12.5px">${esc(l.summary)}</b><small>${fmtSec(l.created_at)} · ${esc(l.actor_username || "Hệ thống")}${l.ip ? " · IP " + esc(l.ip) : ""}</small></div>${logBadge(l.action)}</div>`).join("")}</div>`
+      : `<div class="muted" style="font-size:12.5px">Chưa có nhật ký hoạt động.</div>`;
+
+    const body = `
+      <div class="dgrid">
+        <div class="dbox"><span>Vai trò & Trạng thái</span><b>${esc(ROLE_INFO[u.role]?.label || u.role)}</b><small>${u.disabled ? "Đang bị khoá" : "Đang hoạt động"}${d.failure ? ` · ${d.failure.count} lần sai MK` : ""}</small></div>
+        <div class="dbox"><span>Tổng thời gian dùng</span><b>${fmtDur(u.total_active_seconds)}</b><small>${u.login_count || 0} lượt đăng nhập</small></div>
+        <div class="dbox"><span>Ngày tạo & Đăng nhập cuối</span><b>${day(u.created_at)}</b><small>ĐN cuối: ${fmt(u.last_login_at)}</small></div>
+        <div class="dbox"><span>Hoạt động gần nhất</span><b>${ago(u.last_active_at, "Chưa có")}</b><small>${esc(u.last_device || "—")}${u.last_ip ? " · " + esc(u.last_ip) : ""}</small></div>
+      </div>
+      ${u.note ? `<div class="hint" style="margin:0">${I("info", "sm")}<span>Ghi chú: <b>${esc(u.note)}</b></span></div>` : ""}
+      <div class="dsec"><h4>Biểu đồ sử dụng 14 ngày gần nhất</h4>${dailyHtml}</div>
+      <div class="dsec"><h4>Key bản quyền (${d.keys.length})</h4>${keysHtml}</div>
+      <div class="dsec"><h4>Phiên đang hoạt động (${d.sessions.length})${d.sessions.length && p.manageSessions && (mng || u.id === me?.id) ? `<button type="button" class="btn xs danger" id="d-kick-all">Đăng xuất tất cả phiên</button>` : ""}</h4>${sessHtml}</div>
+      <div class="dsec"><h4>Nhật ký gần đây (${d.logs.length})</h4>${logsHtml}</div>`;
+
+    await modal({
+      icon: "user",
+      title: `Hồ sơ 360° · ${u.username}`,
+      text: `${esc(u.display_name || "Chưa đặt tên hiển thị")} · ID #${u.id}`,
+      size: "xl",
+      body,
+      ok: "",
+      cancel: "Đóng",
+      onOpen: (el, finish) => {
+        el.querySelectorAll("[data-d-kick]").forEach((b) => (b.onclick = async () => {
+          finish(null);
+          await act(() => api("/admin/sessions/" + b.dataset.dKick, "DELETE"), "Đã đăng xuất phiên");
+          openUserDetail(id);
+        }));
+        const allBtn = el.querySelector("#d-kick-all");
+        if (allBtn) allBtn.onclick = async () => {
+          finish(null);
+          if (await confirmBox(`Đăng xuất toàn bộ phiên của ${u.username}?`, "Mọi thiết bị của tài khoản này sẽ phải đăng nhập lại.", "Đăng xuất tất cả")) {
+            await act(() => api(`/admin/users/${id}/logout-all`, "POST"), "Đã đăng xuất toàn bộ phiên");
+          }
+          openUserDetail(id);
+        };
+      },
+    });
   } catch (e) { toast(e.message, "bad"); }
 }
-render(); load();
+
+async function editUser(id) {
+  const u = state.users.find((x) => x.id === Number(id));
+  if (!u) return;
+  const p = perms();
+  const isSelf = me && u.id === me.id;
+  const canEditRole = p.changeRole && (me.role === "super_admin" || (!isSelf && canManage(u)));
+  const roleChoices = (me.role === "super_admin" ? ["user", "staff", "admin", "super_admin"] : p.creatableRoles || ["user"]).map((r) => [r, ROLE_INFO[r].label]);
+  const fields = [
+    { name: "displayName", label: "Tên hiển thị", value: u.display_name || "", placeholder: "vd: Anh Nam" },
+    { name: "note", label: "Ghi chú", value: u.note || "", placeholder: "vd: Gói 1 năm, VIP" },
+  ];
+  if (canEditRole) {
+    fields.push({ name: "role", label: "Vai trò phân quyền", value: u.role, options: roleChoices, hint: "Thay đổi vai trò có hiệu lực ngay lập tức trên máy chủ." });
+  }
+  const v = await modal({ icon: "edit", title: `Chỉnh sửa · ${u.username}`, text: `Tài khoản #${u.id}`, ok: "Lưu thay đổi", fields });
+  if (!v) return;
+  const payload = { displayName: v.displayName, note: v.note };
+  if (canEditRole && v.role) payload.role = v.role;
+  act(() => api("/admin/users/" + id, "PATCH", payload), "Đã cập nhật tài khoản");
+}
+
+async function giveKey(username) {
+  const v = await modal({
+    icon: "key", title: "Cấp key cho " + username, text: "Chọn thời lượng, số máy và thời điểm bắt đầu tính hạn.", ok: "Cấp key",
+    fields: [
+      { name: "days", label: "Số ngày", type: "number", value: 30, min: 0, max: 36500, quick: [[7, "7 ngày"], [30, "30 ngày"], [90, "3 tháng"], [365, "1 năm"], [0, "Vĩnh viễn"]] },
+      { name: "maxDevices", label: "Số máy tối đa", type: "number", value: 1, min: 1, max: 100, quick: [[1, "1 máy"], [2, "2 máy"], [3, "3 máy"], [5, "5 máy"]] },
+      { name: "activateMode", label: "Bắt đầu tính hạn", value: "first_login", options: [["first_login", "Từ lần đăng nhập đầu"], ["immediate", "Ngay bây giờ"]] },
+      { name: "note", label: "Ghi chú", value: "", placeholder: "Tuỳ chọn" },
+    ],
+  });
+  if (!v) return;
+  act(async () => {
+    const r = await api("/admin/keys", "POST", { username, days: +v.days, maxDevices: +v.maxDevices, activateMode: v.activateMode, note: v.note });
+    setTimeout(() => showText("Key mới của " + username, r.keys[0], v.activateMode === "first_login" && +v.days > 0 ? "Key đã gắn, bắt đầu đếm ngược từ lần khách đăng nhập đầu tiên." : "Key đã kích hoạt ngay cho tài khoản."), 40);
+  }, "Đã cấp key");
+}
+
+async function assignKey(key) {
+  const userOpts = state.users.filter((u) => u.role === "user").map((u) => [u.username, `${u.username}${u.display_name ? " (" + u.display_name + ")" : ""}`]);
+  if (!userOpts.length) { toast("Chưa có tài khoản người dùng nào để gán", "bad"); return; }
+  const v = await modal({
+    icon: "link", title: "Gán key cho tài khoản", text: `<code>${esc(key)}</code>`, ok: "Gán key",
+    fields: [
+      { name: "username", label: "Chọn tài khoản", options: userOpts, value: userOpts[0][0] },
+      { name: "activateMode", label: "Bắt đầu tính hạn", value: "first_login", options: [["first_login", "Từ lần đăng nhập đầu"], ["immediate", "Ngay bây giờ"]] },
+    ],
+  });
+  if (!v) return;
+  act(() => api("/admin/keys/" + encodeURIComponent(key), "PATCH", { assignUsername: v.username, activateMode: v.activateMode }), "Đã gán key cho " + v.username);
+}
+
+async function extendKey(key) {
+  const k = state.keys.find((x) => x.key === key);
+  const curDate = k?.expires_at ? new Date(k.expires_at).toISOString().slice(0, 10) : new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+  const v = await modal({
+    icon: "clock", title: "Gia hạn / Đặt hạn key", text: `<code>${esc(key)}</code>`, ok: "Cập nhật hạn",
+    fields: [
+      { name: "mode", label: "Chế độ chỉnh hạn", value: "add", options: [["add", "Cộng / bớt số ngày"], ["set", "Đặt còn chính xác N ngày kể từ hôm nay"], ["date", "Chọn ngày hết hạn cụ thể"], ["forever", "Chuyển thành vĩnh viễn"]] },
+      { name: "d", label: "Số ngày", type: "number", value: 30, min: -36500, max: 36500, quick: [[7, "+7 ngày"], [30, "+30 ngày"], [90, "+3 tháng"], [365, "+1 năm"], [-7, "-7 ngày"]] },
+      { name: "date", label: "Ngày hết hạn (khi chọn chế độ đặt ngày)", type: "date", value: curDate },
+    ],
+  });
+  if (!v) return;
+  let body;
+  if (v.mode === "forever") body = { forever: true };
+  else if (v.mode === "set") body = { setDays: Math.max(0, +v.d) };
+  else if (v.mode === "date") {
+    const ts = new Date(v.date + "T23:59:59+07:00").getTime();
+    if (!Number.isFinite(ts)) { toast("Ngày hết hạn không hợp lệ", "bad"); return; }
+    body = { expiresAt: ts };
+  } else body = { addDays: +v.d };
+  act(() => api("/admin/keys/" + encodeURIComponent(key), "PATCH", body), "Đã cập nhật hạn sử dụng");
+}
+
+async function editKeyNote(key) {
+  const k = state.keys.find((x) => x.key === key);
+  const v = await modal({ icon: "edit", title: "Sửa ghi chú key", text: `<code>${esc(key)}</code>`, ok: "Lưu", fields: [{ name: "note", label: "Ghi chú", value: k?.note || "", placeholder: "Nhập ghi chú mới" }] });
+  if (v) act(() => api("/admin/keys/" + encodeURIComponent(key), "PATCH", { note: v.note }), "Đã cập nhật ghi chú");
+}
+
+async function showKeyDevices(key) {
+  try {
+    const k = state.keys.find((x) => x.key === key) || { max_devices: 1 };
+    const r = await api("/admin/keys/" + encodeURIComponent(key) + "/devices");
+    const p = perms();
+    const list = r.devices.length
+      ? `<div class="devs">${r.devices.map((d) => `<div class="dev"><div class="ico">${I("monitor")}</div><div class="info"><b>${esc(d.device_name || "Không rõ")}</b><small>${esc(d.platform || "—")}${d.app_version ? " v" + esc(d.app_version) : ""} · IP ${esc(d.last_ip || "—")} · Dùng ${fmtDur(d.total_active_seconds)} · Gần nhất ${ago(d.last_seen)}</small></div>${p.manageDevices ? `<button type="button" class="btn xs danger" data-rm="${d.id}">Gỡ máy</button>` : ""}</div>`).join("")}</div>`
+      : `<div class="empty" style="padding:18px"><div class="ico">${I("monitor")}</div>Chưa có máy nào kích hoạt key này.</div>`;
+    const v = await modal({
+      icon: "devices", title: "Thiết bị dùng key", text: `<code>${esc(key)}</code> · ${r.devices.length}/${k.max_devices} máy`, size: "wide", body: list,
+      ok: p.manageKeys ? "Lưu số máy" : "", cancel: "Đóng",
+      fields: p.manageKeys ? [{ name: "max", label: "Số máy tối đa", type: "number", value: k.max_devices, min: 1, max: 100, quick: [[1, "1"], [2, "2"], [3, "3"], [5, "5"], [10, "10"]] }] : [],
+      onOpen: (el, finish) => {
+        el.querySelectorAll("[data-rm]").forEach((b) => (b.onclick = async () => {
+          finish(null);
+          if (await confirmBox("Gỡ máy này khỏi key?", "Máy đó sẽ bị đăng xuất ngay và trả lại 1 suất kích hoạt.", "Gỡ máy")) {
+            await act(() => api("/admin/devices/" + b.dataset.rm, "DELETE"), "Đã gỡ máy");
+          }
+          showKeyDevices(key);
+        }));
+      },
+    });
+    if (v && +v.max !== k.max_devices) act(() => api("/admin/keys/" + encodeURIComponent(key), "PATCH", { maxDevices: +v.max }), "Đã đổi số máy tối đa");
+  } catch (e) { toast(e.message, "bad"); }
+}
+
+function exportUsersCsv() {
+  const head = ["ID", "Username", "TenHienThi", "VaiTro", "TrangThai", "HanDung", "KeyDangDung", "SoMay", "PhienSong", "Online", "DungHomNay_Giay", "TongThoiGian_Giay", "LuotDangNhap", "NgayTao", "DangNhapCuoi", "HoatDongCuoi", "IPCuoi", "GhiChu"];
+  const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const lines = [head.join(",")].concat(
+    state.users.map((u) => [
+      u.id, u.username, u.display_name, ROLE_INFO[u.role]?.label || u.role, u.disabled ? "Khoa" : "HoatDong",
+      u.expires_at ? fmt(u.expires_at) : u.license_state, u.active_key || "", u.devices, u.active_sessions, u.is_online ? "Online" : "Offline",
+      u.today_active_seconds || 0, u.total_active_seconds || 0, u.login_count || 0, fmt(u.created_at), fmt(u.last_login_at), fmt(u.last_active_at), u.last_ip || "", u.note || "",
+    ].map(q).join(",")),
+  );
+  const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `lms-accounts-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast("Đã xuất file CSV danh sách tài khoản");
+}
+
+// ---- single delegated event router (zero inline onclick bugs) ----
+document.addEventListener("click", async (e) => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const a = el.dataset.act;
+  if (a === "tab") { tab = el.dataset.tab; filter = ""; statusFilter = "all"; renderStatsAndTabs(); renderActiveTab(true); return; }
+  if (a === "stat-jump") {
+    tab = el.dataset.tab;
+    statusFilter = el.dataset.st || "all";
+    if (el.dataset.sort) sortBy = el.dataset.sort;
+    filter = "";
+    renderStatsAndTabs();
+    renderActiveTab(true);
+    return;
+  }
+  if (a === "jump-create-user") { tab = "users"; renderStatsAndTabs(); renderActiveTab(true); setTimeout(() => $("#uf input")?.focus(), 40); return; }
+  if (a === "jump-create-key") { tab = "keys"; renderStatsAndTabs(); renderActiveTab(true); setTimeout(() => $("#kf input")?.focus(), 40); return; }
+  if (a === "refresh-now") { loadAll(true); return; }
+  if (a === "toggle-live") {
+    autoRefresh = !autoRefresh;
+    localStorage.setItem("lms.admin.live", autoRefresh ? "1" : "0");
+    if ($("#livedot")) $("#livedot").className = "live-dot " + (autoRefresh ? "" : "off");
+    if ($("#btn-live")) $("#btn-live").dataset.tip = autoRefresh ? "Tạm dừng tự cập nhật" : "Bật tự cập nhật 15s";
+    toast(autoRefresh ? "Đã bật tự động cập nhật mỗi 15 giây" : "Đã tạm dừng tự cập nhật");
+    updateClock();
+    return;
+  }
+  if (a === "copy-text") { copy(el.dataset.val); return; }
+  if (a === "copy-last-user") { copy(createdResult.lastUserText); return; }
+  if (a === "copy-last-keys") { copy(createdResult.lastKeysText); return; }
+  if (a === "export-users") { exportUsersCsv(); return; }
+  if (a === "user-detail") { openUserDetail(el.dataset.id); return; }
+  if (a === "user-edit") { editUser(el.dataset.id); return; }
+  if (a === "user-keys") { tab = "keys"; filter = el.dataset.user || ""; statusFilter = "all"; renderStatsAndTabs(); renderActiveTab(true); return; }
+  if (a === "give-key") { giveKey(el.dataset.user); return; }
+  if (a === "assign-key") { assignKey(el.dataset.key); return; }
+  if (a === "extend-key") { extendKey(el.dataset.key); return; }
+  if (a === "edit-key-note") { editKeyNote(el.dataset.key); return; }
+  if (a === "key-devices") { showKeyDevices(el.dataset.key); return; }
+  if (a === "reset-pw") {
+    const u = el.dataset.user, id = el.dataset.id;
+    const v = await modal({ icon: "reset", title: "Đặt lại mật khẩu", text: `Cho tài khoản <b>${esc(u)}</b>. Mọi phiên đang đăng nhập của tài khoản này sẽ bị đăng xuất.`, ok: "Đặt lại",
+      fields: [{ name: "p", label: "Mật khẩu mới", value: "", required: true, minlength: 6, placeholder: "Ít nhất 6 ký tự" }] });
+    if (v) act(() => api("/admin/users/" + id, "PATCH", { password: v.p }), "Đã đặt lại mật khẩu");
+    return;
+  }
+  if (a === "toggle-user") {
+    const dis = el.dataset.dis === "1", u = el.dataset.user, id = el.dataset.id;
+    if (dis && !(await confirmBox(`Khoá tài khoản ${u}?`, "Mọi phiên đang mở sẽ bị đăng xuất ngay. Có thể mở khoá lại bất kỳ lúc nào.", "Khoá tài khoản"))) return;
+    act(() => api("/admin/users/" + id, "PATCH", { disabled: dis }), dis ? "Đã khoá tài khoản" : "Đã mở khoá tài khoản");
+    return;
+  }
+  if (a === "del-user") {
+    const u = el.dataset.user, id = el.dataset.id;
+    if (await confirmBox(`Xoá vĩnh viễn tài khoản ${u}?`, "Không thể hoàn tác. Mọi phiên, lịch sử dùng bị xoá và key sẽ bị thu hồi.", "Xoá vĩnh viễn")) {
+      act(() => api("/admin/users/" + id, "DELETE"), "Đã xoá tài khoản");
+    }
+    return;
+  }
+  if (a === "key-status") {
+    const key = el.dataset.key, val = el.dataset.val;
+    if (val === "revoked" && !(await confirmBox("Thu hồi key này?", `<code>${esc(key)}</code><br>Nếu tài khoản không còn key khác, app sẽ tự đăng xuất ngay.`, "Thu hồi"))) return;
+    act(() => api("/admin/keys/" + encodeURIComponent(key), "PATCH", { status: val }), val === "active" ? "Đã khôi phục key" : "Đã thu hồi key");
+    return;
+  }
+  if (a === "unassign-key") {
+    const key = el.dataset.key;
+    if (await confirmBox("Gỡ key khỏi tài khoản?", "Danh sách máy bị xoá, phiên hết key bị đăng xuất, key trở về trạng thái Chưa dùng.", "Gỡ key")) {
+      act(() => api("/admin/keys/" + encodeURIComponent(key), "PATCH", { unassign: true }), "Đã gỡ key");
+    }
+    return;
+  }
+  if (a === "del-key") {
+    const key = el.dataset.key;
+    if (await confirmBox("Xoá vĩnh viễn key?", `<code>${esc(key)}</code><br>Không thể hoàn tác.`, "Xoá key")) {
+      act(() => api("/admin/keys/" + encodeURIComponent(key), "DELETE"), "Đã xoá key");
+    }
+    return;
+  }
+  if (a === "kick-session") {
+    if (await confirmBox(`Đăng xuất phiên của ${el.dataset.user}?`, "Thiết bị này sẽ phải đăng nhập lại ngay ở lần đồng bộ kế tiếp.", "Đăng xuất phiên")) {
+      act(() => api("/admin/sessions/" + el.dataset.id, "DELETE"), "Đã đăng xuất phiên");
+    }
+    return;
+  }
+  if (a === "rm-device") {
+    if (await confirmBox(`Gỡ thiết bị "${el.dataset.name}"?`, "Thiết bị sẽ bị đăng xuất và giải phóng 1 suất kích hoạt.", "Gỡ máy")) {
+      act(() => api("/admin/devices/" + el.dataset.id, "DELETE"), "Đã gỡ thiết bị");
+    }
+    return;
+  }
+  if (a === "unlock-fail") {
+    act(() => api("/admin/failures/" + encodeURIComponent(el.dataset.user), "DELETE"), "Đã mở chặn đăng nhập cho " + el.dataset.user);
+    return;
+  }
+  if (a === "prune-logs") {
+    const v = await modal({ icon: "trash", tone: "bad", title: "Dọn nhật ký hệ thống", text: "Xoá bớt nhật ký cũ để giữ cơ sở dữ liệu gọn nhẹ.", ok: "Dọn nhật ký", okTone: "danger",
+      fields: [{ name: "keepDays", label: "Giữ lại nhật ký trong", value: "30", options: [["30", "30 ngày gần nhất"], ["7", "7 ngày gần nhất"], ["0", "Xoá toàn bộ nhật ký cũ"]] }] });
+    if (v) act(() => api("/admin/logs?keepDays=" + encodeURIComponent(v.keepDays), "DELETE"), "Đã dọn nhật ký");
+    return;
+  }
+  if (a === "change-pw") {
+    const v = await modal({ icon: "pass", title: "Đổi mật khẩu của bạn", ok: "Đổi mật khẩu",
+      fields: [
+        { name: "o", label: "Mật khẩu hiện tại", type: "password", required: true },
+        { name: "n", label: "Mật khẩu mới", type: "password", required: true, minlength: 6, placeholder: "Ít nhất 6 ký tự" },
+        { name: "c", label: "Nhập lại mật khẩu mới", type: "password", required: true, minlength: 6 },
+      ] });
+    if (!v) return;
+    if (v.n !== v.c) { toast("Mật khẩu xác nhận không khớp", "bad"); return; }
+    act(() => api("/auth/password", "POST", { oldPassword: v.o, newPassword: v.n }), "Đã đổi mật khẩu");
+    return;
+  }
+  if (a === "logout") {
+    try { await api("/auth/logout", "POST"); } catch {}
+    clearSession("");
+    return;
+  }
+});
+
+// ---- live clock & polling ----
+function updateClock() {
+  const clk = $("#liveclock");
+  if (clk) clk.textContent = new Date(serverNow()).toLocaleTimeString("vi-VN", { hour12: false });
+  const lt = $("#livetext");
+  if (lt) {
+    if (refreshing) lt.textContent = "Đang đồng bộ…";
+    else if (!state.lastSyncAt) lt.textContent = "Chưa đồng bộ";
+    else {
+      const sec = Math.max(0, Math.floor((Date.now() - state.lastSyncAt) / 1000));
+      lt.textContent = autoRefresh ? `Trực tiếp · ${sec < 3 ? "vừa cập nhật" : sec + "s trước"}` : `Tạm dừng · ${sec}s trước`;
+    }
+  }
+}
+
+function startTimers() {
+  stopTimers();
+  clockTimer = setInterval(updateClock, 1000);
+  pollTimer = setInterval(() => {
+    if (autoRefresh && token && document.visibilityState === "visible" && !dlg.open) {
+      loadAll(false);
+    }
+  }, POLL_MS);
+}
+
+function stopTimers() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && token && autoRefresh && Date.now() - state.lastSyncAt > 5000) {
+    loadAll(false);
+  }
+});
+
+async function loadAll(showSpinner = false) {
+  if (!token || refreshing) return;
+  refreshing = true;
+  const rBtn = $("#btn-refresh");
+  if (rBtn && showSpinner) rBtn.querySelector("svg")?.classList.add("spin");
+  updateClock();
+  try {
+    const snap = await api("/admin/snapshot?limit=200");
+    if (!isConsoleRole(snap.me?.role)) {
+      clearSession("Tài khoản đã bị thay đổi phân quyền và không còn quyền quản trị.");
+      return;
+    }
+    me = snap.me;
+    localStorage.setItem("lms.admin.me", JSON.stringify(me));
+    const srvNow = snap.serverTime || snap.stats?.serverTime || Date.now();
+    state = {
+      loaded: true,
+      now: srvNow,
+      clockOffset: srvNow - Date.now(),
+      lastSyncAt: Date.now(),
+      stats: snap.stats || {},
+      users: snap.users || [],
+      keys: snap.keys || [],
+      sessions: snap.sessions || [],
+      devices: snap.devices || [],
+      logs: snap.logs || [],
+      failures: snap.failures || [],
+      roles: snap.roles || null,
+    };
+    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(state)); } catch {}
+    if (!shellMounted) mountShell();
+    else {
+      renderStatsAndTabs();
+      renderActiveTab(false);
+    }
+  } catch (e) {
+    if (token && showSpinner) toast(e.message || "Không thể đồng bộ dữ liệu", "bad");
+  } finally {
+    refreshing = false;
+    if (rBtn) rBtn.querySelector("svg")?.classList.remove("spin");
+    updateClock();
+  }
+}
+
+// ---- boot ----
+(async function boot() {
+  if (!token) {
+    renderLogin($("#app"));
+    return;
+  }
+  if (me && state.loaded) {
+    mountShell();
+    startTimers();
+    loadAll(false);
+  } else {
+    $("#app").innerHTML = `<div class="boot"><div class="logo-glow" style="margin:0"><img src="/logo-lms.png" alt=""></div><div>Đang xác thực phiên quản trị…</div></div>`;
+    await loadAll(true);
+    if (token) startTimers();
+  }
+})();
 </script>
 </body>
 </html>

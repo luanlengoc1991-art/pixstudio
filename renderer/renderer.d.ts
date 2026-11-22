@@ -5,14 +5,15 @@ export interface IElectronAPI {
   off: (command, func?) => IpcRenderer;
   send: <T>(command, func?: T) => IpcRenderer;
   invoke: (command, func?) => any;
-  platform: "mac" | "win" | "linux";
+  platform: "mac" | "win" | "linux" | "web";
   getSystemInfo: () => Promise<{
+    hostname?: string;
     platform: string | undefined;
     release: string;
     arch: string | undefined;
     model: string;
     cpuCount: number;
-    gpu: Record<string, any>;
+    gpu?: Record<string, any>;
   }>;
   getAppVersion: () => Promise<string>;
   /** Website only (lib/web/runtime.ts) */

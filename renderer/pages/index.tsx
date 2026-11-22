@@ -44,10 +44,14 @@ const App = () => {
   const version = useUpscaylVersion();
 
   useEffect(() => {
-    window.electron.on(ELECTRON_COMMANDS.REMOVE_BACKGROUND_PROGRESS, (_, data: string) => {
+    const onProgress = (_: unknown, data: string) => {
       if (data) setToolProgress(data);
-    });
-  }, []);
+    };
+    window.electron.on(ELECTRON_COMMANDS.REMOVE_BACKGROUND_PROGRESS, onProgress);
+    return () => {
+      window.electron.off?.(ELECTRON_COMMANDS.REMOVE_BACKGROUND_PROGRESS, onProgress);
+    };
+  }, [setToolProgress]);
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden text-base-content">
