@@ -32,7 +32,8 @@ try {
   }
   // Admin page for accounts and license keys (talks to functions/api)
   fs.cpSync(path.join(root, "web", "admin"), path.join(dist, "admin"), { recursive: true });
-  // Pages serves _headers from the output root (ldc-cache-optimization)
+  // Pages serves _headers from the output root (ldc-cache-optimization).
+  // Note: Cloudflare Pages `*` splats match across `/`, so extension rules cover nested folders without duplicate headers.
   fs.writeFileSync(
     path.join(dist, "_headers"),
     [
@@ -42,10 +43,6 @@ try {
       "  Cache-Control: public, max-age=0, must-revalidate",
       "/_next/static/*",
       "  Cache-Control: public, max-age=31536000, immutable",
-      "/icons3d/*",
-      "  Cache-Control: public, max-age=604800, stale-while-revalidate=86400",
-      "/model-comparison/*",
-      "  Cache-Control: public, max-age=604800, stale-while-revalidate=86400",
       "/wasm/*",
       "  Cache-Control: public, max-age=604800, stale-while-revalidate=86400",
       "/*.png",
