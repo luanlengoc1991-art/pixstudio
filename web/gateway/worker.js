@@ -9,6 +9,10 @@ export default {
     const target = new URL(url.pathname + url.search, ORIGIN);
     const headers = new Headers(request.headers);
     headers.set("x-lms-gw", env.GW_SECRET || "");
+    const clientIp = request.headers.get("cf-connecting-ip");
+    if (clientIp) headers.set("x-lms-client-ip", clientIp);
+    const country = request.cf?.country;
+    if (country) headers.set("x-lms-client-country", String(country));
     const res = await fetch(target, {
       method: request.method,
       headers,

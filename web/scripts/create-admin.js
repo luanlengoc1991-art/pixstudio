@@ -18,8 +18,9 @@ const hash = crypto.pbkdf2Sync(password, salt, iterations, 32, "sha256");
 const passHash = `pbkdf2$${iterations}$${salt.toString("base64")}$${hash.toString("base64")}`;
 const q = (s) => "'" + s.replace(/'/g, "''") + "'";
 const sql =
-  `INSERT INTO users (username, pass_hash, role, display_name, created_at) VALUES (${q(username)}, ${q(passHash)}, 'admin', ${q(username)}, ${Date.now()}) ` +
-  `ON CONFLICT(username) DO UPDATE SET pass_hash = excluded.pass_hash, role = 'admin', disabled = 0;`;
+  `INSERT INTO users (username, pass_hash, role, display_name, created_at, updated_at) VALUES (${q(username)}, ${q(passHash)}, 'super_admin', ${q(username)}, ${Date.now()}, ${Date.now()}) ` +
+  `ON CONFLICT(username) DO UPDATE SET pass_hash = excluded.pass_hash, role = 'super_admin', disabled = 0, updated_at = excluded.updated_at; ` +
+  `DELETE FROM login_failures WHERE username = ${q(username)};`;
 const file = path.join(os.tmpdir(), `lms-admin-${process.pid}.sql`);
 fs.writeFileSync(file, sql);
 try {
