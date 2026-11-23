@@ -2,6 +2,7 @@
 // Supports 4-tier RBAC, real device identity, active-time heartbeat sync,
 // and offline grace with clock-rollback protection.
 import { IS_WEB } from "@/lib/platform";
+import { ELECTRON_COMMANDS } from "@common/electron-commands";
 
 export const AUTH_REQUIRED = !IS_WEB;
 export const API_BASE = IS_WEB ? "" : "https://lms.luangroup.asia";
@@ -138,6 +139,70 @@ async function call<T>(path: string, method: string, body?: unknown, token?: str
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new AuthError(j?.error?.code ?? "SERVER", j?.error?.message ?? `Lỗi máy chủ (${r.status})`);
   return j as T;
+}
+
+export type AuthConfig = {
+  google: {
+    webEnabled: boolean;
+    idTokenEnabled: boolean;
+    desktopEnabled: boolean;
+    clientId: string;
+    desktopClientId: string;
+  };
+};
+
+export async function fetchAuthConfig(): Promise<AuthConfig> {
+  try {
+    return await call<AuthConfig>("/auth/config", "GET");
+  } catch {
+    return {
+      google: { webEnabled: false, idTokenEnabled: false, desktopEnabled: false, clientId: "", desktopClientId: "" },
+    };
+  }
+}
+
+export async function loginWithGoogle(key?: string): Promise<AuthState> {
+  const cfg = await fetchAuthConfig();
+  if (!cfg.google.desktopEnabled || !cfg.google.desktopClientId) {
+    throw new AuthError(
+      "GOOGLE_DISABLED",
+      "Máy chủ chưa bật đăng nhập Google. Quản trị viên cần cấu hình GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET trên Cloudflare.",
+    );
+  }
+  const oauth = (await window.electron.invoke(ELECTRON_COMMANDS.GOOGLE_LOGIN, {
+    clientId: cfg.google.desktopClientId,
+  })) as { code: string; codeVerifier: string; redirectUri: string };
+  const meta = await getClientMeta();
+  const r = await call<{ token: string; user: AuthUser; license: AuthLicense | null; serverTime?: number }>(
+    "/auth/google/desktop",
+    "POST",
+    {
+      code: oauth.code,
+      codeVerifier: oauth.codeVerifier,
+      redirectUri: oauth.redirectUri,
+      key: key || undefined,
+      deviceId: deviceId(),
+      deviceName: meta.deviceName,
+      platform: meta.platform,
+      appVersion: meta.appVersion,
+    },
+  );
+  const now = Date.now();
+  const s: AuthState = {
+    token: r.token,
+    user: r.user,
+    license: r.license,
+    checkedAt: now,
+    clockOffset: r.serverTime ? r.serverTime - now : 0,
+  };
+  saveAuth(s);
+  return s;
+}
+
+export async function cancelGoogleLogin() {
+  try {
+    await window.electron?.invoke?.(ELECTRON_COMMANDS.GOOGLE_LOGIN_CANCEL, undefined);
+  } catch {}
 }
 
 export async function login(username: string, password: string, key?: string): Promise<AuthState> {

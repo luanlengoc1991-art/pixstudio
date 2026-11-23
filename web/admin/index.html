@@ -92,6 +92,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 .login p.sub{margin:4px 0 24px;text-align:center;color:var(--muted);font-size:13px}
 .login .field{margin-bottom:14px}
 .login .btn.primary{width:100%;height:44px;margin-top:6px;font-size:15px}
+.or-sep{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--faint);font-size:11.5px;text-transform:uppercase;letter-spacing:.08em}
+.or-sep::before,.or-sep::after{content:"";flex:1;height:1px;background:var(--line)}
+.btn.google{width:100%;height:44px;background:rgba(255,255,255,.06);border:1px solid var(--line2);color:#fff;font-size:14px}
+.btn.google:hover{background:rgba(255,255,255,.12);border-color:rgba(246,188,23,.5)}
+.g-note{margin-top:8px;text-align:center;font-size:11.5px;color:var(--faint)}
+.g-tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:999px;background:rgba(66,133,244,.16);color:#93c5fd;border:1px solid rgba(66,133,244,.32);margin-left:4px;vertical-align:middle}
+.av img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
 .alert{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:var(--r);font-size:13px;margin-top:12px}
 .alert.bad{background:var(--bad-bg);color:var(--bad);border:1px solid rgba(251,113,133,.25)}
 .alert:empty{display:none}
@@ -452,11 +459,15 @@ const P = {
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/>',
 };
 const I = (n, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24">${P[n] || ""}</svg>`;
+const GOOGLE_SVG = `<svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.54-5.17 3.54-8.87Z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.15-4.05 1.15-3.12 0-5.77-2.11-6.72-4.96H1.29v3.09A12 12 0 0 0 12 24Z"/><path fill="#FBBC05" d="M5.28 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.38-2.28V6.63H1.29A12 12 0 0 0 0 12c0 1.94.46 3.77 1.29 5.37l3.99-3.09Z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.29 6.63l3.99 3.09c.95-2.85 3.6-4.97 6.72-4.97Z"/></svg>`;
 const hue = (s) => [...String(s)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
-const avatar = (name, online = null) => {
+const avatar = (name, online = null, imgUrl = "") => {
   const h = hue(name);
   const dot = online === null ? "" : `<span class="on-dot ${online ? "live" : ""}" title="${online ? "Đang trực tuyến" : "Ngoại tuyến"}"></span>`;
-  return `<span class="av-wrap"><span class="av" style="background:linear-gradient(135deg,hsl(${h} 70% 52%),hsl(${(h + 50) % 360} 75% 42%))">${esc(String(name).slice(0, 1))}</span>${dot}</span>`;
+  const inner = imgUrl && /^https:\/\//.test(imgUrl)
+    ? `<img src="${esc(imgUrl)}" alt="" referrerpolicy="no-referrer">`
+    : esc(String(name).slice(0, 1));
+  return `<span class="av-wrap"><span class="av" style="background:linear-gradient(135deg,hsl(${h} 70% 52%),hsl(${(h + 50) % 360} 75% 42%))">${inner}</span>${dot}</span>`;
 };
 const rolePill = (r) => {
   const info = ROLE_INFO[r] || ROLE_INFO.user;
@@ -573,6 +584,9 @@ function renderLogin(app, initialError = "") {
       <label class="field"><span>Tên đăng nhập</span><div class="with-icon">${I("user", "sm")}<input name="u" autocomplete="username" required autofocus></div></label>
       <label class="field"><span>Mật khẩu</span><div class="with-icon with-eye">${I("lock", "sm")}<input name="p" id="lpw" type="password" autocomplete="current-password" required><button type="button" class="ib eye-btn" id="teye" title="Hiện/ẩn mật khẩu">${I("eye", "sm")}</button></div></label>
       <button class="btn primary" id="lbtn">Đăng nhập</button>
+      <div class="or-sep">hoặc</div>
+      <button type="button" class="btn google" id="gbtn">${GOOGLE_SVG} Đăng nhập bằng Google</button>
+      <div class="g-note" id="gnote"></div>
       <div class="alert bad" id="lerr">${initialError ? I("alert", "sm") + "<span>" + esc(initialError) + "</span>" : ""}</div>
     </form></div>`;
   $("#teye").onclick = () => {
@@ -580,6 +594,75 @@ function renderLogin(app, initialError = "") {
     const show = inp.type === "password";
     inp.type = show ? "text" : "password";
     $("#teye").innerHTML = I(show ? "eyeoff" : "eye", "sm");
+  };
+  let authCfg = null;
+  fetch(API + "/auth/config", { cache: "no-store" })
+    .then((r) => r.json())
+    .then((j) => {
+      authCfg = j?.google || null;
+      const gnote = $("#gnote");
+      if (!gnote) return;
+      if (authCfg && (authCfg.webEnabled || authCfg.idTokenEnabled)) {
+        gnote.textContent = "Dùng Gmail đã liên kết với tài khoản quản trị";
+      } else {
+        gnote.textContent = "Chưa gắn GOOGLE_CLIENT_ID / SECRET trên Cloudflare";
+      }
+    })
+    .catch(() => {});
+
+  $("#gbtn").onclick = async () => {
+    const err = $("#lerr"), gb = $("#gbtn");
+    err.innerHTML = "";
+    if (!authCfg) {
+      try { authCfg = (await fetch(API + "/auth/config", { cache: "no-store" }).then((r) => r.json()))?.google; } catch {}
+    }
+    if (authCfg?.webEnabled) {
+      gb.disabled = true;
+      gb.innerHTML = GOOGLE_SVG + " Đang chuyển tới Google…";
+      window.location.href = API + "/auth/google/start";
+      return;
+    }
+    if (authCfg?.idTokenEnabled && authCfg.clientId) {
+      gb.disabled = true;
+      gb.innerHTML = GOOGLE_SVG + " Đang mở chọn tài khoản Google…";
+      try {
+        if (!window.google?.accounts?.id) {
+          await new Promise((res, rej) => {
+            const sc = document.createElement("script");
+            sc.src = "https://accounts.google.com/gsi/client";
+            sc.async = true;
+            sc.onload = res;
+            sc.onerror = () => rej(new Error("Không tải được thư viện đăng nhập Google"));
+            document.head.appendChild(sc);
+          });
+        }
+        window.google.accounts.id.initialize({
+          client_id: authCfg.clientId,
+          callback: async (resp) => {
+            try {
+              let id = localStorage.getItem("lms.admin.device");
+              if (!id) { id = crypto.randomUUID(); localStorage.setItem("lms.admin.device", id); }
+              const r = await api("/auth/google/id-token", "POST", { credential: resp.credential, deviceId: id, deviceName: browserDeviceName() });
+              token = r.token; me = r.user;
+              if (r.serverTime) state.clockOffset = r.serverTime - Date.now();
+              localStorage.setItem("lms.admin.token", token);
+              localStorage.setItem("lms.admin.me", JSON.stringify(me));
+              shellMounted = false; mountShell(); startTimers(); await loadAll(true);
+            } catch (ex) {
+              err.innerHTML = I("alert", "sm") + "<span>" + esc(ex.message) + "</span>";
+              gb.disabled = false; gb.innerHTML = GOOGLE_SVG + " Đăng nhập bằng Google";
+            }
+          },
+        });
+        window.google.accounts.id.prompt();
+      } catch (ex) {
+        err.innerHTML = I("alert", "sm") + "<span>" + esc(ex.message) + "</span>";
+      } finally {
+        gb.disabled = false; gb.innerHTML = GOOGLE_SVG + " Đăng nhập bằng Google";
+      }
+      return;
+    }
+    err.innerHTML = I("alert", "sm") + "<span>Máy chủ chưa gắn bí mật Google OAuth. Chạy <code>node web/scripts/set-google-oauth.js &lt;file-json&gt;</code> với Redirect URI <code>https://lms.luangroup.asia/api/auth/google/callback</code>.</span>";
   };
   $("#lf").onsubmit = async (e) => {
     e.preventDefault();
@@ -649,6 +732,7 @@ function mountShell() {
         </div>
       </div>
       <div class="stats" id="stats-grid"></div>
+      <div class="card gb" id="live-overview" style="padding:14px 18px;margin-bottom:18px"></div>
       <div class="tabs-wrap"><div class="tabs" id="tab-bar" role="tablist"></div></div>
       <div id="pane"></div>
     </main>`;
@@ -721,6 +805,46 @@ function renderStatsAndTabs() {
     $("#me-role").className = "crown " + (me?.role || "admin");
     $("#me-role").innerHTML = I(me?.role === "super_admin" ? "crown" : "shield", "sm") + " " + esc(rInfo.badge);
   }
+  renderLiveOverview();
+}
+
+function renderLiveOverview() {
+  const box = $("#live-overview");
+  if (!box) return;
+  if (!state.loaded) {
+    box.innerHTML = `<div class="muted" style="font-size:13px">Đang tải tổng quan toàn bộ tài khoản đang sử dụng app & key…</div>`;
+    return;
+  }
+  const now = serverNow();
+  const rows = [...state.users].sort((a, b) => (b.is_online - a.is_online) || ((b.last_active_at || 0) - (a.last_active_at || 0)));
+  box.innerHTML = `<div class="card-h" style="margin-bottom:10px">
+      <div class="card-hl">
+        <div class="ico" style="width:32px;height:32px">${I("pulse", "sm")}</div>
+        <div>
+          <h3 style="font-size:14.5px">Toàn bộ tài khoản đang sử dụng App & Key (${rows.length} tài khoản · ${state.keys.length} key · ${state.sessions.length} phiên)</h3>
+          <p style="font-size:12px">Nắm nhanh tài khoản, Gmail liên kết, mã key, thời hạn còn lại, thiết bị, thời gian dùng và trạng thái trực tiếp.</p>
+        </div>
+      </div>
+      <button class="btn xs" data-act="export-users">${I("download", "sm")} Xuất CSV</button>
+    </div>
+    <div class="tbl"><table class="rows"><thead><tr>
+      <th>Tài khoản & Gmail</th><th>Vai trò</th><th>Key & Hạn còn lại</th><th>Thiết bị / Phiên</th><th>Thời gian sử dụng</th><th>Hoạt động & IP</th>
+    </tr></thead><tbody>
+    ${rows.map((u) => {
+      const toolLabel = u.last_tool ? (TOOL_NAMES[u.last_tool] || u.last_tool) : "";
+      return `<tr>
+        <td class="first"><div class="user">${avatar(u.username, !!u.is_online, u.avatar_url || "")}<div>
+          <b><button class="btn xs ghost" style="padding:0;height:auto;font-weight:700;font-size:13px" data-act="user-detail" data-id="${u.id}">${esc(u.username)}</button>${u.google_linked ? '<span class="g-tag">Google</span>' : ""}</b>
+          <small>${esc(u.display_name || "—")}${u.email && u.email !== u.username ? " · " + esc(u.email) : ""}${u.note ? " · " + esc(u.note) : ""}</small>
+        </div></div></td>
+        <td data-l="Vai trò">${rolePill(u.role)}</td>
+        <td data-l="Key & Hạn">${userLicenseCell(u, now)}</td>
+        <td data-l="Máy / Phiên"><span>${u.devices} máy · ${u.active_sessions} phiên${u.online_sessions ? ` <b style="color:var(--ok)">(${u.online_sessions} online)</b>` : ""}</span></td>
+        <td data-l="Thời gian dùng"><div class="stack"><span>Hôm nay: <b>${fmtDur(u.today_active_seconds)}</b></span><small>Tổng: ${fmtDur(u.total_active_seconds)} · ${u.login_count} lượt ĐN</small></div></td>
+        <td data-l="Hoạt động"><div class="stack"><span>${u.is_online ? '<b style="color:var(--ok)">● Trực tuyến</b>' : `<span class="muted">${ago(u.last_active_at, "Chưa đăng nhập")}</span>`}${toolLabel ? ` · <span style="color:var(--info)">${esc(toolLabel)}</span>` : ""}</span><small>${u.last_ip ? "IP " + esc(u.last_ip) : "Tạo " + day(u.created_at)}</small></div></td>
+      </tr>`;
+    }).join("") || emptyRow(6, "users", "Chưa có tài khoản nào trong hệ thống.")}
+    </tbody></table></div>`;
 }
 
 function renderActiveTab(forceFull = false) {
@@ -748,6 +872,7 @@ function renderUsersPane(rebuildForm) {
         <label class="field"><span>Tên đăng nhập</span><input name="username" required pattern="[A-Za-z0-9._@\\-]{3,64}" placeholder="vd: khach01" title="3–64 ký tự: chữ, số, . _ @ -"></label>
         <label class="field"><span>Mật khẩu</span><input name="password" required minlength="6" placeholder="Ít nhất 6 ký tự"></label>
         <label class="field"><span>Tên hiển thị</span><input name="displayName" placeholder="vd: Anh Nam"></label>
+        <label class="field"><span>Email Google (tuỳ chọn)</span><input name="email" type="email" placeholder="vd: khach@gmail.com"></label>
         <label class="field"><span>Ghi chú</span><input name="note" placeholder="vd: Gói 1 tháng, đã TT"></label>
         <label class="field"><span>Vai trò</span><select name="role" id="uf-role">${roleOpts}</select></label>
         <label class="field" data-keyfield><span>Cấp key kèm</span><select name="withKey" id="uf-withkey"><option value="1">Có</option><option value="">Không</option></select></label>
@@ -787,6 +912,7 @@ function renderUsersPane(rebuildForm) {
             username: f.username,
             password: f.password,
             displayName: f.displayName,
+            email: f.email || "",
             note: f.note,
             role: f.role,
             withKey,
@@ -841,7 +967,7 @@ function renderUsersTable() {
   const p = perms();
 
   let rows = state.users.filter((u) => {
-    if (f && ![u.username, u.display_name, u.note, u.active_key, u.last_ip, u.last_device, ROLE_INFO[u.role]?.label].join(" ").toLowerCase().includes(f)) return false;
+    if (f && ![u.username, u.display_name, u.email, u.note, u.active_key, u.last_ip, u.last_device, ROLE_INFO[u.role]?.label].join(" ").toLowerCase().includes(f)) return false;
     if (statusFilter === "online") return !!u.is_online;
     if (statusFilter === "admins") return isConsoleRole(u.role);
     if (statusFilter === "locked") return !!u.disabled || !!u.login_blocked;
@@ -890,9 +1016,9 @@ function renderUsersTable() {
       const isSelf = me && u.id === me.id;
       const toolLabel = u.last_tool ? (TOOL_NAMES[u.last_tool] || u.last_tool) : "";
       return `<tr>
-        <td class="first"><div class="user">${avatar(u.username, !!u.is_online)}<div>
-          <b>${esc(u.username)}${isSelf ? ' <span class="faint" style="font-weight:500">(bạn)</span>' : ""}</b>
-          <small>${esc(u.display_name || "—")}${u.note ? " · " + esc(u.note) : ""}</small>
+        <td class="first"><div class="user">${avatar(u.username, !!u.is_online, u.avatar_url || "")}<div>
+          <b>${esc(u.username)}${isSelf ? ' <span class="faint" style="font-weight:500">(bạn)</span>' : ""}${u.google_linked ? '<span class="g-tag">Google</span>' : ""}</b>
+          <small>${esc(u.display_name || "—")}${u.email && u.email !== u.username ? " · " + esc(u.email) : ""}${u.note ? " · " + esc(u.note) : ""}</small>
         </div></div></td>
         <td data-l="Vai trò">${rolePill(u.role)}</td>
         <td data-l="Bản quyền">${userLicenseCell(u, now)}</td>
@@ -1376,6 +1502,7 @@ async function editUser(id) {
   const roleChoices = (me.role === "super_admin" ? ["user", "staff", "admin", "super_admin"] : p.creatableRoles || ["user"]).map((r) => [r, ROLE_INFO[r].label]);
   const fields = [
     { name: "displayName", label: "Tên hiển thị", value: u.display_name || "", placeholder: "vd: Anh Nam" },
+    { name: "email", label: "Email Google (để đăng nhập bằng Google)", type: "email", value: u.email || "", placeholder: "vd: ten@gmail.com", hint: "Gắn Gmail để đăng nhập 1 chạm bằng nút Google." },
     { name: "note", label: "Ghi chú", value: u.note || "", placeholder: "vd: Gói 1 năm, VIP" },
   ];
   if (canEditRole) {
@@ -1383,7 +1510,7 @@ async function editUser(id) {
   }
   const v = await modal({ icon: "edit", title: `Chỉnh sửa · ${u.username}`, text: `Tài khoản #${u.id}`, ok: "Lưu thay đổi", fields });
   if (!v) return;
-  const payload = { displayName: v.displayName, note: v.note };
+  const payload = { displayName: v.displayName, email: v.email, note: v.note };
   if (canEditRole && v.role) payload.role = v.role;
   act(() => api("/admin/users/" + id, "PATCH", payload), "Đã cập nhật tài khoản");
 }
@@ -1475,11 +1602,11 @@ async function showKeyDevices(key) {
 }
 
 function exportUsersCsv() {
-  const head = ["ID", "Username", "TenHienThi", "VaiTro", "TrangThai", "HanDung", "KeyDangDung", "SoMay", "PhienSong", "Online", "DungHomNay_Giay", "TongThoiGian_Giay", "LuotDangNhap", "NgayTao", "DangNhapCuoi", "HoatDongCuoi", "IPCuoi", "GhiChu"];
+  const head = ["ID", "Username", "TenHienThi", "EmailGoogle", "LienKetGoogle", "VaiTro", "TrangThai", "HanDung", "KeyDangDung", "SoMay", "PhienSong", "Online", "DungHomNay_Giay", "TongThoiGian_Giay", "LuotDangNhap", "NgayTao", "DangNhapCuoi", "HoatDongCuoi", "IPCuoi", "GhiChu"];
   const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const lines = [head.join(",")].concat(
     state.users.map((u) => [
-      u.id, u.username, u.display_name, ROLE_INFO[u.role]?.label || u.role, u.disabled ? "Khoa" : "HoatDong",
+      u.id, u.username, u.display_name, u.email || "", u.google_linked ? "Co" : "Chua", ROLE_INFO[u.role]?.label || u.role, u.disabled ? "Khoa" : "HoatDong",
       u.expires_at ? fmt(u.expires_at) : u.license_state, u.active_key || "", u.devices, u.active_sessions, u.is_online ? "Online" : "Offline",
       u.today_active_seconds || 0, u.total_active_seconds || 0, u.login_count || 0, fmt(u.created_at), fmt(u.last_login_at), fmt(u.last_active_at), u.last_ip || "", u.note || "",
     ].map(q).join(",")),
@@ -1695,6 +1822,39 @@ async function loadAll(showSpinner = false) {
 
 // ---- boot ----
 (async function boot() {
+  const qs = new URLSearchParams(window.location.search);
+  const gTicket = qs.get("g_ticket");
+  const gError = qs.get("g_error");
+  if (gTicket || gError) {
+    const cleanUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, "", cleanUrl);
+  }
+  if (gTicket) {
+    $("#app").innerHTML = `<div class="boot"><div class="logo-glow" style="margin:0"><img src="/logo-lms.png" alt=""></div><div>Đang hoàn tất đăng nhập bằng Google…</div></div>`;
+    try {
+      let id = localStorage.getItem("lms.admin.device");
+      if (!id) { id = crypto.randomUUID(); localStorage.setItem("lms.admin.device", id); }
+      const r = await api("/auth/google/exchange", "POST", { ticket: gTicket, deviceId: id, deviceName: browserDeviceName() });
+      token = r.token;
+      me = r.user;
+      if (r.serverTime) state.clockOffset = r.serverTime - Date.now();
+      localStorage.setItem("lms.admin.token", token);
+      localStorage.setItem("lms.admin.me", JSON.stringify(me));
+      shellMounted = false;
+      mountShell();
+      startTimers();
+      await loadAll(true);
+      toast("Đăng nhập bằng Google thành công");
+      return;
+    } catch (e) {
+      renderLogin($("#app"), e.message || "Không thể hoàn tất đăng nhập Google");
+      return;
+    }
+  }
+  if (gError && !token) {
+    renderLogin($("#app"), gError);
+    return;
+  }
   if (!token) {
     renderLogin($("#app"));
     return;

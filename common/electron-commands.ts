@@ -46,6 +46,8 @@ const ELECTRON_COMMANDS = {
   CHATGPT_BROWSER_LOGIN: "Sign in to ChatGPT in Edge/Chrome and copy the session",
   GET_SYSTEM_STATS: "Read RAM, VRAM and GPU usage",
   SAVE_FILES_TO_FOLDER: "Save several result files into a chosen folder",
+  GOOGLE_LOGIN: "Sign in to LMS Studio with Google via system browser loopback",
+  GOOGLE_LOGIN_CANCEL: "Cancel an in-progress Google desktop sign-in",
 } as const;
 
 export { ELECTRON_COMMANDS };

@@ -23,12 +23,15 @@ import {
   AUTH_REQUIRED,
   AuthError,
   AuthState,
+  cancelGoogleLogin,
   changePassword,
   expired,
   expiryText,
+  fetchAuthConfig,
   heartbeat,
   isConsoleRole,
   login,
+  loginWithGoogle,
   logout,
   refresh,
   roleLabel,
@@ -197,6 +200,17 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={{ auth, signOut, refreshNow, syncing }}>{children}</AuthContext.Provider>;
 }
 
+function GoogleLogo() {
+  return (
+    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden>
+      <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.54-5.17 3.54-8.87Z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.15-4.05 1.15-3.12 0-5.77-2.11-6.72-4.96H1.29v3.09A12 12 0 0 0 12 24Z" />
+      <path fill="#FBBC05" d="M5.28 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.38-2.28V6.63H1.29A12 12 0 0 0 0 12c0 1.94.46 3.77 1.29 5.37l3.99-3.09Z" />
+      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.29 6.63l3.99 3.09c.95-2.85 3.6-4.97 6.72-4.97Z" />
+    </svg>
+  );
+}
+
 function LoginScreen({ notice, presetUser, onDone }: { notice: string; presetUser?: string; onDone: (s: AuthState) => void }) {
   const [username, setUsername] = useState(presetUser ?? "");
   const [password, setPassword] = useState("");
@@ -204,11 +218,17 @@ function LoginScreen({ notice, presetUser, onDone }: { notice: string; presetUse
   const [key, setKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (presetUser) setUsername(presetUser);
   }, [presetUser]);
+
+  useEffect(() => {
+    fetchAuthConfig().then((cfg) => setGoogleReady(!!cfg.google.desktopEnabled));
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,6 +242,20 @@ function LoginScreen({ notice, presetUser, onDone }: { notice: string; presetUse
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const signInGoogle = async () => {
+    setGoogleBusy(true);
+    setError("");
+    try {
+      onDone(await loginWithGoogle(key.trim()));
+    } catch (err) {
+      const code = err instanceof AuthError ? err.code : "";
+      if (code === "NEED_KEY" || code === "KEY_EXPIRED") setShowKey(true);
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setGoogleBusy(false);
     }
   };
 
@@ -306,10 +340,43 @@ function LoginScreen({ notice, presetUser, onDone }: { notice: string; presetUse
 
         <button
           className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-amber-400 text-sm font-bold uppercase tracking-wide text-black shadow-[0_8px_28px_-8px_rgba(246,188,23,0.65)] transition hover:bg-amber-300 disabled:opacity-60"
-          disabled={busy}
+          disabled={busy || googleBusy}
         >
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : "Đăng nhập"}
         </button>
+
+        <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-wider text-white/35">
+          <span className="h-px flex-1 bg-white/10" />
+          <span>hoặc</span>
+          <span className="h-px flex-1 bg-white/10" />
+        </div>
+
+        {googleBusy ? (
+          <div className="flex items-center gap-2">
+            <div className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 text-xs text-white/80">
+              <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+              Đang chờ chọn tài khoản Google…
+            </div>
+            <button
+              type="button"
+              onClick={() => cancelGoogleLogin()}
+              className="h-11 rounded-full border border-rose-500/35 bg-rose-500/10 px-4 text-xs font-semibold text-rose-200 hover:bg-rose-500/20"
+            >
+              Huỷ
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={signInGoogle}
+            className="flex h-11 w-full items-center justify-center gap-2.5 rounded-full border border-white/15 bg-white/[0.06] text-sm font-semibold text-white transition hover:border-amber-400/50 hover:bg-white/[0.11] disabled:opacity-50"
+            title={googleReady ? "Đăng nhập nhanh bằng tài khoản Google" : "Đang kiểm tra hoặc chưa cấu hình Google OAuth"}
+          >
+            <GoogleLogo />
+            Đăng nhập bằng Google
+          </button>
+        )}
 
         <p className="mt-4 text-center text-[11px] text-white/45">Chưa có tài khoản hoặc key? Liên hệ quản trị viên LMS Studio.</p>
       </form>

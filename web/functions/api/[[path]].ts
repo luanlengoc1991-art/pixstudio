@@ -37,7 +37,18 @@
 interface Env {
   DB: D1Database;
   GW_SECRET?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  GOOGLE_DESKTOP_CLIENT_ID?: string;
+  GOOGLE_DESKTOP_CLIENT_SECRET?: string;
+  GOOGLE_OAUTH_BASE?: string;
 }
+
+const PUBLIC_HOME = "https://lms.luangroup.asia";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const OAUTH_STATE_TTL = 10 * 60_000;
+const OAUTH_TICKET_TTL = 60_000;
+const GOOGLE_STATE_COOKIE = "lms_g_state";
 
 type Row = Record<string, unknown>;
 type Role = "user" | "staff" | "admin" | "super_admin";
@@ -1027,7 +1038,9 @@ async function admin(request: Request, env: Env, parts: string[], body: Row, now
         await Promise.all([
           db
             .prepare(
-              `SELECT id, username, display_name, role, note, disabled, created_at, updated_at,
+              `SELECT id, username, display_name, email, avatar_url,
+                      CASE WHEN google_sub IS NOT NULL AND google_sub != '' THEN 1 ELSE 0 END AS google_linked,
+                      role, note, disabled, created_at, updated_at,
                       last_login_at, last_active_at, last_ip, last_device, last_tool,
                       COALESCE(login_count, 0) AS login_count,
                       COALESCE(total_active_seconds, 0) AS total_active_seconds
@@ -1175,11 +1188,18 @@ async function admin(request: Request, env: Env, parts: string[], body: Row, now
       }
       const exists = await db.prepare("SELECT id FROM users WHERE username = ?").bind(username).first();
       if (exists) fail(409, "EXISTS", "Tên đăng nhập đã có");
+      const rawEmail = str(body, "email", { max: 120 }).toLowerCase();
+      const email = rawEmail || (EMAIL_RE.test(username) ? username.toLowerCase() : "");
+      if (email && !EMAIL_RE.test(email)) fail(400, "BAD_INPUT", "Email Google không hợp lệ");
+      if (email) {
+        const dupEmail = await db.prepare("SELECT id FROM users WHERE LOWER(email) = ?").bind(email).first();
+        if (dupEmail) fail(409, "EXISTS", "Email Google này đã gắn với tài khoản khác");
+      }
       const displayName = str(body, "displayName", { max: 100 });
       const note = str(body, "note", { max: 500 });
       const r = await db
-        .prepare("INSERT INTO users (username, pass_hash, role, display_name, note, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
-        .bind(username, await hashPassword(password), role, displayName, note, now, now)
+        .prepare("INSERT INTO users (username, pass_hash, role, display_name, email, note, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+        .bind(username, await hashPassword(password), role, displayName, email || null, note, now, now)
         .run();
       const userId = Number(r.meta.last_row_id);
       let keys: string[] = [];
@@ -1208,7 +1228,9 @@ async function admin(request: Request, env: Env, parts: string[], body: Row, now
     if (!Number.isInteger(userId) || userId <= 0) fail(404, "NOT_FOUND", "Không tìm thấy tài khoản");
     const target = await db
       .prepare(
-        `SELECT id, username, display_name, role, note, disabled, created_at, updated_at,
+        `SELECT id, username, display_name, email, avatar_url,
+                CASE WHEN google_sub IS NOT NULL AND google_sub != '' THEN 1 ELSE 0 END AS google_linked,
+                role, note, disabled, created_at, updated_at,
                 last_login_at, last_active_at, last_ip, last_device, last_tool,
                 COALESCE(login_count, 0) AS login_count,
                 COALESCE(total_active_seconds, 0) AS total_active_seconds
@@ -1373,6 +1395,25 @@ async function admin(request: Request, env: Env, parts: string[], body: Row, now
         if (!isSelf && !perms.editUser) fail(403, "FORBIDDEN", "Bạn không có quyền sửa ghi chú");
         stmts.push(db.prepare("UPDATE users SET note = ?, updated_at = ? WHERE id = ?").bind(str(body, "note", { max: 500 }), now, userId));
         changes.push("cập nhật ghi chú");
+      }
+
+      if (body.email !== undefined) {
+        if (!isSelf && !perms.editUser) fail(403, "FORBIDDEN", "Bạn không có quyền sửa email Google");
+        const nextEmail = str(body, "email", { max: 120 }).toLowerCase();
+        if (nextEmail && !EMAIL_RE.test(nextEmail)) fail(400, "BAD_INPUT", "Email Google không hợp lệ");
+        if (nextEmail) {
+          const dup = await db.prepare("SELECT id FROM users WHERE LOWER(email) = ? AND id != ?").bind(nextEmail, userId).first();
+          if (dup) fail(409, "EXISTS", "Email Google này đã gắn với tài khoản khác");
+        }
+        const curEmail = String(target!.email ?? "").toLowerCase();
+        if (nextEmail !== curEmail) {
+          stmts.push(
+            db
+              .prepare("UPDATE users SET email = ?, google_sub = NULL, updated_at = ? WHERE id = ?")
+              .bind(nextEmail || null, now, userId),
+          );
+          changes.push(nextEmail ? `liên kết Gmail ${nextEmail}` : "gỡ liên kết Gmail");
+        }
       }
 
       if (body.unlockLogin === true) {
@@ -1814,6 +1855,626 @@ async function admin(request: Request, env: Env, parts: string[], body: Row, now
   return fail(404, "NOT_FOUND", "Không có đường dẫn này");
 }
 
+// ---------- Google OAuth (Web PKCE + GIS RS256 ID Token + Desktop Loopback PKCE) ----------
+
+function publicOrigin(request: Request, env: Env): string {
+  const url = new URL(request.url);
+  const viaGw = !!env.GW_SECRET && request.headers.get("x-lms-gw") === env.GW_SECRET;
+  if (url.hostname.endsWith(".pages.dev") && viaGw) return PUBLIC_HOME;
+  return url.origin;
+}
+
+function googleEndpoints(env: Env) {
+  const base = (env.GOOGLE_OAUTH_BASE || "").replace(/\/+$/, "");
+  if (base) {
+    return {
+      authorize: `${base}/authorize`,
+      token: `${base}/token`,
+      certs: `${base}/certs`,
+    };
+  }
+  return {
+    authorize: "https://accounts.google.com/o/oauth2/v2/auth",
+    token: "https://oauth2.googleapis.com/token",
+    certs: "https://www.googleapis.com/oauth2/v3/certs",
+  };
+}
+
+function googleConfig(env: Env) {
+  const webClientId = (env.GOOGLE_CLIENT_ID || "").trim();
+  const webClientSecret = (env.GOOGLE_CLIENT_SECRET || "").trim();
+  const desktopClientId = (env.GOOGLE_DESKTOP_CLIENT_ID || webClientId).trim();
+  const desktopClientSecret = (env.GOOGLE_DESKTOP_CLIENT_SECRET || webClientSecret).trim();
+  return {
+    webClientId,
+    webClientSecret,
+    desktopClientId,
+    desktopClientSecret,
+    webEnabled: Boolean(webClientId && webClientSecret),
+    idTokenEnabled: Boolean(webClientId),
+    desktopEnabled: Boolean(desktopClientId && desktopClientSecret),
+  };
+}
+
+function b64UrlEncode(bytes: Uint8Array): string {
+  return b64(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function b64UrlDecode(strVal: string): Uint8Array {
+  const pad = strVal.length % 4 === 0 ? "" : "=".repeat(4 - (strVal.length % 4));
+  const raw = atob(strVal.replace(/-/g, "+").replace(/_/g, "/") + pad);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+function readCookie(request: Request, name: string): string {
+  const header = request.headers.get("cookie") || "";
+  for (const part of header.split(";")) {
+    const idx = part.indexOf("=");
+    if (idx === -1) continue;
+    if (part.slice(0, idx).trim() === name) return decodeURIComponent(part.slice(idx + 1).trim());
+  }
+  return "";
+}
+
+type GoogleIdentity = { sub: string; email: string; name: string; picture: string };
+
+function validateGoogleClaims(claims: Record<string, unknown>, expectedAud: string, now: number, expectedNonce?: string): GoogleIdentity {
+  const iss = String(claims.iss || "");
+  if (iss !== "https://accounts.google.com" && iss !== "accounts.google.com") {
+    fail(401, "GOOGLE_INVALID", "Mã xác thực Google không hợp lệ");
+  }
+  if (claims.aud !== expectedAud) fail(401, "GOOGLE_INVALID", "Mã xác thực Google sai ứng dụng");
+  if (typeof claims.exp !== "number" || claims.exp * 1000 <= now) fail(401, "GOOGLE_EXPIRED", "Phiên Google đã hết hạn, thử lại");
+  if (expectedNonce && claims.nonce !== expectedNonce) fail(401, "GOOGLE_INVALID", "Mã phiên Google không khớp");
+  const email = String(claims.email || "").trim().toLowerCase();
+  const sub = String(claims.sub || "").trim();
+  if (claims.email_verified !== true || !EMAIL_RE.test(email) || !sub) {
+    fail(401, "GOOGLE_UNVERIFIED", "Email Google chưa được xác minh");
+  }
+  return {
+    sub,
+    email,
+    name: String(claims.name || "").trim().slice(0, 100) || email.split("@")[0],
+    picture: String(claims.picture || "").trim().slice(0, 400),
+  };
+}
+
+function parseJwtPart(part: string): Record<string, unknown> {
+  return JSON.parse(new TextDecoder().decode(b64UrlDecode(part))) as Record<string, unknown>;
+}
+
+let jwksCache: { fetchedAt: number; keys: Array<JsonWebKey & { kid?: string }> } | null = null;
+
+async function verifyGoogleIdTokenSignature(idToken: string, expectedAud: string, env: Env, now: number): Promise<GoogleIdentity> {
+  const segs = idToken.split(".");
+  if (segs.length !== 3) fail(401, "GOOGLE_INVALID", "Google ID Token không đúng định dạng");
+  let header: Record<string, unknown>;
+  let claims: Record<string, unknown>;
+  try {
+    header = parseJwtPart(segs[0]);
+    claims = parseJwtPart(segs[1]);
+  } catch {
+    fail(401, "GOOGLE_INVALID", "Không đọc được Google ID Token");
+  }
+  if (header!.alg !== "RS256" || typeof header!.kid !== "string") {
+    fail(401, "GOOGLE_INVALID", "Thuật toán ký Google không được hỗ trợ");
+  }
+  const loadKeys = async (force = false) => {
+    if (!force && jwksCache && now - jwksCache.fetchedAt < 3_600_000) return jwksCache.keys;
+    const r = await fetch(googleEndpoints(env).certs);
+    if (!r.ok) fail(502, "GOOGLE_ERROR", "Không tải được khoá xác minh của Google");
+    const j = (await r.json()) as { keys?: Array<JsonWebKey & { kid?: string }> };
+    jwksCache = { fetchedAt: now, keys: j.keys || [] };
+    return jwksCache.keys;
+  };
+  let keys = await loadKeys(false);
+  let jwk = keys.find((k) => k.kid === header!.kid);
+  if (!jwk) {
+    keys = await loadKeys(true);
+    jwk = keys.find((k) => k.kid === header!.kid);
+  }
+  if (!jwk) fail(401, "GOOGLE_INVALID", "Không tìm thấy khoá công khai của Google");
+  const pubKey = await crypto.subtle.importKey("jwk", jwk!, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+  const sig = b64UrlDecode(segs[2]);
+  const signedData = enc.encode(`${segs[0]}.${segs[1]}`);
+  const ok = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", pubKey, sig, signedData);
+  if (!ok) fail(401, "GOOGLE_INVALID", "Chữ ký Google không hợp lệ");
+  return validateGoogleClaims(claims!, expectedAud, now);
+}
+
+async function exchangeGoogleCode(
+  env: Env,
+  params: { code: string; codeVerifier: string; redirectUri: string; clientId: string; clientSecret: string; expectedNonce?: string },
+  now: number,
+): Promise<GoogleIdentity> {
+  let tokenRes: Response;
+  try {
+    tokenRes = await fetch(googleEndpoints(env).token, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code: params.code,
+        client_id: params.clientId,
+        client_secret: params.clientSecret,
+        redirect_uri: params.redirectUri,
+        grant_type: "authorization_code",
+        code_verifier: params.codeVerifier,
+      }).toString(),
+    });
+  } catch {
+    fail(502, "GOOGLE_ERROR", "Không liên lạc được với máy chủ Google");
+  }
+  const tok = (await tokenRes!.json().catch(() => ({}))) as { id_token?: string; error?: string };
+  if (!tokenRes!.ok || !tok.id_token) {
+    fail(401, "GOOGLE_REJECTED", `Google từ chối phiên đăng nhập (${tok.error || tokenRes!.status})`);
+  }
+  const segs = String(tok.id_token).split(".");
+  if (segs.length !== 3) fail(401, "GOOGLE_INVALID", "Google không trả thông tin tài khoản hợp lệ");
+  let claims: Record<string, unknown>;
+  try {
+    claims = parseJwtPart(segs[1]);
+  } catch {
+    fail(401, "GOOGLE_INVALID", "Không giải mã được thông tin từ Google");
+  }
+  return validateGoogleClaims(claims!, params.clientId, now, params.expectedNonce);
+}
+
+async function findUserByGoogle(db: D1Database, identity: GoogleIdentity): Promise<Row | null> {
+  return (
+    (await db
+      .prepare("SELECT * FROM users WHERE google_sub = ? OR LOWER(email) = ? OR LOWER(username) = ? LIMIT 1")
+      .bind(identity.sub, identity.email, identity.email)
+      .first<Row>()) ?? null
+  );
+}
+
+async function completeGoogleDesktopLogin(request: Request, env: Env, body: Row, now: number) {
+  const db = env.DB;
+  const cfg = googleConfig(env);
+  if (!cfg.desktopEnabled) fail(503, "GOOGLE_DISABLED", "Máy chủ chưa cấu hình đăng nhập Google");
+  const code = str(body, "code", { required: true, max: 2048 });
+  const codeVerifier = str(body, "codeVerifier", { required: true, max: 128 });
+  const redirectUri = str(body, "redirectUri", { required: true, max: 200 });
+  if (!/^[A-Za-z0-9._~-]{43,128}$/.test(codeVerifier)) fail(400, "BAD_INPUT", "Mã xác thực PKCE không hợp lệ");
+  if (!/^http:\/\/127\.0\.0\.1:\d{2,5}\/cb$/.test(redirectUri)) fail(400, "BAD_INPUT", "Địa chỉ quay về không hợp lệ");
+
+  const deviceId = str(body, "deviceId", { max: 100 });
+  const deviceName = str(body, "deviceName", { max: 120 }) || "Không rõ";
+  const platform = str(body, "platform", { max: 32 }) || "desktop";
+  const appVersion = str(body, "appVersion", { max: 40 });
+  const keyInput = normalizeKey(body.key);
+  const meta = clientMeta(request, env);
+
+  const identity = await exchangeGoogleCode(
+    env,
+    { code, codeVerifier, redirectUri, clientId: cfg.desktopClientId, clientSecret: cfg.desktopClientSecret },
+    now,
+  );
+
+  let user = await findUserByGoogle(db, identity);
+  let createdFresh = false;
+  if (!user) {
+    if (!keyInput) {
+      await logActivity(db, {
+        now,
+        actorUsername: identity.email,
+        targetType: "auth",
+        targetId: identity.email,
+        action: "login_fail",
+        summary: `Gmail ${identity.email} chưa có tài khoản LMS (cần nhập key bản quyền)`,
+        ip: meta.ip,
+      });
+      fail(403, "NEED_KEY", `Email ${identity.email} chưa có tài khoản. Nhập key bản quyền để kích hoạt ngay hoặc liên hệ quản trị viên.`);
+    }
+    const l = await db.prepare("SELECT * FROM licenses WHERE key = ?").bind(keyInput).first<License>();
+    if (!l || l.status !== "active") fail(403, "KEY_INVALID", "Key không đúng hoặc đã bị thu hồi");
+    if (l!.user_id !== null) fail(403, "KEY_USED", "Key này đã được dùng cho tài khoản khác");
+    if (l!.expires_at !== null && l!.expires_at <= now) fail(403, "KEY_EXPIRED", "Key đã hết hạn");
+
+    // Auto-create customer account linked to verified Gmail (unguessable random password until set)
+    const r = await db
+      .prepare(
+        `INSERT INTO users (username, pass_hash, role, display_name, email, google_sub, avatar_url, note, created_at, updated_at)
+         VALUES (?, ?, 'user', ?, ?, ?, ?, 'Đăng ký qua Google + Key', ?, ?)`,
+      )
+      .bind(identity.email, await hashPassword(randomToken()), identity.name, identity.email, identity.sub, identity.picture, now, now)
+      .run();
+    const newId = Number(r.meta.last_row_id);
+    user = await db.prepare("SELECT * FROM users WHERE id = ?").bind(newId).first<Row>();
+    createdFresh = true;
+    await logActivity(db, {
+      now,
+      actorId: newId,
+      actorUsername: identity.email,
+      actorRole: "user",
+      targetType: "user",
+      targetId: String(newId),
+      action: "user_create",
+      summary: `Tự động tạo tài khoản qua Google cho ${identity.email}`,
+      ip: meta.ip,
+    });
+  }
+
+  const u = user!;
+  const role = normalizeRole(u.role);
+  const userId = Number(u.id);
+  const canonicalUsername = String(u.username);
+  if (u.disabled) {
+    await logActivity(db, {
+      now,
+      actorId: userId,
+      actorUsername: canonicalUsername,
+      actorRole: role,
+      targetType: "auth",
+      targetId: canonicalUsername,
+      action: "login_fail",
+      summary: `Tài khoản bị khoá thử đăng nhập Google: ${canonicalUsername}`,
+      ip: meta.ip,
+    });
+    fail(403, "DISABLED", "Tài khoản đã bị khoá. Liên hệ quản trị viên.");
+  }
+
+  let license: License | undefined;
+  if (!isLicenseExempt(role)) {
+    if (keyInput) {
+      const l = await db.prepare("SELECT * FROM licenses WHERE key = ?").bind(keyInput).first<License>();
+      if (!l || l.status !== "active") fail(403, "KEY_INVALID", "Key không đúng hoặc đã bị thu hồi");
+      if (l!.user_id !== null && l!.user_id !== userId) fail(403, "KEY_USED", "Key này đã được dùng cho tài khoản khác");
+      if (l!.expires_at !== null && l!.expires_at <= now) fail(403, "KEY_EXPIRED", "Key đã hết hạn");
+      if (l!.user_id === null) {
+        const expires = l!.expires_at ?? (l!.duration_days > 0 ? now + l!.duration_days * DAY : null);
+        const upd = await db
+          .prepare("UPDATE licenses SET user_id = ?, activated_at = ?, expires_at = ? WHERE key = ? AND user_id IS NULL")
+          .bind(userId, now, expires, l!.key)
+          .run();
+        if ((upd.meta?.changes ?? 0) === 0) fail(403, "KEY_USED", "Key này vừa được kích hoạt bởi tài khoản khác");
+        l!.user_id = userId;
+        l!.activated_at = now;
+        l!.expires_at = expires;
+        await logActivity(db, {
+          now,
+          actorId: userId,
+          actorUsername: canonicalUsername,
+          actorRole: role,
+          targetType: "license",
+          targetId: l!.key,
+          action: "key_activate",
+          summary: `${canonicalUsername} kích hoạt key ${l!.key} qua Google`,
+          ip: meta.ip,
+        });
+      } else if (isPendingLicense(l!)) {
+        license = await activatePendingLicense(db, l!, now, { id: userId, username: canonicalUsername, role }, meta.ip);
+      }
+      license = license ?? l!;
+    } else {
+      const { live, expired } = await currentLicense(db, userId, now);
+      if (!live) {
+        if (expired) fail(403, "KEY_EXPIRED", "Key của tài khoản đã hết hạn. Nhập key mới để gia hạn.");
+        fail(403, "NEED_KEY", "Tài khoản chưa có key. Nhập key bản quyền để kích hoạt.");
+      }
+      license = await activatePendingLicense(db, live!, now, { id: userId, username: canonicalUsername, role }, meta.ip);
+    }
+
+    if (deviceId.length < 8) fail(400, "BAD_INPUT", "Thiếu mã máy");
+    const known = await db
+      .prepare("SELECT id FROM devices WHERE license_key = ? AND device_id = ?")
+      .bind(license!.key, deviceId)
+      .first<{ id: number }>();
+    if (known) {
+      await db
+        .prepare("UPDATE devices SET last_seen = ?, device_name = ?, user_id = ?, platform = ?, app_version = ?, last_ip = ? WHERE id = ?")
+        .bind(now, deviceName, userId, platform, appVersion, meta.ip, known.id)
+        .run();
+    } else {
+      if ((await deviceCount(db, license!.key)) >= license!.max_devices) {
+        fail(403, "DEVICE_LIMIT", `Key này đã dùng đủ ${license!.max_devices} máy. Liên hệ quản trị viên để gỡ máy cũ.`);
+      }
+      await db
+        .prepare(
+          `INSERT INTO devices (license_key, user_id, device_id, device_name, platform, app_version, last_ip, first_seen, last_seen)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .bind(license!.key, userId, deviceId, deviceName, platform, appVersion, meta.ip, now, now)
+        .run();
+    }
+  }
+
+  const token = randomToken();
+  const dayKey = vnDayKey(now);
+  await db.batch([
+    db
+      .prepare(
+        `INSERT INTO sessions (token_hash, user_id, device_id, device_name, platform, app_version, ip, country, user_agent, created_at, expires_at, last_seen_at, active_seconds, current_tool)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, '')`,
+      )
+      .bind(await sha256(token), userId, deviceId, deviceName, platform, appVersion, meta.ip, meta.country, meta.userAgent, now, now + SESSION_DAYS * DAY, now),
+    db
+      .prepare(
+        `UPDATE users
+            SET google_sub = COALESCE(NULLIF(google_sub, ''), ?),
+                email = COALESCE(NULLIF(email, ''), ?),
+                avatar_url = CASE WHEN ? != '' THEN ? ELSE avatar_url END,
+                display_name = CASE WHEN display_name = '' THEN ? ELSE display_name END,
+                last_login_at = ?, last_active_at = ?, last_ip = ?, last_device = ?,
+                login_count = COALESCE(login_count, 0) + 1
+          WHERE id = ?`,
+      )
+      .bind(identity.sub, identity.email, identity.picture, identity.picture, identity.name, now, now, meta.ip, deviceName, userId),
+    db
+      .prepare(
+        `INSERT INTO daily_usage (user_id, day, active_seconds, sessions_count, last_seen_at)
+         VALUES (?, ?, 0, 1, ?)
+         ON CONFLICT(user_id, day) DO UPDATE SET sessions_count = sessions_count + 1, last_seen_at = excluded.last_seen_at`,
+      )
+      .bind(userId, dayKey, now),
+    db.prepare("DELETE FROM login_failures WHERE username = ?").bind(canonicalUsername),
+    db.prepare("DELETE FROM sessions WHERE expires_at <= ?").bind(now),
+  ]);
+
+  await logActivity(db, {
+    now,
+    actorId: userId,
+    actorUsername: canonicalUsername,
+    actorRole: role,
+    targetType: "auth",
+    targetId: canonicalUsername,
+    action: "login_ok",
+    summary: `${canonicalUsername} đăng nhập bằng Google (${identity.email}) từ ${deviceName}`,
+    ip: meta.ip,
+    meta: { method: "google_desktop", createdFresh, platform, key: license?.key ?? null },
+  });
+
+  return {
+    token,
+    user: userView({
+      id: userId,
+      username: canonicalUsername,
+      role,
+      display_name: String(u.display_name || identity.name || canonicalUsername),
+    }),
+    license: license ? await licenseView(db, license) : null,
+    serverTime: now,
+  };
+}
+
+async function issueConsoleGoogleSession(
+  db: D1Database,
+  identity: GoogleIdentity,
+  meta: { ip: string; country: string; userAgent: string },
+  deviceId: string,
+  deviceName: string,
+  now: number,
+  method: string,
+) {
+  const user = await findUserByGoogle(db, identity);
+  if (!user) {
+    await logActivity(db, {
+      now,
+      actorUsername: identity.email,
+      targetType: "auth",
+      targetId: identity.email,
+      action: "login_fail",
+      summary: `Gmail không thuộc hệ thống quản trị thử đăng nhập /admin/: ${identity.email}`,
+      ip: meta.ip,
+    });
+    fail(403, "GOOGLE_NO_ACCOUNT", `Email ${identity.email} chưa được gắn với tài khoản quản trị nào.`);
+  }
+  const u = user!;
+  const role = normalizeRole(u.role);
+  const userId = Number(u.id);
+  const canonicalUsername = String(u.username);
+  if (u.disabled) fail(403, "DISABLED", "Tài khoản đã bị khoá. Liên hệ quản trị viên.");
+  if (!isConsoleRole(role)) fail(403, "FORBIDDEN", "Tài khoản này không có quyền truy cập trang quản trị.");
+
+  const token = randomToken();
+  const dayKey = vnDayKey(now);
+  await db.batch([
+    db
+      .prepare(
+        `INSERT INTO sessions (token_hash, user_id, device_id, device_name, platform, app_version, ip, country, user_agent, created_at, expires_at, last_seen_at, active_seconds, current_tool)
+         VALUES (?, ?, ?, ?, 'admin-web', '', ?, ?, ?, ?, ?, ?, 0, '')`,
+      )
+      .bind(await sha256(token), userId, deviceId, deviceName, meta.ip, meta.country, meta.userAgent, now, now + SESSION_DAYS * DAY, now),
+    db
+      .prepare(
+        `UPDATE users
+            SET google_sub = COALESCE(NULLIF(google_sub, ''), ?),
+                email = COALESCE(NULLIF(email, ''), ?),
+                avatar_url = CASE WHEN ? != '' THEN ? ELSE avatar_url END,
+                last_login_at = ?, last_active_at = ?, last_ip = ?, last_device = ?,
+                login_count = COALESCE(login_count, 0) + 1
+          WHERE id = ?`,
+      )
+      .bind(identity.sub, identity.email, identity.picture, identity.picture, now, now, meta.ip, deviceName, userId),
+    db
+      .prepare(
+        `INSERT INTO daily_usage (user_id, day, active_seconds, sessions_count, last_seen_at)
+         VALUES (?, ?, 0, 1, ?)
+         ON CONFLICT(user_id, day) DO UPDATE SET sessions_count = sessions_count + 1, last_seen_at = excluded.last_seen_at`,
+      )
+      .bind(userId, dayKey, now),
+    db.prepare("DELETE FROM login_failures WHERE username = ?").bind(canonicalUsername),
+    db.prepare("DELETE FROM oauth_states WHERE expires_at <= ?").bind(now),
+  ]);
+
+  await logActivity(db, {
+    now,
+    actorId: userId,
+    actorUsername: canonicalUsername,
+    actorRole: role,
+    targetType: "auth",
+    targetId: canonicalUsername,
+    action: "login_ok",
+    summary: `${canonicalUsername} đăng nhập trang quản trị bằng Google (${identity.email})`,
+    ip: meta.ip,
+    meta: { method, country: meta.country },
+  });
+
+  return {
+    token,
+    user: userView({
+      id: userId,
+      username: canonicalUsername,
+      role,
+      display_name: String(u.display_name || identity.name || canonicalUsername),
+    }),
+    serverTime: now,
+  };
+}
+
+function redirectAdminError(origin: string, msg: string, clearCookie: boolean, isHttps: boolean): Response {
+  const headers = new Headers({
+    location: `${origin}/admin/?g_error=${encodeURIComponent(msg)}`,
+    "cache-control": "no-store",
+  });
+  if (clearCookie) {
+    headers.append(
+      "set-cookie",
+      `${GOOGLE_STATE_COOKIE}=; Path=/api/auth/google; HttpOnly; SameSite=Lax; Max-Age=0${isHttps ? "; Secure" : ""}`,
+    );
+  }
+  return new Response(null, { status: 302, headers });
+}
+
+async function googleStart(request: Request, env: Env, now: number): Promise<Response> {
+  const origin = publicOrigin(request, env);
+  const isHttps = origin.startsWith("https:");
+  const cfg = googleConfig(env);
+  if (!cfg.webEnabled) return redirectAdminError(origin, "Máy chủ chưa cấu hình Google OAuth (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).", false, isHttps);
+
+  const state = randomToken();
+  const verifier = randomToken() + randomToken();
+  const nonce = randomToken();
+  const challenge = b64UrlEncode(new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(verifier))));
+  const redirectUri = `${origin}/api/auth/google/callback`;
+
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM oauth_states WHERE expires_at <= ?").bind(now),
+    env.DB
+      .prepare("INSERT INTO oauth_states (state, kind, verifier, nonce, payload, created_at, expires_at) VALUES (?, 'web_pkce', ?, ?, ?, ?, ?)")
+      .bind(state, verifier, nonce, redirectUri, now, now + OAUTH_STATE_TTL),
+  ]);
+
+  const authUrl = new URL(googleEndpoints(env).authorize);
+  authUrl.search = new URLSearchParams({
+    client_id: cfg.webClientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    state,
+    nonce,
+    code_challenge: challenge,
+    code_challenge_method: "S256",
+    prompt: "select_account",
+  }).toString();
+
+  const headers = new Headers({
+    location: authUrl.toString(),
+    "cache-control": "no-store",
+    "set-cookie": `${GOOGLE_STATE_COOKIE}=${encodeURIComponent(state)}; Path=/api/auth/google; HttpOnly; SameSite=Lax; Max-Age=600${isHttps ? "; Secure" : ""}`,
+  });
+  return new Response(null, { status: 302, headers });
+}
+
+async function googleCallback(request: Request, env: Env, now: number): Promise<Response> {
+  const origin = publicOrigin(request, env);
+  const isHttps = origin.startsWith("https:");
+  const cfg = googleConfig(env);
+  if (!cfg.webEnabled) return redirectAdminError(origin, "Máy chủ chưa cấu hình Google OAuth.", true, isHttps);
+
+  const url = new URL(request.url);
+  if (url.searchParams.get("error")) {
+    return redirectAdminError(origin, "Bạn đã huỷ đăng nhập Google.", true, isHttps);
+  }
+  const state = url.searchParams.get("state") || "";
+  const code = url.searchParams.get("code") || "";
+  const cookieState = readCookie(request, GOOGLE_STATE_COOKIE);
+  if (!state || !code || !cookieState || cookieState !== state) {
+    return redirectAdminError(origin, "Phiên xác thực Google không hợp lệ hoặc đã hết hạn. Thử lại.", true, isHttps);
+  }
+
+  const row = await env.DB
+    .prepare("SELECT verifier, nonce, payload, expires_at FROM oauth_states WHERE state = ? AND kind = 'web_pkce'")
+    .bind(state)
+    .first<{ verifier: string; nonce: string; payload: string; expires_at: number }>();
+  await env.DB.prepare("DELETE FROM oauth_states WHERE state = ?").bind(state).run();
+  if (!row || row.expires_at <= now) {
+    return redirectAdminError(origin, "Phiên xác thực Google đã hết hạn. Vui lòng thử lại.", true, isHttps);
+  }
+
+  try {
+    const identity = await exchangeGoogleCode(
+      env,
+      {
+        code,
+        codeVerifier: row.verifier,
+        redirectUri: row.payload || `${origin}/api/auth/google/callback`,
+        clientId: cfg.webClientId,
+        clientSecret: cfg.webClientSecret,
+        expectedNonce: row.nonce,
+      },
+      now,
+    );
+    const meta = clientMeta(request, env);
+    const sessionRes = await issueConsoleGoogleSession(env.DB, identity, meta, "", "Trang quản trị · Google", now, "google_web");
+    const ticket = randomToken();
+    await env.DB
+      .prepare("INSERT INTO oauth_states (state, kind, payload, created_at, expires_at) VALUES (?, 'one_time_ticket', ?, ?, ?)")
+      .bind(ticket, JSON.stringify(sessionRes), now, now + OAUTH_TICKET_TTL)
+      .run();
+
+    const headers = new Headers({
+      location: `${origin}/admin/?g_ticket=${encodeURIComponent(ticket)}`,
+      "cache-control": "no-store",
+      "set-cookie": `${GOOGLE_STATE_COOKIE}=; Path=/api/auth/google; HttpOnly; SameSite=Lax; Max-Age=0${isHttps ? "; Secure" : ""}`,
+    });
+    return new Response(null, { status: 302, headers });
+  } catch (e) {
+    const msg = e instanceof ApiError ? e.message : "Đăng nhập Google thất bại, thử lại sau.";
+    return redirectAdminError(origin, msg, true, isHttps);
+  }
+}
+
+async function googleExchangeTicket(env: Env, body: Row, now: number) {
+  const ticket = str(body, "ticket", { required: true, max: 120 });
+  const deviceId = str(body, "deviceId", { max: 100 });
+  const deviceName = str(body, "deviceName", { max: 120 });
+  const row = await env.DB
+    .prepare("SELECT payload, expires_at FROM oauth_states WHERE state = ? AND kind = 'one_time_ticket'")
+    .bind(ticket)
+    .first<{ payload: string; expires_at: number }>();
+  const del = await env.DB.prepare("DELETE FROM oauth_states WHERE state = ? AND kind = 'one_time_ticket'").bind(ticket).run();
+  if (!row || row.expires_at <= now || (del.meta?.changes ?? 0) === 0) {
+    fail(401, "TICKET_EXPIRED", "Mã phiên Google đã hết hạn, vui lòng đăng nhập lại");
+  }
+  const data = JSON.parse(row!.payload) as { token: string; user: Row; serverTime: number };
+  if (deviceId || deviceName) {
+    await env.DB
+      .prepare(
+        `UPDATE sessions
+            SET device_id = CASE WHEN ? != '' THEN ? ELSE device_id END,
+                device_name = CASE WHEN ? != '' THEN ? ELSE device_name END
+          WHERE token_hash = ?`,
+      )
+      .bind(deviceId, deviceId, deviceName, deviceName, await sha256(data.token))
+      .run();
+  }
+  return { ...data, serverTime: now };
+}
+
+async function googleIdTokenLogin(request: Request, env: Env, body: Row, now: number) {
+  const cfg = googleConfig(env);
+  if (!cfg.idTokenEnabled) fail(503, "GOOGLE_DISABLED", "Máy chủ chưa cấu hình GOOGLE_CLIENT_ID");
+  const credential = str(body, "credential", { required: true, max: 4096 });
+  const deviceId = str(body, "deviceId", { max: 100 });
+  const deviceName = str(body, "deviceName", { max: 120 }) || "Trang quản trị · Google";
+  const identity = await verifyGoogleIdTokenSignature(credential, cfg.webClientId, env, now);
+  const meta = clientMeta(request, env);
+  return issueConsoleGoogleSession(env.DB, identity, meta, deviceId, deviceName, now, "google_id_token");
+}
+
 // ---------- router ----------
 
 export const onRequest: PagesFunction<Env, "path"> = async ({ request, env, params }) => {
@@ -1825,6 +2486,36 @@ export const onRequest: PagesFunction<Env, "path"> = async ({ request, env, para
     const [group, action, ...rest] = parts;
     const m = request.method;
     if (group === "auth") {
+      if (action === "config" && m === "GET") {
+        const cfg = googleConfig(env);
+        return new Response(
+          JSON.stringify({
+            google: {
+              webEnabled: cfg.webEnabled,
+              idTokenEnabled: cfg.idTokenEnabled,
+              desktopEnabled: cfg.desktopEnabled,
+              clientId: cfg.webClientId,
+              desktopClientId: cfg.desktopClientId,
+            },
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json; charset=utf-8",
+              "cache-control": "public, max-age=60, stale-while-revalidate=300",
+              ...CORS,
+            },
+          },
+        );
+      }
+      if (action === "google") {
+        const sub = rest[0];
+        if (sub === "start" && m === "GET") return googleStart(request, env, now);
+        if (sub === "callback" && m === "GET") return googleCallback(request, env, now);
+        if (sub === "exchange" && m === "POST") return json(await googleExchangeTicket(env, body, now));
+        if (sub === "desktop" && m === "POST") return json(await completeGoogleDesktopLogin(request, env, body, now));
+        if (sub === "id-token" && m === "POST") return json(await googleIdTokenLogin(request, env, body, now));
+      }
       if (action === "login" && m === "POST") return json(await login(request, env, body, now));
       if (action === "me" && m === "GET") return json(await me(request, env, now));
       if (action === "heartbeat" && m === "POST") return json(await heartbeat(request, env, body, now));
@@ -1858,7 +2549,7 @@ export const onRequest: PagesFunction<Env, "path"> = async ({ request, env, para
       if (action === "password" && m === "POST") return json(await changePassword(request, env, body, now));
     }
     if (group === "admin" && action) return json(await admin(request, env, [action, ...rest], body, now));
-    if (group === "health") return json({ ok: true, time: now, db: !!env.DB, version: 2 });
+    if (group === "health") return json({ ok: true, time: now, db: !!env.DB, version: 3 });
     return json({ error: { code: "NOT_FOUND", message: "Không có đường dẫn này" } }, 404);
   } catch (e) {
     if (e instanceof ApiError) return json({ error: { code: e.code, message: e.message } }, e.status);
