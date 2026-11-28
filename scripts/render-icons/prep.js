@@ -16,6 +16,8 @@ const ICONS = {
   vector: "pen-tool",
   "ad-designer": "megaphone",
   "fake-model": "shirt",
+  "clothing-change": "wand-sparkles",
+  "pod-studio": "shopping-bag",
   "signboard-mockup": "store",
   "old-photo-restoration": "history",
   "die-cut": "scissors",

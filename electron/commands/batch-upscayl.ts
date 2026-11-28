@@ -16,6 +16,7 @@ import { BatchUpscaylPayload } from "../../common/types/types";
 import showNotification from "../utils/show-notification";
 import { MODELS } from "../../common/models-list";
 import { copyMetadata } from "../utils/copy-metadata";
+import getPreferredVulkanGpu from "../utils/get-preferred-vulkan-gpu";
 
 const batchUpscayl = async (event, payload: BatchUpscaylPayload) => {
   const mainWindow = getMainWindow();
@@ -28,7 +29,7 @@ const batchUpscayl = async (event, payload: BatchUpscaylPayload) => {
   const useCustomWidth = payload.useCustomWidth;
   const customWidth = useCustomWidth ? payload.customWidth : "";
   const model = payload.model;
-  const gpuId = payload.gpuId;
+  const gpuId = await getPreferredVulkanGpu(payload.gpuId);
   const saveImageAs = payload.saveImageAs;
   // GET THE IMAGE DIRECTORY
   let inputDir = decodeURIComponent(payload.batchFolderPath);

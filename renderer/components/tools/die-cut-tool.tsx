@@ -3,7 +3,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
 import { Download, FileCode2, ImageUpscale, Maximize2, Scissors } from "lucide-react";
 import { ELECTRON_COMMANDS } from "@common/electron-commands";
-import { DieCutPayload, DieCutResult, DieCutType } from "@common/types/types";
+import { DesignAppTarget, DieCutPayload, DieCutResult, DieCutType } from "@common/types/types";
 import { sendImageToToolAtom, toolProgressAtom } from "@/atoms/workspace-atom";
 import { IS_WEB } from "@/lib/platform";
 import { useToast } from "@/components/ui/use-toast";
@@ -24,6 +24,7 @@ import {
   ZoomModal,
 } from "./common";
 import { ChatGptJobBanner, useChatGptStep } from "./common/chatgpt-job";
+import { OpenInDesignMenu } from "./common/open-in-design-menu";
 
 const CUTOUT_PROMPT = [
   "Remove the background of the attached design so only the design itself remains, on a real transparent alpha background (PNG, not a checkerboard, not white).",
@@ -57,6 +58,7 @@ export default function DieCutTool() {
   const [result, setResult] = useState<DieCutResult | null>(null);
   const [view, setView] = useState<ViewMode>("result");
   const [busy, setBusy] = useState(false);
+  const [openingApp, setOpeningApp] = useState<DesignAppTarget | null>(null);
   const [zoom, setZoom] = useState(false);
 
   usePendingToolImage("die-cut", (path) => {
@@ -128,6 +130,26 @@ export default function DieCutTool() {
         title: "Đã xuất Vector SVG",
         description: "Đường cắt nằm ở lớp CutContour, mở bằng Corel / Illustrator / phần mềm máy cắt.",
       });
+    }
+  };
+
+  const openCutInDesignApp = async (target: DesignAppTarget) => {
+    if (!result) return;
+    setOpeningApp(target);
+    try {
+      await window.electron.invoke(ELECTRON_COMMANDS.OPEN_IN_DESIGN_APP, {
+        target,
+        fileName: `${fileName(imagePath)}_duong-be`,
+        sourcePath: result.svgPath,
+      });
+      toast({
+        title: `Đang mở đường bế trong ${target === "corel" ? "CorelDRAW" : "Adobe Illustrator"}`,
+        description: "Lớp CutContour đã sẵn sàng cho máy cắt bế decal.",
+      });
+    } catch (error) {
+      toast({ title: "Không mở được phần mềm thiết kế", description: errorMessage(error) });
+    } finally {
+      setOpeningApp(null);
     }
   };
 
@@ -300,6 +322,14 @@ export default function DieCutTool() {
               >
                 <ImageUpscale className="h-4 w-4" /> Kích nét
               </button>
+              <OpenInDesignMenu
+                onSelect={openCutInDesignApp}
+                busyTarget={openingApp}
+                apps={[
+                  { target: "corel", label: "CorelDRAW", hint: "Mở file SVG CutContour thẳng trong CorelDRAW" },
+                  { target: "illustrator", label: "Adobe Illustrator", hint: "Mở file SVG CutContour thẳng trong Illustrator" },
+                ]}
+              />
               <button className="btn btn-sm" onClick={saveSvg}>
                 <FileCode2 className="h-4 w-4" /> Xuất Vector SVG
               </button>

@@ -23,6 +23,7 @@ import decodePath from "../../common/decode-path";
 import getDirectoryFromPath from "../../common/get-directory-from-path";
 import { MODELS } from "../../common/models-list";
 import { copyMetadata } from "../utils/copy-metadata";
+import getPreferredVulkanGpu from "../utils/get-preferred-vulkan-gpu";
 
 const doubleUpscayl = async (event, payload: DoubleUpscaylPayload) => {
   const mainWindow = getMainWindow();
@@ -35,7 +36,7 @@ const doubleUpscayl = async (event, payload: DoubleUpscaylPayload) => {
   const useCustomWidth = payload.useCustomWidth;
   const customWidth = useCustomWidth ? payload.customWidth : "";
   const model = payload.model;
-  const gpuId = payload.gpuId as string;
+  const gpuId = await getPreferredVulkanGpu(payload.gpuId as string);
   const saveImageAs = payload.saveImageAs as ImageFormat;
   const imagePath = decodePath(payload.imagePath);
   let inputDir = getDirectoryFromPath(imagePath);

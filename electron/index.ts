@@ -33,6 +33,7 @@ import {
 import { loginWithBrowser } from "./commands/browser-login";
 import { cancelGoogleLogin, startGoogleLogin } from "./commands/google-login";
 import { saveFileAs, saveFilesToFolder, saveTempImage } from "./utils/tool-files";
+import { openInDesignApp } from "./utils/open-in-design-app";
 import path from "path";
 import fs from "fs";
 import { getSystemStats } from "./utils/system-stats";
@@ -148,6 +149,8 @@ ipcMain.handle(ELECTRON_COMMANDS.CHATGPT_BROWSER_LOGIN, loginWithBrowser);
 ipcMain.handle(ELECTRON_COMMANDS.GOOGLE_LOGIN, startGoogleLogin);
 
 ipcMain.handle(ELECTRON_COMMANDS.GOOGLE_LOGIN_CANCEL, cancelGoogleLogin);
+
+ipcMain.handle(ELECTRON_COMMANDS.OPEN_IN_DESIGN_APP, openInDesignApp);
 
 ipcMain.handle(ELECTRON_COMMANDS.GET_SYSTEM_STATS, getSystemStats);
 

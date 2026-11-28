@@ -192,8 +192,17 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
   },
 
   "print-restoration": {
-    slots: [{ key: "source", label: "Ảnh chụp biển bảng / banner", required: true }],
+    slots: [{ key: "source", label: "Ảnh chụp biển bảng / bao bì", required: true }],
     fields: [
+      {
+        type: "choice",
+        key: "target",
+        title: "Loại ấn phẩm",
+        options: [
+          { value: "print", label: "Biển bảng / Banner", hint: "Bảng hiệu, poster, menu, bạt" },
+          { value: "packaging", label: "Bao bì 2D phẳng", hint: "Xóa mép hàn, đường zip, nếp gấp" },
+        ],
+      },
       {
         type: "choice",
         key: "mode",
@@ -201,6 +210,21 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
         options: [
           { value: "faithful", label: "Giữ nguyên thiết kế", hint: "Bám sát bản gốc" },
           { value: "refresh", label: "Làm mới màu sắc", hint: "Màu tươi, hiện đại hơn" },
+        ],
+      },
+      {
+        type: "choice",
+        key: "bgcolor",
+        title: "Màu nền ấn phẩm",
+        columns: 4,
+        options: [
+          { value: "keep", label: "Theo gốc" },
+          { value: "white", label: "Trắng" },
+          { value: "red", label: "Đỏ tươi" },
+          { value: "blue", label: "Xanh dương" },
+          { value: "green", label: "Xanh lá" },
+          { value: "black", label: "Đen" },
+          { value: "orange", label: "Cam" },
         ],
       },
       {
@@ -215,24 +239,49 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
         ],
       },
     ],
-    steps: ["AI đang đọc kỹ tất cả văn bản, số điện thoại & chữ tiếng Việt...","Đang khử góc nghiêng, bóng mờ & nắn phẳng bố cục thiết kế...","Đang vẽ lại logo, đồ họa & phục hồi độ sắc nét chuẩn in...","Đang hoàn thiện bản in phẳng chất lượng cao..."],
+    steps: [
+      "AI đang đọc kỹ tất cả văn bản, số điện thoại & chữ tiếng Việt...",
+      "Đang khử góc nghiêng, bóng mờ, mép hàn, đường zip & nếp gấp...",
+      "Đang vẽ lại logo, đồ họa & phục hồi độ sắc nét chuẩn in...",
+      "Đang hoàn thiện bản thiết kế 2D phẳng chất lượng cao...",
+    ],
     resultLabel: "Bản in phục hồi",
     action: "Phục hồi bằng ChatGPT",
-    buildPrompt: ({ mode, ratio }) =>
-      [
-        "The attached photo shows a printed sign, banner or poster, possibly worn, faded, wrinkled, dirty or shot at an angle.",
-        "Recreate it as a clean, flat, front-facing print-ready design: correct the perspective, remove reflections, stains, folds and damage, and rebuild every text, logo and graphic with sharp edges.",
-        "Reproduce all text exactly as written in the original, including Vietnamese diacritics; do not invent, translate or drop any words.",
-        mode === "refresh"
-          ? "Keep the same layout and content but refresh the colors so they look vivid and modern."
-          : "Match the original layout, fonts, colors and proportions as closely as possible.",
-        pick(
-          { keep: "Keep the original aspect ratio.", wide: "Use a wide 3:1 landscape format.", tall: "Use a 2:3 portrait format." },
-          ratio,
-        ),
-        "Highest available resolution, no mockup, no background around the design.",
-        OUTPUT_RULES,
-      ].join(" "),
+    buildPrompt: ({ target, mode, bgcolor, ratio }) =>
+      target === "packaging"
+        ? [
+            "You are a master print packaging artwork restoration specialist.",
+            "Recreate ONLY the flat 2D printed graphic artwork from the attached product packaging photo — DO NOT recreate the physical pouch, bag, box or container.",
+            "COMPLETELY REMOVE 100% of physical packaging structures: remove all 4-side heat-seal crimps, zipper tracks, tear notches,ribbed edges, folds, creases, dents, plastic glare, reflections and drop shadows.",
+            "Extend and seamlessly reconstruct the background color and pattern cleanly all the way to all 4 edges as a perfectly flat 90-degree front-facing rectangular print file with zero white margins or fake borders.",
+            "Preserve 100% of original logos, illustrations, layout, colors, numbers and Vietnamese text with exact diacritics; do not invent or omit text.",
+            mode === "refresh" ? "Refresh faded ink colors so they look crisp and vibrant." : "Match original print colors faithfully.",
+            bgcolor && bgcolor !== "keep"
+              ? `Use a clean solid ${bgcolor} background while keeping high contrast for all text and graphics.`
+              : "",
+            pick(
+              { keep: "Choose the natural flat aspect ratio of the main packaging face.", wide: "Use a wide 3:1 landscape format.", tall: "Use a 2:3 portrait format." },
+              ratio,
+            ),
+            OUTPUT_RULES,
+          ].filter(Boolean).join(" ")
+        : [
+            "The attached photo shows a printed sign, banner, menu or poster, possibly worn, faded, wrinkled, dirty or shot at an angle.",
+            "Recreate it as a clean, flat, front-facing print-ready design: correct the perspective, remove reflections, stains, folds and damage, and rebuild every text, logo and graphic with sharp edges.",
+            "Reproduce all text exactly as written in the original, including Vietnamese diacritics; do not invent, translate or drop any words.",
+            mode === "refresh"
+              ? "Keep the same layout and content but refresh the colors so they look vivid and modern."
+              : "Match the original layout, fonts, colors and proportions as closely as possible.",
+            bgcolor && bgcolor !== "keep"
+              ? `Use a clean solid ${bgcolor} background while keeping strong readable contrast for all text and graphics.`
+              : "",
+            pick(
+              { keep: "Keep the original aspect ratio.", wide: "Use a wide 3:1 landscape format.", tall: "Use a 2:3 portrait format." },
+              ratio,
+            ),
+            "Highest available resolution, no mockup, no background around the design.",
+            OUTPUT_RULES,
+          ].filter(Boolean).join(" "),
   },
 
   "product-retoucher": {
@@ -303,6 +352,30 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
       },
       {
         type: "choice",
+        key: "realism",
+        title: "Mức độ chân thực",
+        columns: 3,
+        options: [
+          { value: "premium", label: "Premium" },
+          { value: "ultra", label: "Ultra 8K" },
+          { value: "standard", label: "Standard" },
+        ],
+      },
+      {
+        type: "choice",
+        key: "ratio",
+        title: "Tỉ lệ khung hình",
+        columns: 3,
+        options: [
+          { value: "1:1", label: "1:1 Vuông" },
+          { value: "4:3", label: "4:3 Ngang" },
+          { value: "3:4", label: "3:4 Dọc" },
+          { value: "16:9", label: "16:9 Rộng" },
+          { value: "9:16", label: "9:16 Story" },
+        ],
+      },
+      {
+        type: "choice",
         key: "scene",
         title: "Bối cảnh",
         options: [
@@ -314,13 +387,13 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
     steps: ["Đang tải bản vẽ 2D lên AI...","Đang phân tích bố cục nhãn mác & chất liệu...","Đang dựng khối 3D & dán nhãn theo phối cảnh...","Đang tính toán ánh sáng, phản chiếu & bóng đổ...","Đang render ảnh sản phẩm 3D hoàn chỉnh..."],
     resultLabel: "Ảnh 3D",
     action: "Render 3D bằng ChatGPT",
-    buildPrompt: ({ packaging, scene }) =>
+    buildPrompt: ({ packaging, realism, ratio, scene }) =>
       [
         "The attached image is a flat 2D packaging design / label artwork.",
         pick(
           {
             box: "Apply it to a realistic 3D cardboard box.",
-            bottle: "Wrap it as the label of a realistic 3D bottle.",
+            bottle: "Wrap it as the label of a realistic 3D bottle with accurate cap/nozzle geometry.",
             pouch: "Print it on a realistic 3D stand-up zip pouch.",
             can: "Wrap it around a realistic 3D aluminium can.",
             tube: "Print it on a realistic 3D squeeze tube.",
@@ -328,8 +401,16 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
           },
           packaging,
         ),
-        "Map the artwork accurately with correct curvature and perspective; keep every logo, color and text exactly as in the artwork, including Vietnamese diacritics.",
-        "Photorealistic commercial product photography with realistic materials, reflections and shadows, three-quarter view.",
+        "Map the artwork accurately with correct curvature and perspective; keep every logo, color and text exactly as in the artwork, including Vietnamese diacritics. Do not redesign or invent new branding.",
+        pick(
+          {
+            premium: "Premium photorealistic commercial product photography with realistic materials, reflections and shadows.",
+            ultra: "Ultra-realistic 8K commercial studio product photography with crisp micro-textures, refraction, specular highlights and contact shadows.",
+            standard: "Clean commercial product photography with natural studio lighting and shadows.",
+          },
+          realism,
+        ),
+        `Aspect ratio: ${ratio || "1:1"}.`,
         scene === "lifestyle"
           ? "Place it in an appealing real-world setting that suits the product."
           : "Clean seamless studio background in a color that complements the design.",
@@ -340,9 +421,18 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
   "fake-model": {
     slots: [
       { key: "pose", label: "Ảnh 1 · Dáng mẫu", hint: "Tư thế, bố cục muốn lấy", required: true },
-      { key: "person", label: "Ảnh 2 · Người & trang phục", hint: "Khuôn mặt, vóc dáng, quần áo giữ nguyên", required: true },
+      { key: "person", label: "Ảnh 2 · Khuôn mặt & Người mẫu", hint: "Ngũ quan, kiểu tóc, vóc dáng giữ nguyên", required: true },
     ],
     fields: [
+      {
+        type: "choice",
+        key: "clothing",
+        title: "Trang phục",
+        options: [
+          { value: "person", label: "Giữ đồ Ảnh 2", hint: "Mặc nguyên bộ của Ảnh 2" },
+          { value: "pose", label: "Lấy đồ Ảnh 1", hint: "Mặc bộ đồ của mẫu Ảnh 1" },
+        ],
+      },
       {
         type: "choice",
         key: "background",
@@ -354,15 +444,31 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
           { value: "street", label: "Đường phố" },
         ],
       },
+      {
+        type: "choice",
+        key: "ratio",
+        title: "Tỉ lệ khung hình",
+        columns: 3,
+        options: [
+          { value: "auto", label: "Tự động" },
+          { value: "3:4", label: "3:4 Chân dung" },
+          { value: "1:1", label: "1:1 Vuông" },
+          { value: "9:16", label: "9:16 Dọc" },
+          { value: "16:9", label: "16:9 Ngang" },
+        ],
+      },
     ],
-    steps: ["Đang nạp Ảnh 1 (Dáng mẫu) & Ảnh 2 (Khuôn mặt & Trang phục) lên AI...","Đang phân tích cấu trúc xương, hướng cơ thể & góc máy từ Ảnh 1...","Đang khóa nhận diện ngũ quan, kiểu tóc & màu da từ Ảnh 2...","Đang đồng bộ trang phục & thể hình từ Ảnh 2 khớp tự nhiên với dáng Ảnh 1...","Đang xử lý hòa quyện ánh sáng môi trường, bóng đổ & chất liệu vải...","Đang hoàn thiện ảnh chân dung Photorealistic chuẩn Studio..."],
+    steps: ["Đang nạp Ảnh 1 (Dáng mẫu) & Ảnh 2 (Khuôn mặt & Trang phục) lên AI...","Đang phân tích cấu trúc xương, hướng cơ thể & góc máy từ Ảnh 1...","Đang khóa nhận diện ngũ quan, kiểu tóc & màu da từ Ảnh 2...","Đang đồng bộ trang phục & thể hình khớp tự nhiên với dáng Ảnh 1...","Đang xử lý hòa quyện ánh sáng môi trường, bóng đổ & chất liệu vải...","Đang hoàn thiện ảnh chân dung Photorealistic chuẩn Studio..."],
     resultLabel: "Kết quả ghép",
     action: "Ghép dáng bằng ChatGPT",
-    buildPrompt: ({ background }) =>
+    buildPrompt: ({ clothing, background, ratio }) =>
       [
-        "Two images are attached. Image 1 is the pose reference. Image 2 shows the person and the outfit.",
-        "Create a photorealistic fashion photo of the person from Image 2 standing in the exact pose, body angle and camera framing of Image 1.",
-        "Keep the face, hairstyle, skin tone, body shape and the complete outfit (cut, color, fabric, pattern, accessories) of Image 2 unchanged. Do not take any facial features or clothing from Image 1.",
+        "Two images are attached. Use Image 1 strictly as the pose and composition reference. Use Image 2 strictly as the identity reference.",
+        "Create a photorealistic photograph of the person from Image 2 placed into the exact pose, head direction, shoulder angle, hand/leg placement and camera framing of Image 1.",
+        "Keep the face, facial structure, hairstyle, skin tone and recognizable identity of Image 2 100% unchanged. Never copy or blend facial features from Image 1.",
+        clothing === "pose"
+          ? "CLOTHING: Keep the outfit, colors, fabric materials and details from Image 1, fitted naturally to the body proportions of the person from Image 2."
+          : "CLOTHING: Preserve the complete outfit (cut, color, fabric, pattern, accessories) from Image 2 unchanged, adapted naturally to the pose of Image 1.",
         pick(
           {
             pose: "Use the background and lighting of Image 1.",
@@ -372,11 +478,12 @@ export const AI_TOOLS: Partial<Record<ToolId, AiToolConfig>> = {
           },
           background,
         ),
-        "Natural anatomy, realistic fabric folds, consistent lighting.",
+        ratio && ratio !== "auto" ? `Maintain aspect ratio: ${ratio}.` : "",
+        "Natural human anatomy, realistic fabric folds, consistent lighting.",
         REAL_PEOPLE,
-        "It must look like a real unedited camera photo, not a render or illustration.",
+        "It must look like a genuine unedited camera photograph, not a face swap or pasted composite.",
         OUTPUT_RULES,
-      ].join(" "),
+      ].filter(Boolean).join(" "),
   },
 
   "signboard-mockup": {

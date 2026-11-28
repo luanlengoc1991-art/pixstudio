@@ -14,6 +14,9 @@ import IdPhotoTool from "@/components/tools/id-photo";
 import ChatGptTool from "@/components/tools/chatgpt-tool";
 import LayerSeparationTool from "@/components/tools/layer-separation";
 import AdDesignerTool from "@/components/tools/ad-designer";
+import ClothingChangeTool from "@/components/tools/clothing-change-tool";
+import PodStudioTool from "@/components/tools/pod-studio";
+import SignboardMockupTool from "@/components/tools/signboard-mockup-tool";
 import useUpscaylVersion from "@/components/hooks/use-upscayl-version";
 import { ToolId, TOOLS } from "@/lib/tools";
 
@@ -32,6 +35,9 @@ const TOOL_VIEWS: Partial<Record<ToolId, () => JSX.Element>> = {
   "id-photo": IdPhotoTool,
   "layer-separation": LayerSeparationTool,
   "ad-designer": AdDesignerTool,
+  "clothing-change": ClothingChangeTool,
+  "pod-studio": PodStudioTool,
+  "signboard-mockup": SignboardMockupTool,
 };
 // The upscaler is mounted on its own below
 delete TOOL_VIEWS.upscayl;

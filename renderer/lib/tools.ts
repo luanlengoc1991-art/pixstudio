@@ -11,6 +11,8 @@ import {
   PenTool,
   Scissors,
   Shirt,
+  ShoppingBag,
+  Sparkles,
   Store,
   FileImage,
 } from "lucide-react";
@@ -26,6 +28,8 @@ export type ToolId =
   | "product-retoucher"
   | "render-2d-to-3d"
   | "fake-model"
+  | "clothing-change"
+  | "pod-studio"
   | "signboard-mockup"
   | "id-photo"
   | "ad-designer"
@@ -75,7 +79,7 @@ export const TOOLS: ToolInfo[] = [
     id: "layer-separation",
     title: "Bóc Tách Layer",
     description:
-      "Tự động phân tách ảnh thành 10 lớp PNG không nền, hoặc khoanh vùng đối tượng cần tách.",
+      "Tách 10 lớp PNG, khoanh vùng không tách, bóc tách chữ, ghép layer & xuất PSD/PDF/Corel/AI.",
     icon: Layers,
     tint: "bg-violet-500/15 text-violet-600 dark:text-violet-300",
     status: "ready",
@@ -85,7 +89,7 @@ export const TOOLS: ToolInfo[] = [
     id: "print-restoration",
     title: "Phục hồi ấn phẩm",
     description:
-      "Tái tạo biển bảng, banner cũ từ ảnh chụp thành bản thiết kế phẳng sắc nét chuẩn in 4K.",
+      "Tái tạo biển bảng cũ & phục dựng bao bì 2D phẳng xóa mép hàn/zip sắc nét chuẩn in 4K.",
     icon: FileImage,
     tint: "bg-orange-500/15 text-orange-600 dark:text-orange-300",
     status: "ready",
@@ -135,9 +139,29 @@ export const TOOLS: ToolInfo[] = [
     id: "fake-model",
     title: "Fake Model AI",
     description:
-      "Ghép dáng mẫu từ Ảnh 1, giữ nguyên khuôn mặt, vóc dáng & trang phục Ảnh 2.",
+      "Ghép dáng mẫu từ Ảnh 1, giữ nguyên khuôn mặt, vóc dáng & tùy chọn trang phục Ảnh 1/Ảnh 2.",
     icon: Shirt,
     tint: "bg-rose-500/15 text-rose-600 dark:text-rose-300",
+    status: "ready",
+    engine: "chatgpt",
+  },
+  {
+    id: "clothing-change",
+    title: "Thay trang phục",
+    description:
+      "Thử đồ thời trang AI, đổi váy áo, vest, áo dài từ ảnh mẫu hoặc mô tả, giữ nguyên 100% khuôn mặt.",
+    icon: Sparkles,
+    tint: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300",
+    status: "ready",
+    engine: "chatgpt",
+  },
+  {
+    id: "pod-studio",
+    title: "Studio POD",
+    description:
+      "Phục hồi file in mờ hàng loạt chuẩn DTG/DTF & dựng Mockup Áo, Cốc, Túi bán hàng Etsy, Amazon.",
+    icon: ShoppingBag,
+    tint: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-300",
     status: "ready",
     engine: "chatgpt",
   },
@@ -145,7 +169,7 @@ export const TOOLS: ToolInfo[] = [
     id: "signboard-mockup",
     title: "Phối cảnh biển hiệu",
     description:
-      "Gắn bản thiết kế biển hiệu 2D vào ảnh mặt tiền thực tế, chuẩn phối cảnh & bóng đổ 3D.",
+      "Ướm biển hiệu 2D vào khung sắt, mặt tiền, biển vẫy, quầy lễ tân hoặc AI tự dựng bối cảnh 3D.",
     icon: Store,
     tint: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-300",
     status: "ready",

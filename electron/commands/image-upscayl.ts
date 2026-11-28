@@ -22,6 +22,7 @@ import getDirectoryFromPath from "../../common/get-directory-from-path";
 import { MODELS } from "../../common/models-list";
 import { getPlatform } from "../utils/get-device-specs";
 import { copyMetadata } from "../utils/copy-metadata";
+import getPreferredVulkanGpu from "../utils/get-preferred-vulkan-gpu";
 
 const imageUpscayl = async (event, payload: ImageUpscaylPayload) => {
   const mainWindow = getMainWindow();
@@ -39,7 +40,7 @@ const imageUpscayl = async (event, payload: ImageUpscaylPayload) => {
   const useCustomWidth = payload.useCustomWidth;
   const customWidth = useCustomWidth ? payload.customWidth : "";
   const model = payload.model as string;
-  const gpuId = payload.gpuId as string;
+  const gpuId = await getPreferredVulkanGpu(payload.gpuId as string);
   const saveImageAs = payload.saveImageAs as ImageFormat;
   const overwrite = payload.overwrite as boolean;
   const imagePath = decodePath(payload.imagePath);

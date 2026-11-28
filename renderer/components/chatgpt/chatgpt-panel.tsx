@@ -28,6 +28,7 @@ import {
   RESET_CAPTURE_SCRIPT,
 } from "@/lib/chatgpt/scripts";
 import { dataUrlToBytes, imageSize, looksAlike, mimeExtension, pathToDataUrl } from "@/lib/chatgpt/image-utils";
+import { isLayerSequenceComplete } from "@common/sequential-layers";
 import { useToast } from "@/components/ui/use-toast";
 
 const PARTITION = "persist:chatgpt";
@@ -244,7 +245,7 @@ export default function ChatGptPanel() {
 
     for (let step = 0; Date.now() - sentAt < limit; step++) {
       if (!isCurrent()) return;
-      const poll = await exec<{ candidates: Candidate[]; generating: boolean; missing?: boolean }>(POLL_SCRIPT(multi, step));
+      const poll = await exec<{ candidates: Candidate[]; generating: boolean; missing?: boolean; assistantText?: string }>(POLL_SCRIPT(multi, step));
       if (poll?.missing) await exec(CAPTURE_SCRIPT);
       emptyPolls = poll?.candidates?.length ? 0 : emptyPolls + 1;
       for (const candidate of poll?.candidates ?? []) {
@@ -287,6 +288,14 @@ export default function ChatGptPanel() {
       } else {
         // One image: done once it arrived and ChatGPT stopped working
         if (!multi && collected.length > 0 && !generating && quietFor > 4000) return update({ status: "done", message: "Hoàn tất." });
+        // Sequential layer batch: stop immediately if ChatGPT reported all layers extracted
+        if (job.stopOnTextComplete && collected.length > 0 && !generating && quietFor > 3500 && isLayerSequenceComplete(poll?.assistantText || "")) {
+          return update({
+            status: "done",
+            sequenceCompleted: true,
+            message: `Đã bóc tách toàn bộ ${collected.length} layer của ảnh.`,
+          });
+        }
         // Several images: stop early only when some arrived and ChatGPT has been quiet for 2 minutes
         if (multi && collected.length > 0 && idlePolls > 100 && quietFor > 120000) {
           return update({

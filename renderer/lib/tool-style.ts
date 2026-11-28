@@ -12,6 +12,8 @@ export const TOOL_ACCENT: Record<ToolId, [string, string, string]> = {
   vector: ["#f9a8d4", "#ec4899", "#be185d"],
   "ad-designer": ["#fcd34d", "#f59e0b", "#b45309"],
   "fake-model": ["#fda4af", "#f43f5e", "#be123c"],
+  "clothing-change": ["#f0abfc", "#d946ef", "#86198f"],
+  "pod-studio": ["#818cf8", "#4f46e5", "#312e81"],
   "signboard-mockup": ["#67e8f9", "#06b6d4", "#0e7490"],
   "old-photo-restoration": ["#fde047", "#eab308", "#a16207"],
   "die-cut": ["#fca5a5", "#ef4444", "#b91c1c"],
@@ -23,7 +25,7 @@ export const TOOL_ACCENT: Record<ToolId, [string, string, string]> = {
  * glass tile, rendered with three.js into public/icons3d.
  * Bump ICON_VERSION when the files are replaced so no cached copy shows.
  */
-const ICON_VERSION = 8;
+const ICON_VERSION = 9;
 
 export const toolImage = (id: ToolId) => publicSrc(`icons3d/${id}.png?v=${ICON_VERSION}`);
 

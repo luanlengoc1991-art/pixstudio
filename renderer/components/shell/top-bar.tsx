@@ -188,6 +188,7 @@ function ChatGptStatus() {
 
 /** On the website: link to the desktop app, which also has the ChatGPT tools. */
 function DownloadAppButton() {
+  const desktopExclusiveCount = TOOLS.filter((t) => !isAvailable(t)).length;
   return (
     <a
       href={DOWNLOAD_APP_URL}
@@ -195,7 +196,7 @@ function DownloadAppButton() {
       rel="noreferrer"
       className="flex h-12 shrink-0 items-center gap-2.5 rounded-2xl border border-sky-400/40 bg-sky-500/10 px-4 text-sm font-bold text-sky-600 transition-all hover:bg-sky-500/20 dark:text-sky-300"
       data-tooltip-id="tooltip"
-      data-tooltip-content="App cho Windows và Mac, có thêm 8 công cụ AI qua ChatGPT"
+      data-tooltip-content={`App cho Windows và Mac, có thêm ${desktopExclusiveCount} công cụ AI chuyên sâu qua ChatGPT`}
     >
       <Download className="h-5 w-5" />
       Tải app máy tính

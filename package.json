@@ -1,7 +1,7 @@
 {
   "name": "pixstudio",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.3.0",
   "productName": "LMS",
   "author": {
     "name": "Nayam Amarshe",
@@ -70,7 +70,8 @@
     "dist:appstore": "CSC_KEY_PASSWORD=$PASSWORD CSC_LINK=$(openssl base64 -in $CERTIFICATE_PATH) npm run dist:mac-mas",
     "enable-store": "sed -i '' -e 's/APP_STORE_BUILD: false,/APP_STORE_BUILD: true,/' common/feature-flags.ts",
     "disable-store": "sed -i '' -e 's/APP_STORE_BUILD: true,/APP_STORE_BUILD: false,/' common/feature-flags.ts",
-    "validate-schema": "node scripts/validate-schema.js"
+    "validate-schema": "node scripts/validate-schema.js",
+    "test": "tsc && node scripts/test-new-features.cjs"
   },
   "build": {
     "productName": "LMS",
@@ -227,6 +228,7 @@
     "@radix-ui/react-scroll-area": "^1.2.2",
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.4",
+    "ag-psd": "^34.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",

@@ -18,6 +18,8 @@ export type ChatGptJob = {
   nativeEdit?: boolean;
   /** Do not send anything: collect the images already in the current conversation */
   collectOnly?: boolean;
+  /** Stop early when ChatGPT's text reply states all layers are completed */
+  stopOnTextComplete?: boolean;
   /** Progress lines shown while waiting, cycled by the tool */
   steps?: string[];
 };
@@ -31,6 +33,8 @@ export type ChatGptToolState = {
   expected: number;
   /** Images collected by the current job, in arrival order */
   results: string[];
+  /** True when sequential layer extraction reported no remaining objects */
+  sequenceCompleted?: boolean;
   startedAt: number;
 };
 

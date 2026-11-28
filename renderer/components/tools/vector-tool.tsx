@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useAtom } from "jotai";
 import { Copy, Download, FileText, PenTool, WandSparkles } from "lucide-react";
 import { ELECTRON_COMMANDS } from "@common/electron-commands";
-import { VectorizePayload, VectorizeResult, VectorType } from "@common/types/types";
+import { DesignAppTarget, VectorizePayload, VectorizeResult, VectorType } from "@common/types/types";
 import { toolProgressAtom } from "@/atoms/workspace-atom";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -22,6 +22,7 @@ import {
   ZoomModal,
 } from "./common";
 import { ChatGptJobBanner, useChatGptStep } from "./common/chatgpt-job";
+import { OpenInDesignMenu } from "./common/open-in-design-menu";
 import { IS_WEB } from "@/lib/platform";
 
 const VECTOR_TYPES: { value: VectorType; label: string; hint: string }[] = [
@@ -76,6 +77,7 @@ export default function VectorTool() {
   const [background, setBackground] = useState<"transparent" | "white">("transparent");
   const [result, setResult] = useState<VectorizeResult | null>(null);
   const [busy, setBusy] = useState(false);
+  const [openingApp, setOpeningApp] = useState<DesignAppTarget | null>(null);
   const [zoom, setZoom] = useState<"source" | "svg" | null>(null);
   const [aiCleanup, setAiCleanup] = useState(!IS_WEB);
   const cleanup = useChatGptStep("vector");
@@ -147,6 +149,30 @@ export default function VectorTool() {
       if (saved) toast({ title: "Đã xuất file PDF Vector", description: saved });
     } catch (error) {
       toast({ title: "Xuất PDF thất bại", description: errorMessage(error) });
+    }
+  };
+
+  const openInDesignApp = async (target: DesignAppTarget) => {
+    if (!result) return;
+    setOpeningApp(target);
+    try {
+      const pdfBytes: Uint8Array = await window.electron.invoke(ELECTRON_COMMANDS.EXPORT_VECTOR_PDF, {
+        svg: result.svg,
+      });
+      await window.electron.invoke(ELECTRON_COMMANDS.OPEN_IN_DESIGN_APP, {
+        target,
+        fileName: fileName(imagePath),
+        extension: "pdf",
+        bytes: pdfBytes,
+      });
+      toast({
+        title: `Đang mở trong ${target === "corel" ? "CorelDRAW" : "Adobe Illustrator"}`,
+        description: "Đã gửi file Vector PDF giữ đúng kích thước gốc sang phần mềm.",
+      });
+    } catch (error) {
+      toast({ title: "Không mở được phần mềm thiết kế", description: errorMessage(error) });
+    } finally {
+      setOpeningApp(null);
     }
   };
 
@@ -248,6 +274,14 @@ export default function VectorTool() {
                 Kích thước: <b>{result.width}×{result.height}px</b>
               </span>
               <div className="ml-auto flex flex-wrap gap-2">
+                <OpenInDesignMenu
+                  onSelect={openInDesignApp}
+                  busyTarget={openingApp}
+                  apps={[
+                    { target: "illustrator", label: "Adobe Illustrator", hint: "Xuất PDF Vector & mở thẳng Illustrator" },
+                    { target: "corel", label: "CorelDRAW", hint: "Xuất PDF Vector & mở thẳng CorelDRAW" },
+                  ]}
+                />
                 <button className="btn btn-sm" onClick={copySvg}>
                   <Copy className="h-4 w-4" /> Sao chép mã SVG
                 </button>

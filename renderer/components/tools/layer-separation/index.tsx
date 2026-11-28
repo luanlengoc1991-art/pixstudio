@@ -1,44 +1,76 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSetAtom } from "jotai";
-import { CheckCircle2, Download, FolderDown, Layers, Loader2, Maximize2, MousePointerSquareDashed, PenTool, Sparkles, Zap } from "lucide-react";
+import {
+  CheckCircle2,
+  Combine,
+  Download,
+  FolderDown,
+  Layers,
+  Loader2,
+  Maximize2,
+  MousePointerSquareDashed,
+  PenTool,
+  ShieldAlert,
+  Sparkles,
+  Type,
+  Zap,
+} from "lucide-react";
+import {
+  buildDirectLayerNextPrompt,
+  buildDirectLayerStartPrompt,
+  LAYERS_PER_BATCH,
+  MAX_DIRECT_LAYERS,
+} from "@common/sequential-layers";
 import { cn } from "@/lib/utils";
 import { sendImageToToolAtom } from "@/atoms/workspace-atom";
 import { useToast } from "@/components/ui/use-toast";
 import {
   fileExtension,
+  fileName,
   fileUrl,
   IMAGE_SAVE_FILTERS,
   ImageInput,
+  OptionCards,
   saveFileAs,
   saveFilesToFolder,
   Section,
-  Segmented,
   storeImageFile,
   ToolLayout,
   usePendingToolImage,
   ZoomModal,
 } from "../common";
 import { ChatGptJobBanner, useChatGptJob } from "../common/chatgpt-job";
+import LayerCompositionModal from "./composition-modal";
 import RegionEditor from "./region-editor";
 import {
   annotateImage,
+  AnnotationVariant,
   AUTO_LAYER_COUNT,
   autoContinuePrompt,
   autoPrompt,
   customContinuePrompt,
   customPrompt,
   Region,
+  textContinuePrompt,
+  textPrompt,
 } from "./prompts";
 
-type Mode = "auto" | "custom";
+type Mode = "auto" | "sequential" | "custom" | "text";
 
 const STEPS = [
   "Đang tải ảnh gốc & khởi tạo...",
   "Đang gửi yêu cầu bóc tách lớp sang AI...",
-  "AI đang phân tích các đối tượng & ảnh nền...",
+  "AI đang phân tích các đối tượng, chữ & ảnh nền...",
   "Đang bóc tách phông nền & xuất file PNG không nền...",
   "Đang hoàn tất và xuất danh sách các lớp layer...",
 ];
+
+const MODE_DESCRIPTIONS: Record<Mode, string> = {
+  auto: "Tự động phân tách ảnh thành tối đa 10 layer trong 1 lượt. Có thể khoanh vùng vàng cam KHÔNG TÁCH để giữ chi tiết cố định trên nền.",
+  sequential: "Tách theo từng đợt 5 ảnh (Layer 1 là Background sạch + các cụm đối tượng), tự động gửi 'Tiếp' cho đợt 2 và dừng sớm khi đã hết đối tượng.",
+  custom: "Khoanh khung đỏ các đối tượng muốn tách; AI xuất từng đối tượng thành PNG trong suốt + 1 ảnh gốc đã xóa sạch chỗ tách.",
+  text: "Khoanh các cụm chữ / slogan; AI xuất chữ PNG nền trong suốt (alpha = 0, giữ dấu tiếng Việt & hiệu ứng 3D) + 1 ảnh nền sạch đã xóa chữ.",
+};
 
 export default function LayerSeparationTool() {
   const { toast } = useToast();
@@ -48,68 +80,166 @@ export default function LayerSeparationTool() {
   const [mode, setMode] = useState<Mode>("auto");
   const [imagePath, setImagePath] = useState("");
   const [regions, setRegions] = useState<Region[]>([]);
-  const [editing, setEditing] = useState(false);
-  // Layers from earlier jobs of this separation ("Tách tiếp" keeps them)
+  const [exclusions, setExclusions] = useState<Region[]>([]);
+  const [editorVariant, setEditorVariant] = useState<AnnotationVariant | null>(null);
+  const [composingOpen, setComposingOpen] = useState(false);
+
+  // Layers from earlier jobs of this separation ("Tách tiếp" or sequential batch 2 keeps them)
   const [base, setBase] = useState<string[]>([]);
   const [jobIds, setJobIds] = useState<string[]>([]);
   const [total, setTotal] = useState(AUTO_LAYER_COUNT);
-  // Settings of the separation shown in the grid (mode and regions may be edited afterwards)
-  const runSettings = useRef<{ mode: Mode; regions: Region[]; source?: string }>({ mode: "auto", regions: [] });
+  const [seqFinishedEarly, setSeqFinishedEarly] = useState(false);
+
+  const runSettings = useRef<{
+    mode: Mode;
+    regions: Region[];
+    exclusions: Region[];
+    source?: string;
+    autoAdvancedBatch?: string;
+  }>({
+    mode: "auto",
+    regions: [],
+    exclusions: [],
+  });
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
 
   usePendingToolImage("layer-separation", (path) => {
     setImagePath(path);
     setRegions([]);
-    toast({ title: "Đã nạp ảnh vào Bóc Tách Layer", description: "Chọn tách tự động hoặc khoanh vùng đối tượng cần tách." });
+    setExclusions([]);
+    toast({
+      title: "Đã nạp ảnh vào Bóc Tách Layer",
+      description: "Chọn tách tự động, tách theo đợt, tách đối tượng hoặc bóc tách chữ.",
+    });
   });
 
   const ownJob = job.state && jobIds.includes(job.state.jobId);
   const layers = [...base, ...(ownJob ? job.state!.results : [])];
   const running = job.running && ownJob;
-  const complete = layers.length >= total;
+  const complete = seqFinishedEarly || layers.length >= total;
   const started = jobIds.length > 0;
+
+  // Automatic batch-2 continuation in "sequential" mode
+  useEffect(() => {
+    if (!ownJob || !job.state) return;
+    if (runSettings.current.mode !== "sequential") return;
+    if (job.state.sequenceCompleted) {
+      setSeqFinishedEarly(true);
+      setTotal(Math.max(1, layers.length));
+      return;
+    }
+    if (
+      job.state.status === "done" &&
+      layers.length >= LAYERS_PER_BATCH &&
+      layers.length < MAX_DIRECT_LAYERS &&
+      runSettings.current.autoAdvancedBatch !== job.state.jobId
+    ) {
+      runSettings.current.autoAdvancedBatch = job.state.jobId;
+      const nextIndex = layers.length + 1;
+      const prompt = buildDirectLayerNextPrompt(nextIndex, runSettings.current.exclusions);
+      setBase(layers);
+      const batchExpected = Math.min(LAYERS_PER_BATCH, MAX_DIRECT_LAYERS - layers.length);
+      const nextId = job.submit({
+        prompt,
+        imagePaths: [],
+        expected: batchExpected,
+        newChat: false,
+        stopOnTextComplete: true,
+        steps: [`Đang tách đợt 2 (Layer ${nextIndex}..${MAX_DIRECT_LAYERS})...`, ...STEPS.slice(2)],
+      });
+      setJobIds((prev) => [...prev, nextId]);
+    }
+  }, [ownJob, job.state, layers.length]);
 
   const labelOf = (index: number) => {
     const { mode: m, regions: r } = runSettings.current;
-    if (m === "custom") return index === r.length ? "Ảnh gốc đã mất chỗ tách" : r[index]?.name.trim() || `Đối tượng ${index + 1}`;
-    return `Đối tượng ${index + 1}`;
+    if (m === "sequential") {
+      return index === 0 ? "Background sạch" : `Đối tượng ${index}`;
+    }
+    if (m === "custom") {
+      return index === r.length ? "Background đã xóa vật thể" : r[index]?.name.trim() || `Đối tượng ${index + 1}`;
+    }
+    if (m === "text") {
+      return index === r.length ? "Background đã xóa chữ" : r[index]?.name.trim() || `Cụm chữ ${index + 1}`;
+    }
+    return index === AUTO_LAYER_COUNT - 1 ? "Background" : `Đối tượng ${index + 1}`;
   };
+
   const fileNameOf = (index: number, path: string) =>
-    `${labelOf(index).replace(/\s+/g, "_")}.${fileExtension(path)}`;
+    `${labelOf(index).replace(/[/\\?%*:|"<>]/g, "_").replace(/\s+/g, "_")}.${fileExtension(path)}`;
 
   const start = async () => {
     if (!imagePath) {
       toast({ title: "Chưa có ảnh", description: "Hãy chọn ảnh cần bóc tách trước." });
       return;
     }
-    if (mode === "custom" && regions.length === 0) {
-      setEditing(true);
+    if ((mode === "custom" || mode === "text") && regions.length === 0) {
+      setEditorVariant(mode === "text" ? "text" : "target");
       return;
     }
-    runSettings.current = { mode, regions };
-    let source = imagePath;
-    let prompt = autoPrompt();
-    let expected = AUTO_LAYER_COUNT;
-    if (mode === "custom") {
-      source = await storeImageFile(await annotateImage(fileUrl(imagePath), regions), "vung-khoanh-do.png");
-      prompt = customPrompt(regions);
-      expected = regions.length + 1;
-    }
-    runSettings.current.source = source;
+
+    runSettings.current = { mode, regions, exclusions };
+    setSeqFinishedEarly(false);
     setBase([]);
-    setTotal(expected);
-    const id = job.submit({ prompt, imagePaths: [source], expected, steps: STEPS });
+
+    let imagePaths = [imagePath];
+    let prompt = "";
+    let totalExpected = AUTO_LAYER_COUNT;
+    let firstJobExpected = AUTO_LAYER_COUNT;
+    let stopOnTextComplete = false;
+
+    if (mode === "custom") {
+      const annotated = await storeImageFile(await annotateImage(fileUrl(imagePath), regions, "target"), "vung-khoanh-do.png");
+      imagePaths = [annotated];
+      runSettings.current.source = annotated;
+      prompt = customPrompt(regions);
+      totalExpected = regions.length + 1;
+      firstJobExpected = totalExpected;
+    } else if (mode === "text") {
+      const annotated = await storeImageFile(await annotateImage(fileUrl(imagePath), regions, "text"), "vung-chu-do.png");
+      imagePaths = [imagePath, annotated];
+      runSettings.current.source = annotated;
+      prompt = textPrompt(regions);
+      totalExpected = regions.length + 1;
+      firstJobExpected = totalExpected;
+    } else if (mode === "sequential") {
+      if (exclusions.length > 0) {
+        const maskPath = await storeImageFile(await annotateImage(fileUrl(imagePath), exclusions, "exclude"), "vung-khong-tach.png");
+        imagePaths = [imagePath, maskPath];
+        runSettings.current.source = maskPath;
+      }
+      prompt = buildDirectLayerStartPrompt(exclusions);
+      totalExpected = MAX_DIRECT_LAYERS;
+      firstJobExpected = LAYERS_PER_BATCH;
+      stopOnTextComplete = true;
+    } else {
+      if (exclusions.length > 0) {
+        const maskPath = await storeImageFile(await annotateImage(fileUrl(imagePath), exclusions, "exclude"), "vung-khong-tach.png");
+        imagePaths = [maskPath];
+        runSettings.current.source = maskPath;
+      }
+      prompt = autoPrompt(exclusions);
+      totalExpected = AUTO_LAYER_COUNT;
+      firstJobExpected = AUTO_LAYER_COUNT;
+    }
+
+    setTotal(totalExpected);
+    const id = job.submit({
+      prompt,
+      imagePaths,
+      expected: firstJobExpected,
+      stopOnTextComplete,
+      steps: STEPS,
+    });
     setJobIds([id]);
   };
 
-  // Picks up the layers ChatGPT already made in the current chat (after a stop or error)
   const fetchResults = () => {
     setBase(layers);
     const id = job.submit({
       prompt: "",
-      // Listed so the source image and the layers already here are not taken again
-      imagePaths: [runSettings.current.source || imagePath, ...layers].filter(Boolean),
-      expected: total - layers.length,
+      imagePaths: [imagePath, runSettings.current.source || "", ...layers].filter(Boolean),
+      expected: Math.max(1, total - layers.length),
       newChat: false,
       collectOnly: true,
       steps: ["Đang quét các ảnh ChatGPT đã tạo..."],
@@ -117,13 +247,25 @@ export default function LayerSeparationTool() {
     setJobIds((prev) => [...prev, id]);
   };
 
-  // Asks ChatGPT, in the same conversation, for the layers still missing
   const continueSeparation = () => {
     const next = layers.length + 1;
-    const { mode: m, regions: r } = runSettings.current;
-    const prompt = m === "custom" ? customContinuePrompt(r, next) : autoContinuePrompt(next);
+    const { mode: m, regions: r, exclusions: ex } = runSettings.current;
+    let prompt = "";
+    let expected = Math.max(1, total - layers.length);
+    let stopOnTextComplete = false;
+    if (m === "custom") {
+      prompt = customContinuePrompt(r, next);
+    } else if (m === "text") {
+      prompt = textContinuePrompt(r, next);
+    } else if (m === "sequential") {
+      prompt = buildDirectLayerNextPrompt(Math.min(MAX_DIRECT_LAYERS, Math.max(2, next)), ex);
+      expected = Math.min(LAYERS_PER_BATCH, MAX_DIRECT_LAYERS - layers.length);
+      stopOnTextComplete = true;
+    } else {
+      prompt = autoContinuePrompt(next, ex);
+    }
     setBase(layers);
-    const id = job.submit({ prompt, imagePaths: [], expected: total - layers.length, newChat: false, steps: STEPS });
+    const id = job.submit({ prompt, imagePaths: [], expected, newChat: false, stopOnTextComplete, steps: STEPS });
     setJobIds((prev) => [...prev, id]);
   };
 
@@ -140,63 +282,119 @@ export default function LayerSeparationTool() {
 
   const saveAll = async () => {
     const count = await saveFilesToFolder({
-      folderName: `Tach_layer_${new Date().toLocaleString("vi-VN").replace(/[/:, ]+/g, "-")}`,
-      files: layers.map((path, index) => ({ sourcePath: path, name: `${String(index + 1).padStart(2, "0")}_${fileNameOf(index, path)}` })),
+      folderName: `LMS_Tach_Layer_${new Date().toLocaleString("vi-VN").replace(/[/:, ]+/g, "-")}`,
+      files: layers.map((path, index) => ({
+        sourcePath: path,
+        name: `${String(index + 1).padStart(2, "0")}_${fileNameOf(index, path)}`,
+      })),
     });
-    if (count) toast({ title: `Đã tự động lưu ${count} ảnh` });
+    if (count) toast({ title: `Đã tự động lưu ${count} ảnh layer` });
   };
 
-  // Keep the lightbox in range when layers change
   useEffect(() => {
     if (zoomIndex !== null && zoomIndex >= layers.length) setZoomIndex(null);
   }, [layers.length, zoomIndex]);
 
+  const isAutoLike = mode === "auto" || mode === "sequential";
+  const isBoxMode = mode === "custom" || mode === "text";
+
   const aside = (
     <>
-      <Section title="Chế độ bóc tách">
-        <Segmented
+      <Section step="01" title="Chế độ bóc tách">
+        <OptionCards
           value={mode}
-          onChange={(m: Mode) => setMode(m)}
+          onChange={(next: Mode) => {
+            setMode(next);
+            setRegions([]);
+          }}
           options={[
-            { value: "auto", label: "Mặc định" },
-            { value: "custom", label: "Theo yêu cầu" },
+            { value: "auto", label: "Tách một lượt", hint: "Tối đa 10 layer trong 1 lần" },
+            { value: "sequential", label: "Tách theo đợt", hint: "Mỗi đợt 5 ảnh, ổn định cao" },
+            { value: "custom", label: "Theo yêu cầu", hint: "Khoanh vùng vật thể cần tách" },
+            { value: "text", label: "Bóc tách chữ", hint: "Chữ PNG không nền + xóa chữ" },
           ]}
         />
-        <p className="text-[11px] font-light leading-4 text-base-content/70">
-          {mode === "auto"
-            ? "Tự động phân tách toàn bộ ảnh thành 10 layer đối tượng & nền."
-            : "Khoanh khung đỏ đối tượng muốn tách; AI sẽ xóa vật thể trên ảnh gốc và xuất layer PNG riêng."}
-        </p>
+        <p className="text-[11px] font-light leading-4 text-base-content/70">{MODE_DESCRIPTIONS[mode]}</p>
       </Section>
 
-      <Section title={mode === "custom" ? "Ảnh & vùng chọn" : "Tải ảnh đầu vào"}>
+      <Section
+        step="02"
+        title={mode === "text" ? "Ảnh & vùng chữ" : mode === "custom" ? "Ảnh & vùng chọn" : "Ảnh đầu vào & loại trừ"}
+      >
         <ImageInput
           toolId="layer-separation"
           imagePath={imagePath}
           onChange={(path) => {
             setImagePath(path);
             setRegions([]);
+            setExclusions([]);
           }}
         />
-        {mode === "custom" && imagePath && (
+
+        {isBoxMode && imagePath && (
           <>
             <button
+              type="button"
               className="btn btn-sm w-full border-red-500/40 bg-red-500/10 text-red-600 hover:border-red-500 hover:bg-red-500 hover:text-white dark:text-red-400"
-              onClick={() => setEditing(true)}
+              onClick={() => setEditorVariant(mode === "text" ? "text" : "target")}
             >
-              <MousePointerSquareDashed className="h-4 w-4" />
-              {regions.length ? `Sửa vùng đã chọn (${regions.length})` : "Chọn vùng cần tách"}
+              {mode === "text" ? <Type className="h-4 w-4" /> : <MousePointerSquareDashed className="h-4 w-4" />}
+              {regions.length
+                ? mode === "text"
+                  ? `Sửa vùng chữ đã chọn (${regions.length})`
+                  : `Sửa vùng đối tượng (${regions.length})`
+                : mode === "text"
+                  ? "Chọn khối chữ cần tách"
+                  : "Chọn vùng đối tượng cần tách"}
             </button>
             {regions.length > 0 && (
               <div className="space-y-1 rounded-xl border border-base-content/10 bg-base-100 p-2 text-[11px]">
                 {regions.map((r, i) => (
                   <button
                     key={r.id}
+                    type="button"
                     className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1 text-left hover:bg-base-200"
-                    onClick={() => setEditing(true)}
+                    onClick={() => setEditorVariant(mode === "text" ? "text" : "target")}
                   >
                     <span className="rounded bg-red-500/15 px-1 py-0.5 text-[10px] font-black text-red-500">#{i + 1}</span>
-                    <span className="truncate font-medium">{r.name.trim() || `Đối tượng ${i + 1}`}</span>
+                    <span className="truncate font-medium">
+                      {r.name.trim() || (mode === "text" ? `Khối chữ ${i + 1}` : `Đối tượng ${i + 1}`)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {isAutoLike && imagePath && (
+          <>
+            <button
+              type="button"
+              disabled={running}
+              className="btn btn-sm w-full border-amber-500/40 bg-amber-500/10 text-amber-600 hover:border-amber-500 hover:bg-amber-500 hover:text-slate-950 dark:text-amber-400"
+              onClick={() => setEditorVariant("exclude")}
+            >
+              <ShieldAlert className="h-4 w-4" />
+              {exclusions.length ? `Sửa vùng KHÔNG TÁCH (${exclusions.length})` : "Khoanh vùng KHÔNG TÁCH (tùy chọn)"}
+            </button>
+            {exclusions.length > 0 && (
+              <div className="space-y-1 rounded-xl border border-amber-500/25 bg-amber-500/5 p-2 text-[11px]">
+                <div className="flex items-center justify-between px-1 font-bold text-amber-600 dark:text-amber-300">
+                  <span>Giữ cố định trên nền:</span>
+                  <button type="button" className="text-[10px] hover:underline" onClick={() => setExclusions([])}>
+                    Xóa tất cả
+                  </button>
+                </div>
+                {exclusions.map((r, i) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1 text-left hover:bg-base-200"
+                    onClick={() => setEditorVariant("exclude")}
+                  >
+                    <span className="rounded bg-amber-500/20 px-1 py-0.5 text-[10px] font-black text-amber-500">#{i + 1}</span>
+                    <span className="truncate font-medium">{r.name.trim() || `Không tách ${i + 1}`}</span>
                   </button>
                 ))}
               </div>
@@ -209,14 +407,28 @@ export default function LayerSeparationTool() {
 
   const footer = (
     <button className="btn btn-primary w-full" disabled={!imagePath || running} onClick={start}>
-      {running ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "custom" ? <Layers className="h-4 w-4" /> : <Zap className="h-4 w-4" />}
+      {running ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : mode === "text" ? (
+        <Type className="h-4 w-4" />
+      ) : mode === "custom" ? (
+        <Layers className="h-4 w-4" />
+      ) : (
+        <Zap className="h-4 w-4" />
+      )}
       {running
         ? "Đang bóc tách lớp..."
-        : mode === "custom"
+        : isBoxMode
           ? regions.length
-            ? `Tách ${regions.length} vùng đã chọn`
-            : "Chọn vùng cần tách trước"
-          : "Bắt đầu tách lớp"}
+            ? mode === "text"
+              ? `Tách ${regions.length} cụm chữ (PNG không nền)`
+              : `Tách ${regions.length} vùng đã chọn`
+            : mode === "text"
+              ? "Chọn khối chữ cần tách trước"
+              : "Chọn vùng cần tách trước"
+          : mode === "sequential"
+            ? "Bắt đầu tách theo đợt (5 ảnh/lượt)"
+            : "Bắt đầu tách lớp"}
     </button>
   );
 
@@ -227,9 +439,22 @@ export default function LayerSeparationTool() {
       footer={footer}
       actions={
         layers.length > 0 && (
-          <button className="btn btn-primary btn-sm" onClick={saveAll}>
-            <FolderDown className="h-4 w-4" /> Tải toàn bộ ({layers.length} ảnh)
-          </button>
+          <>
+            {imagePath && !running && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setComposingOpen(true)}
+                data-tooltip-id="tooltip"
+                data-tooltip-content="Tự động căn khớp các layer lên ảnh gốc, chỉnh vị trí & xuất file PSD / PDF / Corel / Illustrator"
+              >
+                <Combine className="h-4 w-4" /> Ghép layer & Xuất PSD/PDF
+              </button>
+            )}
+            <button type="button" className="btn btn-primary btn-sm" onClick={saveAll}>
+              <FolderDown className="h-4 w-4" /> Tải toàn bộ ({layers.length} ảnh)
+            </button>
+          </>
         )
       }
     >
@@ -253,20 +478,26 @@ export default function LayerSeparationTool() {
                 {running
                   ? `Đang quét liên tục & bóc tách... (${layers.length} / ${total} ảnh)`
                   : complete
-                    ? `Đã hoàn tất bóc tách (${layers.length} / ${total} ảnh)`
+                    ? `Đã hoàn tất bóc tách (${layers.length} ảnh)`
                     : `Đã nhận ${layers.length} / ${total} ảnh`}
               </h3>
               <p className="text-xs font-light text-base-content/70">
                 {complete
-                  ? "Tất cả các lớp PNG không nền và ảnh nền đã sẵn sàng để tải về hoặc sử dụng."
+                  ? "Bấm \"Ghép layer & Xuất PSD/PDF\" để tự căn tọa độ từng lớp và mở thẳng trong Photoshop, CorelDRAW hoặc Illustrator."
                   : running
                     ? "Các lớp hiện ra ngay khi ChatGPT tạo xong từng ảnh."
                     : "Nếu ChatGPT đã tạo xong mà ảnh chưa hiện, bấm \"Lấy kết quả từ ChatGPT\"; nếu còn thiếu lớp, bấm \"Tách tiếp\"."}
               </p>
             </div>
+            {!running && imagePath && layers.length > 0 && (
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setComposingOpen(true)}>
+                <Combine className="h-4 w-4" /> Ghép layer
+              </button>
+            )}
             {!running && !complete && (
               <button
-                className="btn btn-secondary btn-sm"
+                type="button"
+                className="btn btn-sm"
                 onClick={fetchResults}
                 data-tooltip-id="tooltip"
                 data-tooltip-content="Lấy các ảnh ChatGPT đã tạo trong cuộc chat hiện tại về app"
@@ -275,8 +506,8 @@ export default function LayerSeparationTool() {
               </button>
             )}
             {!running && !complete && layers.length > 0 && (
-              <button className="btn btn-sm" onClick={continueSeparation}>
-                <Layers className="h-4 w-4" /> Tách tiếp các lớp ({layers.length}/{total})
+              <button type="button" className="btn btn-sm" onClick={continueSeparation}>
+                <Layers className="h-4 w-4" /> Tách tiếp ({layers.length}/{total})
               </button>
             )}
           </div>
@@ -290,20 +521,23 @@ export default function LayerSeparationTool() {
               <Layers className="h-8 w-8" />
             </span>
             <h3 className="text-lg font-extrabold">
-              {imagePath ? (mode === "auto" ? "Sẵn sàng bóc tách tự động (10 lớp layer)" : "Sẵn sàng tách") : "Chưa có ảnh"}
+              {imagePath
+                ? mode === "sequential"
+                  ? "Sẵn sàng tách theo đợt (mỗi đợt 5 ảnh)"
+                  : mode === "text"
+                    ? "Sẵn sàng bóc tách chữ PNG không nền"
+                    : mode === "custom"
+                      ? "Sẵn sàng tách vùng đã chọn"
+                      : "Sẵn sàng bóc tách tự động (10 lớp layer)"
+                : "Chưa có ảnh đầu vào"}
             </h3>
-            <p className="max-w-md text-sm font-light text-base-content/70">
-              {mode === "auto"
-                ? "Tải ảnh JPG hoặc PNG ở bảng bên trái và nhấn \"Bắt đầu tách lớp\" để AI tự động trích xuất các layer PNG không nền."
-                : regions.length
-                  ? `Đã chọn ${regions.length} vùng. AI sẽ tạo ${regions.length + 1} file (${regions.length} ảnh PNG không nền + 1 ảnh gốc đã mất chỗ tách).`
-                  : "Bấm \"Chọn vùng cần tách\" để khoanh các đối tượng. AI sẽ bóc tách các đối tượng đã chọn và 1 ảnh gốc đã mất chỗ tách."}
-            </p>
+            <p className="max-w-lg text-sm font-light text-base-content/70">{MODE_DESCRIPTIONS[mode]}</p>
             <button
+              type="button"
               className="btn btn-ghost btn-sm mt-2"
               onClick={() => {
-                runSettings.current = { mode, regions, source: imagePath };
-                setTotal(mode === "custom" && regions.length ? regions.length + 1 : AUTO_LAYER_COUNT);
+                runSettings.current = { mode, regions, exclusions, source: imagePath };
+                setTotal(isBoxMode && regions.length ? regions.length + 1 : AUTO_LAYER_COUNT);
                 fetchResults();
               }}
               data-tooltip-id="tooltip"
@@ -314,7 +548,7 @@ export default function LayerSeparationTool() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {Array.from({ length: total }).map((_, index) => {
+            {Array.from({ length: seqFinishedEarly ? layers.length : total }).map((_, index) => {
               const path = layers[index];
               return (
                 <div key={index} className="flex flex-col gap-2">
@@ -330,11 +564,15 @@ export default function LayerSeparationTool() {
                         path ? "bg-slate-900/80 text-white" : "bg-base-200 text-base-content/60",
                       )}
                     >
-                      {path ? <CheckCircle2 className="h-3 w-3 text-emerald-400" /> : <Loader2 className={cn("h-3 w-3", running && "animate-spin")} />}
+                      {path ? (
+                        <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                      ) : (
+                        <Loader2 className={cn("h-3 w-3", running && "animate-spin")} />
+                      )}
                       Layer {index + 1}
                     </span>
                     {path ? (
-                      <button className="h-full w-full" onClick={() => setZoomIndex(index)}>
+                      <button type="button" className="h-full w-full" onClick={() => setZoomIndex(index)}>
                         <img src={fileUrl(path)} alt={labelOf(index)} className="h-full w-full object-contain p-3" draggable={false} />
                         <span className="absolute inset-0 flex items-center justify-center bg-slate-950/0 opacity-0 transition-all group-hover:bg-slate-950/40 group-hover:opacity-100">
                           <span className="flex items-center gap-1 rounded-lg bg-slate-900/80 px-2.5 py-1 text-xs font-bold text-white">
@@ -344,7 +582,11 @@ export default function LayerSeparationTool() {
                       </button>
                     ) : (
                       <div className="flex h-full flex-col items-center justify-center gap-1 text-[11px] text-base-content/50">
-                        {running && index === layers.length ? "AI đang vẽ & bóc tách..." : running ? "Đang chờ trong hàng đợi..." : "Chờ bóc tách..."}
+                        {running && index === layers.length
+                          ? "AI đang vẽ & bóc tách..."
+                          : running
+                            ? "Đang chờ trong hàng đợi..."
+                            : "Chờ bóc tách..."}
                       </div>
                     )}
                   </div>
@@ -355,22 +597,25 @@ export default function LayerSeparationTool() {
                     {path && (
                       <>
                         <button
+                          type="button"
                           className="btn btn-ghost btn-xs btn-square"
                           onClick={() => sendImageToTool({ toolId: "upscayl", path })}
                           data-tooltip-id="tooltip"
-                          data-tooltip-content="Gửi ảnh này sang Kích nét để phóng to 4K"
+                          data-tooltip-content="Gửi layer này sang Kích nét 4K"
                         >
                           <Sparkles className="h-3.5 w-3.5" />
                         </button>
                         <button
+                          type="button"
                           className="btn btn-ghost btn-xs btn-square"
                           onClick={() => sendImageToTool({ toolId: "vector", path })}
                           data-tooltip-id="tooltip"
-                          data-tooltip-content="Gửi layer này sang Vector để bóc tách SVG"
+                          data-tooltip-content="Gửi layer này sang Vector SVG"
                         >
                           <PenTool className="h-3.5 w-3.5" />
                         </button>
                         <button
+                          type="button"
                           className="btn btn-ghost btn-xs btn-square"
                           onClick={() => saveOne(index)}
                           data-tooltip-id="tooltip"
@@ -388,16 +633,49 @@ export default function LayerSeparationTool() {
         )}
       </div>
 
-      {editing && imagePath && (
+      {editorVariant && imagePath && (
         <RegionEditor
           src={fileUrl(imagePath)}
-          initial={regions}
-          onClose={() => setEditing(false)}
+          variant={editorVariant}
+          initial={editorVariant === "exclude" ? exclusions : regions}
+          onClose={() => setEditorVariant(null)}
           onSave={(next) => {
-            setRegions(next);
-            setEditing(false);
-            if (next.length) toast({ title: "Đã chọn vùng thành công", description: `Đã khoanh ${next.length} đối tượng cần bóc tách.` });
+            if (editorVariant === "exclude") {
+              setExclusions(next);
+              if (next.length) {
+                toast({
+                  title: "Đã lưu vùng KHÔNG TÁCH",
+                  description: `${next.length} vùng sẽ được giữ nguyên trên ảnh nền.`,
+                });
+              }
+            } else {
+              setRegions(next);
+              if (next.length) {
+                toast({
+                  title: "Đã chọn vùng thành công",
+                  description: `Đã khoanh ${next.length} ${editorVariant === "text" ? "cụm chữ" : "đối tượng"} cần bóc tách.`,
+                });
+              }
+            }
+            setEditorVariant(null);
           }}
+        />
+      )}
+
+      {composingOpen && imagePath && layers.length > 0 && (
+        <LayerCompositionModal
+          originalSource={fileUrl(imagePath)}
+          fileName={fileName(imagePath)}
+          inputs={layers.map((path, idx) => {
+            const title = labelOf(idx);
+            return {
+              id: `layer-${idx}-${path}`,
+              title,
+              source: fileUrl(path),
+              isBackground: /background|phông nền|ảnh nền|^nền(?:\s|$)/i.test(title),
+            };
+          })}
+          onClose={() => setComposingOpen(false)}
         />
       )}
 

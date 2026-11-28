@@ -394,10 +394,11 @@ export const POLL_SCRIPT = (multi: boolean, step: number) => String.raw`
   const turns = document.querySelectorAll('[data-message-author-role="assistant"]');
   const lastTurn = turns[turns.length - 1];
   const busyUi = Boolean(document.querySelector('.result-streaming, [class*="result-streaming"], main [aria-busy="true"], main [class*="shimmer"], main [class*="skeleton"]'));
-  const lastText = ((lastTurn && lastTurn.innerText) || "").slice(-300).toLowerCase();
+  const lastTextRaw = (lastTurn && lastTurn.innerText) || "";
+  const lastText = lastTextRaw.slice(-300).toLowerCase();
   const busyText = /thinking|creating image|generating|đang suy nghĩ|đang tạo|đang xử lý/.test(lastText);
   const generating = stopButton || busyUi || busyText;
-  return { candidates, generating };
+  return { candidates, generating, assistantText: lastTextRaw.slice(-900) };
 })()
 `;
 

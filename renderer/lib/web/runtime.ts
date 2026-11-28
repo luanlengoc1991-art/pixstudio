@@ -111,6 +111,9 @@ const invokeHandlers: Record<string, (payload: any) => Promise<unknown> | unknow
     (await import("./die-cut")).dieCut(payload, progressTo(ELECTRON_COMMANDS.REMOVE_BACKGROUND_PROGRESS)),
   [ELECTRON_COMMANDS.GET_SYSTEM_STATS]: () => null,
   [ELECTRON_COMMANDS.CHATGPT_SESSION_STATUS]: () => false,
+  [ELECTRON_COMMANDS.OPEN_IN_DESIGN_APP]: () => {
+    throw new Error("Mở trực tiếp bằng Photoshop / Illustrator / CorelDRAW chỉ có trong app LMS Studio trên máy tính. Hãy bấm Xuất file để tải về và mở thủ công.");
+  },
 };
 
 const sendHandlers: Record<string, (payload: any) => void> = {

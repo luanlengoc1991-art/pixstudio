@@ -117,6 +117,32 @@ export type ChatGptNativePastePayload = { webContentsId: number; imagePath: stri
 
 export type ChatGptAttachFilesPayload = { webContentsId: number; paths: string[] };
 
+export type DesignAppTarget = "photoshop" | "illustrator" | "corel";
+
+export type CorelLayerItem = {
+  title: string;
+  dataUrl: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type CorelDocumentPayload = {
+  width: number;
+  height: number;
+  layers: CorelLayerItem[];
+};
+
+export type OpenInDesignAppPayload = {
+  target: DesignAppTarget;
+  fileName: string;
+  extension?: "psd" | "pdf" | "svg" | "png";
+  bytes?: Uint8Array | ArrayBuffer;
+  sourcePath?: string;
+  corelDocument?: CorelDocumentPayload;
+};
+
 export type BatchUpscaylPayload = {
   batchFolderPath: string;
   outputPath: string;
